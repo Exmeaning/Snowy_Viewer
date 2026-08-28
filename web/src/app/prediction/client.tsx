@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import Link from "@/components/LocalizedLink";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
@@ -31,8 +31,9 @@ const RANK_TIERS = [50, 100, 200, 300, 400, 500, 1000, 2000, 3000, 5000, 10000];
 
 export default function PredictionClient() {
     const { t, formatDate, formatNumber } = useI18n();
-    const { assetSource, themeColor } = useTheme();
-    const [server, setServer] = useState<ServerType>('cn');
+    const { assetSource, themeColor, serverSource } = useTheme();
+    const [server, setServer] = useState<ServerType>(() => (serverSource === "jp" ? "jp" : "cn"));
+    const hasManualServerOverride = useRef(false);
     const [events, setEvents] = useState<EventListItem[]>([]);
     const [masterEvents, setMasterEvents] = useState<IEventInfo[]>([]);
     const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
@@ -51,6 +52,20 @@ export default function PredictionClient() {
         return () => clearInterval(timer);
     }, []);
 
+    // Sync server selection when global data server setting changes
+    useEffect(() => {
+        if (!hasManualServerOverride.current) {
+            const targetServer: ServerType = serverSource === "jp" ? "jp" : "cn";
+            if (targetServer !== server) {
+                setServer(targetServer);
+                setSelectedEventId(null);
+                setEvents([]);
+                setPredictionData(null);
+                setEventsLoading(true);
+            }
+        }
+    }, [serverSource, server]);
+
     // Fetch master data for assets
     useEffect(() => {
         fetchMasterData<IEventInfo[]>("events.json").then(setMasterEvents).catch(console.error);
@@ -59,6 +74,7 @@ export default function PredictionClient() {
     // Handle server switch safely
     const handleServerChange = (newServer: ServerType) => {
         if (newServer === server) return;
+        hasManualServerOverride.current = true;
         setEventsLoading(true);
         setError(null);
         setServer(newServer);
@@ -573,6 +589,7 @@ export default function PredictionClient() {
                                                                                 <Sparkline
                                                                                     data={historyData}
                                                                                     prediction={(predictData.length > 0 && chart.Rank <= 10000) ? predictData : undefined}
+                                                                                    progress={Math.max(0.05, Math.min(0.95, (banner.progressPercent || 50) / 100))}
                                                                                     color={trendColor}
                                                                                     width={100}
                                                                                     height={30}

@@ -221,6 +221,7 @@ function renderParallaxShapes(layer: ParallaxShape["layer"], shapes: ParallaxSha
             // OUTER wrapper: owns POSITION (left/top/size) + float animation (transform: translate3d).
             <span
                 key={`${layer}-${index}`}
+                suppressHydrationWarning
                 className={`${styles.shapeFloat} ${shapeFloatClassName(layer)}`}
                 style={{
                     // Format to fixed precision so SSR and client serialize identical
@@ -237,8 +238,9 @@ function renderParallaxShapes(layer: ParallaxShape["layer"], shapes: ParallaxSha
                 {isCircle ? (
                     // Circles stay perfect circles via border-radius (never deformed).
                     <span
+                        suppressHydrationWarning
                         className={`${styles.shape} ${styles.shapeCircle}`}
-                        style={{ color, opacity: Number(shape.opacity.toFixed(4)) }}
+                        style={{ color, opacity: shape.opacity.toFixed(4) }}
                     />
                 ) : (
                     // Triangles are drawn with an SVG <polygon>. This is robust on every
@@ -246,11 +248,12 @@ function renderParallaxShapes(layer: ParallaxShape["layer"], shapes: ParallaxSha
                     // <g> carries the bespoke skew/scale/rotate so the float keyframes on
                     // the wrapper never overwrite the silhouette.
                     <svg
+                        suppressHydrationWarning
                         className={styles.shapeSvg}
                         viewBox="0 0 100 100"
                         preserveAspectRatio="none"
                         aria-hidden="true"
-                        style={{ color, opacity: Number(shape.opacity.toFixed(4)) }}
+                        style={{ color, opacity: shape.opacity.toFixed(4) }}
                     >
                         <g transform={`translate(50 50) ${shape.svgTransform} translate(-50 -50)`}>
                             {shape.kind === "outlineTriangle" ? (

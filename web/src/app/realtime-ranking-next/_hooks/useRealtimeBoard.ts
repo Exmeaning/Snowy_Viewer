@@ -16,6 +16,7 @@ import {
 import { buildEntriesWithDiff, LastChange } from "../_lib/board-utils";
 import { mergeResilientEntries } from "@/lib/realtime-ranking-resilience";
 import { useRealtimeRankingLine } from "@/lib/realtime-ranking-line";
+import { publishRankingSync, extractTierScoresFromEntries } from "@/lib/ranking-sync";
 
 export const POLL_INTERVAL = 10_000;
 // After this many consecutive degraded polls, accept the incoming payload so a
@@ -145,6 +146,16 @@ export function useRealtimeBoard(
                 setPreviousSnapshot(previousOverall);
                 snapshotRef.current = nextOverall;
                 setSnapshot(nextOverall);
+
+                if (nextOverall.entries.length > 0) {
+                    publishRankingSync({
+                        region: nextRegion,
+                        eventId: nextOverall.eventId,
+                        updatedAt: nextOverall.updatedAt,
+                        tierScores: extractTierScoresFromEntries(nextOverall.entries),
+                        source: "realtime-ranking-next",
+                    });
+                }
             }
 
             if (shouldFetchWorldLink) {

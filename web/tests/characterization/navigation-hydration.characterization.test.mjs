@@ -176,12 +176,6 @@ async function getComponentHarness() {
       FilterDrawer: () => null,
       FilterTabHandle: () => null,
       FilterDrawerGuide: () => null,
-      useQuickFilterContext: () => ({
-        hasFilters: false,
-        isOpen: false,
-        isDocked: false,
-        close: () => {},
-      }),
       SekaiLoader: () => null,
       BackgroundPattern: () => null,
       KeyboardShortcutsHelp: () => null,
@@ -194,17 +188,23 @@ async function getComponentHarness() {
       }),
       DetailSeoSummary: () => null,
       useDetailSeoSummary: () => null,
+      useQuickFilterContext: () => ({
+        hasFilters: false,
+        isOpen: false,
+        isDocked: false,
+        close: () => {},
+      }),
     });
     const mainLayoutPrelude = `
       const dependencies = globalThis.__moesekaiNavigationHydration;
       const React = dependencies.React;
       const { useState, useEffect, useCallback, useMemo, useRef, Suspense } = React;
       const { useRouter, useSearchParams, MainNavbar, Sidebar, MainFooter,
-        ScrollToTop, FilterDrawer, FilterTabHandle, FilterDrawerGuide,
-        useQuickFilterContext, SekaiLoader, BackgroundPattern,
+        ScrollToTop, FilterDrawer, FilterTabHandle, FilterDrawerGuide, SekaiLoader, BackgroundPattern,
         KeyboardShortcutsHelp, useKeyboardShortcuts, usePageListShortcuts,
         localizePathForBrowser, DetailSeoSummary, useDetailSeoSummary } = dependencies;
       const useTheme = dependencies.useMainLayoutTheme;
+      const useQuickFilterContext = dependencies.useQuickFilterContext;
     `;
     const MainLayout = await importTsxComponent("src/components/MainLayout.tsx", mainLayoutPrelude);
 

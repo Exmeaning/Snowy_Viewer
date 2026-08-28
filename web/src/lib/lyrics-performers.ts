@@ -29,6 +29,8 @@ export const EXTERNAL_LYRICS_PERFORMERS = [
     { id: 1017, sourceId: "外部歌唱者-17", name: "SOLARIA", color: "#B86D46", avatarUrl: "/images/lyrics-performers/solaria.webp" },
     { id: 1018, sourceId: "外部歌唱者-18", name: "Kotonoha Aoi", color: "#4D8FCC", avatarUrl: "/images/lyrics-performers/kotonoha-aoi.webp" },
     { id: 1019, sourceId: "外部歌唱者-19", name: "Kotonoha Akane", color: "#D75C58", avatarUrl: "/images/lyrics-performers/kotonoha-akane.webp" },
+    { id: 1030, sourceId: "外部歌唱者-30", name: "HARU", color: "#8EC31F", avatarUrl: "/images/lyrics-performers/haru.webp" },
+    { id: 1031, sourceId: "外部歌唱者-31", name: "COKO", color: "#00A3E0", avatarUrl: "/images/lyrics-performers/coko.webp" },
 ] as const satisfies readonly ExternalLyricsPerformer[];
 
 const EXTERNAL_LYRICS_PERFORMER_BY_ID = new Map<number, ExternalLyricsPerformer>(
@@ -51,4 +53,53 @@ export function getLyricsCharacterIdBySourceId(sourceId: string): number | null 
     if (!match) return null;
     const characterId = Number(match[1]);
     return Number.isSafeInteger(characterId) && characterId >= 1 && characterId <= 26 ? characterId : null;
+}
+
+const OUTSIDE_CHARACTER_NAME_AVATAR_MAP: Record<string, string> = {
+    "gumi": "/images/lyrics-performers/gumi.webp",
+    "kasane teto": "/images/lyrics-performers/teto.webp",
+    "重音テト": "/images/lyrics-performers/teto.webp",
+    "teto": "/images/lyrics-performers/teto.webp",
+    "flower": "/images/lyrics-performers/flower.webp",
+    "v flower": "/images/lyrics-performers/flower.webp",
+    "kamui gakupo": "/images/lyrics-performers/gakupo.webp",
+    "神威がくぽ": "/images/lyrics-performers/gakupo.webp",
+    "gakupo": "/images/lyrics-performers/gakupo.webp",
+    "kafu": "/images/lyrics-performers/kafu.webp",
+    "可不": "/images/lyrics-performers/kafu.webp",
+    "gekiyaku": "/images/lyrics-performers/gekiyaku.webp",
+    "ゲキヤク": "/images/lyrics-performers/gekiyaku.webp",
+    "sekai": "/images/lyrics-performers/sekai.webp",
+    "星界": "/images/lyrics-performers/sekai.webp",
+    "zundamon": "/images/lyrics-performers/zundamon.webp",
+    "ずんだもん": "/images/lyrics-performers/zundamon.webp",
+    "kaai yuki": "/images/lyrics-performers/yuki.webp",
+    "歌愛ユキ": "/images/lyrics-performers/yuki.webp",
+    "yuki": "/images/lyrics-performers/yuki.webp",
+    "adachi rei": "/images/lyrics-performers/adachi-rei.webp",
+    "足立レイ": "/images/lyrics-performers/adachi-rei.webp",
+    "rime": "/images/lyrics-performers/rime.webp",
+    "裏命": "/images/lyrics-performers/rime.webp",
+    "hanakuma chifuyu": "/images/lyrics-performers/chifuyu.webp",
+    "花隈千冬": "/images/lyrics-performers/chifuyu.webp",
+    "chifuyu": "/images/lyrics-performers/chifuyu.webp",
+    "vy1": "/images/lyrics-performers/vy1.webp",
+    "solaria": "/images/lyrics-performers/solaria.webp",
+    "kotonoha aoi": "/images/lyrics-performers/kotonoha-aoi.webp",
+    "琴葉 葵": "/images/lyrics-performers/kotonoha-aoi.webp",
+    "琴葉葵": "/images/lyrics-performers/kotonoha-aoi.webp",
+    "kotonoha akane": "/images/lyrics-performers/kotonoha-akane.webp",
+    "琴葉 茜": "/images/lyrics-performers/kotonoha-akane.webp",
+    "琴葉茜": "/images/lyrics-performers/kotonoha-akane.webp",
+    "coko": "/images/lyrics-performers/coko.webp",
+    "狐子": "/images/lyrics-performers/coko.webp",
+    "koko": "/images/lyrics-performers/coko.webp",
+    "haru": "/images/lyrics-performers/haru.webp",
+    "羽累": "/images/lyrics-performers/haru.webp",
+};
+
+export function getOutsideCharacterAvatarUrl(name?: string | null): string | null {
+    if (!name) return null;
+    const normalized = name.trim().toLowerCase();
+    return OUTSIDE_CHARACTER_NAME_AVATAR_MAP[normalized] ?? null;
 }

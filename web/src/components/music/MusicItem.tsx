@@ -5,6 +5,7 @@ import { IMusicInfo, getMusicJacketUrl, MUSIC_CATEGORY_COLORS, MusicCategoryType
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTranslation } from "@/contexts/TranslationContext";
+import { formatBpmValue } from "@/lib/musicBpm";
 
 const ALL_DIFFICULTIES: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
 const JACKET_OVERLAY_BADGE_CLASS = "inline-flex h-5 items-center rounded bg-black/60 px-1.5 font-mono text-[10px] font-normal leading-4 text-white shadow-sm backdrop-blur-sm";
@@ -15,6 +16,8 @@ interface MusicItemProps {
     constant?: number;
     difficulties?: Record<string, number>;
     showDifficulty?: boolean;
+    /** Main BPM value; renders a metronome badge at the jacket's bottom-right corner */
+    bpm?: number;
     cnTitle?: string;
     enTitle?: string;
     href?: string;
@@ -22,7 +25,7 @@ interface MusicItemProps {
     jacketTopLeftLabel?: string;
 }
 
-export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, cnTitle, enTitle, href, hrefBase = "/music", jacketTopLeftLabel }: MusicItemProps) {
+export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, bpm, cnTitle, enTitle, href, hrefBase = "/music", jacketTopLeftLabel }: MusicItemProps) {
     const { assetSource, useLLMTranslation } = useTheme();
     const { locale, t } = useI18n();
     const { t: translateMasterText } = useTranslation();
@@ -65,10 +68,35 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                         #{music.id}
                     </div>
 
-                    {/* Constant Badge - bottom right */}
+{/* Constant Badge - bottom right */}
                     {constant !== undefined && (
                         <div className="absolute bottom-2 right-2 px-1.5 py-0.5 bg-miku/80 backdrop-blur-sm rounded text-[10px] text-white font-bold shadow-sm">
                             {constant.toFixed(1)}
+                        </div>
+                    )}
+
+                    {/* Top-left badges: jacket label / spoiler / BPM (BPM sits below the spoiler label) */}
+                    {(bpm !== undefined || jacketTopLeftLabel || isSpoiler) && (
+                        <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+                            {jacketTopLeftLabel && (
+                                <span className={JACKET_OVERLAY_BADGE_CLASS}>
+                                    {jacketTopLeftLabel}
+                                </span>
+                            )}
+                            {isSpoiler && (
+                                <span className="rounded bg-orange-500 px-1.5 py-0.5 text-[10px] font-bold leading-4 text-white shadow-sm">
+                                    {t("common.badge.spoiler")}
+                                </span>
+                            )}
+                            {bpm !== undefined && (
+                                <span
+                                    className={`${JACKET_OVERLAY_BADGE_CLASS} font-bold`}
+                                    title={`${formatBpmValue(bpm)} BPM`}
+                                >
+                                    <span aria-hidden="true" className="text-[12px] leading-none font-sans">♩</span>
+                                    {formatBpmValue(bpm)}
+                                </span>
+                            )}
                         </div>
                     )}
 

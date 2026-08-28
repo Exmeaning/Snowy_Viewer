@@ -37,6 +37,7 @@ export const zhTWLayout = {
             gacha: "轉蛋",
             live: "演唱會",
             prediction: "活動預測",
+            predictionNext: "活動預測 Next",
             realtimeRanking: "即時排行榜 Legacy",
             realtimeRankingNext: "即時排行榜 Next",
             mysekaiPreview: "烤森百景",

@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useI18n } from "@/contexts/I18nContext";
 import { getMotionTransition } from "@/lib/motion";
+import { isKeyboardEventComposing } from "@/lib/shortcuts";
 
 interface ModalProps {
     isOpen: boolean;
@@ -71,7 +72,7 @@ export default function Modal({
         };
 
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
+            if (e.key === "Escape" && !e.defaultPrevented && !isKeyboardEventComposing(e)) {
                 e.preventDefault();
                 stableOnClose();
             }

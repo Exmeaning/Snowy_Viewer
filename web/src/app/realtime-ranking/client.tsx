@@ -11,6 +11,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { fetchEventList } from "@/lib/prediction-api";
 import { fetchRealtimeRanking, fetchRealtimeRankingMasterData, fetchRealtimeRankingEvents, fetchChurnData, fetchWorldLinkChurnData, fetchWorldLinkRanking, getRealtimeRankingErrorMessage } from "@/lib/realtime-ranking-api";
 import { mergeResilientEntries, shouldKeepPreviousChurn } from "@/lib/realtime-ranking-resilience";
+import { publishRankingSync, extractTierScoresFromEntries } from "@/lib/ranking-sync";
 import ParkingPeriodsModal from "@/components/realtime-ranking/ParkingPeriodsModal";
 import Modal from "@/components/common/Modal";
 import ExternalLink from "@/components/ExternalLink";
@@ -209,7 +210,7 @@ function applySnapshotChurnDiff(
 
 function RealtimeRankingContent() {
     const { t, formatNumber = (val: number) => val.toLocaleString() } = useI18n();
-    const { assetSource, themeColor } = useTheme();
+    const { assetSource, themeColor, serverSource } = useTheme();
 
     const [hasInitializedQuery, setHasInitializedQuery] = useState(false);
     const [region, setRegion] = useState<RealtimeRankingRegion>(DEFAULT_REGION);
@@ -354,6 +355,8 @@ function RealtimeRankingContent() {
         const regionParam = params.get("region");
         if (isRealtimeRankingRegion(regionParam)) {
             setRegion(regionParam);
+        } else if (isRealtimeRankingRegion(serverSource)) {
+            setRegion(serverSource);
         }
         const boardParam = params.get("board");
         if (boardParam === "worldlink") {
@@ -364,7 +367,7 @@ function RealtimeRankingContent() {
             setSelectedWorldLinkCharacterId(Number(wlCharacterIdParam));
         }
         setHasInitializedQuery(true);
-    }, []);
+    }, [serverSource]);
 
     const updateUrlState = useCallback((nextRegion: RealtimeRankingRegion, nextBoardMode: RealtimeRankingBoardMode, nextWorldLinkCharacterId: number | null) => {
         const url = new URL(window.location.href);
@@ -451,6 +454,16 @@ function RealtimeRankingContent() {
                 }
                 snapshotRef.current = nextOverallSnapshot;
                 setSnapshot(nextOverallSnapshot);
+
+                if (nextOverallSnapshot && nextOverallSnapshot.entries.length > 0) {
+                    publishRankingSync({
+                        region: nextRegion,
+                        eventId: nextOverallSnapshot.eventId,
+                        updatedAt: nextOverallSnapshot.updatedAt,
+                        tierScores: extractTierScoresFromEntries(nextOverallSnapshot.entries),
+                        source: "realtime-ranking",
+                    });
+                }
 
                 // If the event changed, clear old WL snapshots to avoid cross-event residue.
                 if (previousWorldLink && nextOverallSnapshot &&

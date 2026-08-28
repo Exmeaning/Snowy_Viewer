@@ -506,6 +506,21 @@ export const SEO_PAGE_METADATA = {
       "ja-JP": ["イベント予測", "ランキング予測", "ボーダー予測"],
     },
   ),
+  prediction_next: definePage(
+    "/prediction-next",
+    { "zh-CN": "活动预测 Next", "en-US": "Event Prediction Next", "ja-JP": "イベント予測 Next" },
+    {
+      "zh-CN": "全新 AkiYome v2.0.0-Tori 预测模型与冲榜目标规划器，支持 World Link 3 独立章节预测、贝叶斯-卡尔曼实时拟合与多人协力周回分析。",
+      "en-US": "Next-generation Project SEKAI event border predictions powered by AkiYome v2.0.0-Tori Bayesian-Kalman engine, World Link 3 chapter predictions, and goal strategy planner.",
+      "ja-JP": "AkiYome v2.0.0-Tori ベイズ・カルマン予測エンジンを搭載した新世代イベントボーダー予測と目標プランナー。World Link 3 各章予測に対応。",
+      "ko-KR": "AkiYome v2.0.0-Tori 베이지안-칼만 예측 엔진과 이벤트 목표 전략 플래너를 탑재한 차세대 Project SEKAI 이벤트 예측.",
+    },
+    {
+      "zh-CN": ["活动预测 Next", "AkiYome", "World Link预测", "冲榜规划"],
+      "en-US": ["event prediction next", "AkiYome", "world link prediction", "border forecast"],
+      "ja-JP": ["イベント予測 Next", "AkiYome", "ボーダー予測", "ワールドリンク予測"],
+    },
+  ),
   deck_recommend: definePage(
     "/deck-recommend",
     { "zh-CN": "组卡推荐", "en-US": "Deck Recommender", "ja-JP": "編成レコメンド" },

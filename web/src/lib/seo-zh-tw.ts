@@ -119,6 +119,11 @@ export const ZH_TW_SEO_PAGE_METADATA = {
         "檢視 Project SEKAI 活動預測、排名走勢與資料分析工具。",
         ["活動預測", "排名預測", "預測線"],
     ),
+    prediction_next: page(
+        "活動預測 Next",
+        "全新 AkiYome v2.0.0-Tori 預測模型與衝榜目標規劃器，支援 World Link 3 獨立章節預測、貝葉斯-卡爾曼即時擬合與多人協力周回分析。",
+        ["活動預測 Next", "AkiYome", "World Link預測", "衝榜規劃"],
+    ),
     deck_recommend: page(
         "組隊推薦",
         "使用 Project SEKAI 組隊推薦工具，自動計算活動收益、分數與最佳隊伍。",

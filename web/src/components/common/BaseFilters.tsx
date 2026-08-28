@@ -1,7 +1,8 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useI18n } from "@/contexts/I18nContext";
+import { isKeyboardEventComposing } from "@/lib/shortcuts";
 
 // ============================================================================
 // Types
@@ -56,6 +57,77 @@ export interface BaseFiltersProps {
 // ============================================================================
 // Shared filter styles
 // ============================================================================
+
+interface FilterSearchInputProps {
+    value: string;
+    onChange: (value: string) => void;
+    placeholder?: string;
+}
+
+function FilterSearchInput({ value, onChange, placeholder }: FilterSearchInputProps) {
+    const [localValue, setLocalValue] = useState(value);
+    const [prevValue, setPrevValue] = useState(value);
+    const isComposingRef = useRef(false);
+
+    if (value !== prevValue) {
+        setPrevValue(value);
+        setLocalValue(value);
+    }
+
+    const handleCompositionStart = useCallback(() => {
+        isComposingRef.current = true;
+    }, []);
+
+    const handleCompositionEnd = useCallback((e: React.CompositionEvent<HTMLInputElement>) => {
+        isComposingRef.current = false;
+        const nextValue = e.currentTarget.value;
+        setLocalValue(nextValue);
+        onChange(nextValue);
+    }, [onChange]);
+
+    const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        const nextValue = e.target.value;
+        setLocalValue(nextValue);
+        if (!isComposingRef.current) {
+            onChange(nextValue);
+        }
+    }, [onChange]);
+
+    const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (
+            isComposingRef.current ||
+            isKeyboardEventComposing(e.nativeEvent) ||
+            e.nativeEvent.isComposing ||
+            e.key === "Process" ||
+            (e as unknown as { keyCode?: number }).keyCode === 229
+        ) {
+            e.stopPropagation();
+            return;
+        }
+        if (e.key === "Escape") {
+            if (localValue) {
+                e.preventDefault();
+                e.stopPropagation();
+                setLocalValue("");
+                onChange("");
+            }
+        }
+    }, [localValue, onChange]);
+
+    return (
+        <input
+            data-shortcut-search="true"
+            type="text"
+            placeholder={placeholder}
+            value={localValue}
+            onChange={handleChange}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
+            onKeyDown={handleKeyDown}
+            className="w-full ios-glass-input material-thin px-3.5 py-2.5 pr-10 rounded-xl text-sm type-body text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+        />
+    );
+}
 
 export function getFilterChipStateClasses(
     selected: boolean,
@@ -176,15 +248,12 @@ export default function BaseFilters({
                         {t("common.filter.search")}
                     </label>
                     <div className="relative">
-                        <input
-                            data-shortcut-search="true"
-                            type="text"
+                        <FilterSearchInput
                             placeholder={resolvedSearchPlaceholder}
-                            value={searchQuery}
-                            onChange={(e) => onSearchChange(e.target.value)}
-                            className="w-full ios-glass-input material-thin px-3.5 py-2.5 pr-10 rounded-xl text-sm type-body text-slate-700 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                            value={searchQuery ?? ""}
+                            onChange={onSearchChange}
                         />
-                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>

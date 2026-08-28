@@ -46,6 +46,18 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
     const [useWildcard, setUseWildcard] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
+    const isComposingRef = useRef(false);
+    const compositionEndedAtRef = useRef(0);
+
+    const handleCompositionStart = useCallback(() => {
+        isComposingRef.current = true;
+    }, []);
+
+    const handleCompositionEnd = useCallback((e: React.CompositionEvent<HTMLInputElement>) => {
+        isComposingRef.current = false;
+        compositionEndedAtRef.current = Date.now();
+        setQuery(e.currentTarget.value);
+    }, []);
 
     // Dynamic search index state (loaded once per session)
     const [searchIndex, setSearchIndex] = useState<SearchIndexItem[] | null>(null);
@@ -289,7 +301,21 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
 
     const handleKeyDown = useCallback(
         (e: React.KeyboardEvent) => {
-            if (isKeyboardEventComposing(e.nativeEvent)) return;
+            if (
+                isComposingRef.current ||
+                isKeyboardEventComposing(e.nativeEvent) ||
+                e.nativeEvent.isComposing ||
+                e.key === "Process" ||
+                (e as unknown as { keyCode?: number }).keyCode === 229
+            ) {
+                return;
+            }
+
+            // On macOS / WebKit / Blink, confirming an IME composition with Enter
+            // dispatches a keydown for Enter immediately after compositionend.
+            if (e.key === "Enter" && Date.now() - compositionEndedAtRef.current < 100) {
+                return;
+            }
 
             switch (e.key) {
                 case "ArrowDown":
@@ -395,6 +421,8 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                                     type="text"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
+                                    onCompositionStart={handleCompositionStart}
+                                    onCompositionEnd={handleCompositionEnd}
                                     placeholder={t("search.commandPalette.placeholder")}
                                     className="flex-1 py-1.5 sm:py-2.5 bg-transparent text-sm text-slate-800 placeholder-slate-400 outline-none min-w-0"
                                 />

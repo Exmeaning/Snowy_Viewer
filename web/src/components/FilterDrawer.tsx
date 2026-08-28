@@ -7,6 +7,7 @@ import { useQuickFilterContext } from "@/contexts/QuickFilterContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { filterDrawerVariants } from "@/lib/motion";
 import { FilterDrawerContext } from "@/components/common/BaseFilters";
+import { isKeyboardEventComposing } from "@/lib/shortcuts";
 
 /**
  * Stable id shared by the trigger's `aria-controls` and the drawer's `id`.
@@ -144,7 +145,7 @@ export default function FilterDrawer({ isSidebarOpen }: FilterDrawerProps) {
         if (!isModal) return;
 
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key !== "Escape" || event.defaultPrevented) return;
+            if (event.key !== "Escape" || event.defaultPrevented || isKeyboardEventComposing(event)) return;
             event.preventDefault();
             event.stopPropagation();
             close();

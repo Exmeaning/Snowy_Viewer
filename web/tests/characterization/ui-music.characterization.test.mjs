@@ -392,3 +392,24 @@ test("UI i18n parity, literal usage, hardcoded allowlist, and SEO registry match
   assert.ok(Number(seoCounts?.[1]) >= baseline.validation.seoIndexableRoutes);
   assert.ok(Number(seoCounts?.[2]) >= baseline.validation.seoNoindexRoutes);
 });
+
+test("search inputs, CommandPalette, and FilterDrawer preserve IME composition and prevent premature Enter navigation", () => {
+  const commandPalette = readWeb("src/components/CommandPalette.tsx");
+  assert.match(commandPalette, /onCompositionStart=\{handleCompositionStart\}/, "CommandPalette input tracks composition start");
+  assert.match(commandPalette, /onCompositionEnd=\{handleCompositionEnd\}/, "CommandPalette input tracks composition end");
+  assert.match(commandPalette, /isComposingRef\.current/, "CommandPalette keydown handler guards on active IME composition");
+  assert.match(commandPalette, /compositionEndedAtRef\.current/, "CommandPalette keydown handler guards on Enter immediately following compositionend");
+
+  const baseFilters = readWeb("src/components/common/BaseFilters.tsx");
+  assert.match(baseFilters, /function FilterSearchInput/, "BaseFilters uses dedicated FilterSearchInput with local composition buffer");
+  assert.match(baseFilters, /onCompositionStart=\{handleCompositionStart\}/, "FilterSearchInput tracks composition start");
+  assert.match(baseFilters, /onCompositionEnd=\{handleCompositionEnd\}/, "FilterSearchInput updates parent on composition end");
+  assert.match(baseFilters, /isKeyboardEventComposing/, "FilterSearchInput stops propagation of IME escape/process keys");
+
+  const filterDrawer = readWeb("src/components/FilterDrawer.tsx");
+  assert.match(filterDrawer, /isKeyboardEventComposing\(event\)/, "FilterDrawer escape listener guards against IME composition cancellation");
+
+  const modal = readWeb("src/components/common/Modal.tsx");
+  assert.match(modal, /isKeyboardEventComposing\(e\)/, "Modal escape listener guards against IME composition cancellation");
+});
+

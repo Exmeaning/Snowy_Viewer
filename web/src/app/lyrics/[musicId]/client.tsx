@@ -9,12 +9,14 @@ import MainLayout from "@/components/MainLayout";
 import LyricText from "@/components/lyrics/LyricText";
 import TranslationEditionSelect from "@/components/lyrics/TranslationEditionSelect";
 import Link from "@/components/LocalizedLink";
+import { renderMemberText } from "@/components/MemberText";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme, AssetSourceType } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
 import { getCharacterIconUrl, getMusicVocalAudioUrl } from "@/lib/assets";
+import { getOutsideCharacterAvatarUrl } from "@/lib/lyrics-performers";
 import { getCharacterName } from "@/lib/i18n";
 import {
     fetchLyricsDocument,
@@ -185,17 +187,19 @@ function VocalPlayer({
                             const charName = isGameChar
                                 ? getCharacterLabel(chara.characterId)
                                 : outsideCharacters[chara.characterId] || `Guest ${chara.characterId}`;
-                            const hasIcon = isGameChar && chara.characterId <= 26;
+                            const externalAvatar = !isGameChar ? getOutsideCharacterAvatarUrl(charName) : null;
+                            const hasIcon = (isGameChar && chara.characterId <= 26) || Boolean(externalAvatar);
+                            const avatarUrl = isGameChar ? getCharacterIconUrl(chara.characterId) : externalAvatar;
 
-                            return hasIcon ? (
+                            return hasIcon && avatarUrl ? (
                                 <div
                                     key={chara.id}
                                     className="w-6 h-6 rounded-full overflow-hidden bg-slate-100 ring-1 ring-white dark:ring-slate-800"
                                     title={charName}
                                 >
                                     <Image
-                                        src={getCharacterIconUrl(chara.characterId)}
-                                        alt=""
+                                        src={avatarUrl}
+                                        alt={charName}
                                         width={24}
                                         height={24}
                                         className="w-full h-full object-cover"
@@ -618,7 +622,7 @@ export default function LyricsDetailClient() {
                                                 <div className="space-y-1">
                                                     <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
                                                     <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                        {lyrics.attribution}
+                                                        {renderMemberText(lyrics.attribution, undefined, { stripAtPrefix: true })}
                                                     </dd>
                                                 </div>
                                             </dl>
@@ -633,7 +637,7 @@ export default function LyricsDetailClient() {
                                                 <div className="space-y-1">
                                                     <dt className="font-bold text-primary-text">{t("page.lyrics.translationAndProofreading")}</dt>
                                                     <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                        {sharedTranslationCredit}
+                                                        {renderMemberText(sharedTranslationCredit, undefined, { stripAtPrefix: true })}
                                                     </dd>
                                                 </div>
                                             ) : (
@@ -642,7 +646,7 @@ export default function LyricsDetailClient() {
                                                         <div className="space-y-1">
                                                             <dt className="font-bold text-primary-text">{t("page.lyrics.translation")}</dt>
                                                             <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                                {translationCredit}
+                                                                {renderMemberText(translationCredit, undefined, { stripAtPrefix: true })}
                                                             </dd>
                                                         </div>
                                                     )}
@@ -650,7 +654,7 @@ export default function LyricsDetailClient() {
                                                         <div className="space-y-1">
                                                             <dt className="font-bold text-primary-text">{t("page.lyrics.proofreading")}</dt>
                                                             <dd className="whitespace-pre-wrap break-words leading-relaxed text-slate-600 [overflow-wrap:anywhere] dark:text-slate-300">
-                                                                {proofreadingCredit}
+                                                                {renderMemberText(proofreadingCredit, undefined, { stripAtPrefix: true })}
                                                             </dd>
                                                         </div>
                                                     )}

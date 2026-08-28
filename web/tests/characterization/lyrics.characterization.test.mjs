@@ -464,7 +464,8 @@ async function importLyricsDetailClient(lyrics) {
       getCharacterIconUrl, getCharacterName, getLyricsDisplayLines, getLyricsDisplaySegments, getLyricsRendition, getLyricsRenditions,
       getLyricsSelectedTranslationCredits, getLyricsTargetLocale, getLyricsTranslationEditions, getMusicVocalAudioUrl,
       hasFullLyricsVersion, hasGameLyricsVersion, isLyricsUnavailableError, replaceCurrentUrlSearchParams,
-      resolveLyricsTranslationEdition, getPublishedLyricsIndexEntry, getMusicJacketUrl, MUSIC_CATEGORY_COLORS } = dependencies;
+      resolveLyricsTranslationEdition, getPublishedLyricsIndexEntry, getMusicJacketUrl, MUSIC_CATEGORY_COLORS,
+      renderMemberText } = dependencies;
   `;
   const transpiled = ts.transpileModule(`${prelude}\n${source}`, {
     compilerOptions: {
@@ -521,6 +522,7 @@ async function importLyricsDetailClient(lyrics) {
       onClick: () => onChange(option.key),
     }, option.label))),
     Link: ({ children, ...props }) => React.createElement("a", props, children),
+    renderMemberText: (text) => text,
     useI18n: function useI18n() {
       return { locale: state.locale, t: translate, formatDate: (value) => String(value) };
     },
@@ -700,9 +702,9 @@ test("lyrics source changes invalidate source-scoped index and detail caches", {
 
     assert.deepEqual(requests, [
       `${SOURCE_BASE_URL}/index.json`,
-      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json`,
+      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
       `${alternateBaseUrl}/index.json`,
-      `${alternateBaseUrl}/music_${fixture.document.musicId}.json`,
+      `${alternateBaseUrl}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
     ]);
   } finally {
     globalThis.fetch = previousFetch;
@@ -736,7 +738,7 @@ test("lyrics loaders consume only the configured index and published detail arti
     assert.equal(index.songs.find((song) => song.musicId === document.musicId)?.updatedAt, document.updatedAt);
     assert.deepEqual(requests.map(({ url }) => url), [
       `${SOURCE_BASE_URL}/index.json`,
-      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json`,
+      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
     ]);
     assert.ok(requests.every(({ options }) => options.cache === "no-store" && options.signal instanceof AbortSignal));
 
@@ -847,7 +849,7 @@ test("database-overlaid legacy v1 details validate under the reviewed v3 index",
     const staleDetail = structuredClone(v1Detail);
     staleDetail.updatedAt = "2026-08-15T09:24:07Z";
     globalThis.fetch = async (url) => jsonResponse(
-      String(url).endsWith("/index.json") ? v3Index : staleDetail,
+      String(url).includes("/index.json") ? v3Index : staleDetail,
     );
     const staleLyrics = await importLyrics();
     await assert.rejects(
@@ -855,6 +857,76 @@ test("database-overlaid legacy v1 details validate under the reviewed v3 index",
       /Invalid lyrics document/,
       "a legacy detail that drifts from the index publication must still fail closed",
     );
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
+test("transient index and detail publication mismatches retry and recover without failing the caller", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  try {
+    const freshIndex = {
+      version: 3,
+      songs: [{
+        musicId: UNPUBLISHED_MUSIC_ID,
+        revision: 3,
+        updatedAt: "2026-08-22T12:00:00Z",
+        state: "complete",
+        title: { "ja-JP": "Transient Song", "zh-CN": "过渡歌曲" },
+        availableVersions: ["full"],
+      }],
+    };
+    const staleDetail = {
+      version: 1,
+      musicId: UNPUBLISHED_MUSIC_ID,
+      revision: 2,
+      updatedAt: "2026-08-22T11:00:00Z",
+      attribution: "雪莹ちゃん",
+      lines: [{
+        id: "line-1",
+        order: 0,
+        japanese: "古い歌詞",
+        "zh-CN": "",
+        "en-US": "",
+        segments: [{ text: "古い歌詞", performerIds: [21] }],
+      }],
+    };
+    const freshDetail = {
+      version: 1,
+      musicId: UNPUBLISHED_MUSIC_ID,
+      revision: 3,
+      updatedAt: "2026-08-22T12:00:00Z",
+      attribution: "雪莹ちゃん",
+      lines: [{
+        id: "line-1",
+        order: 0,
+        japanese: "新しい歌詞",
+        "zh-CN": "新歌词",
+        "en-US": "",
+        segments: [{ text: "新しい歌詞", performerIds: [21] }],
+      }],
+    };
+    let detailAttempts = 0;
+    const requestedUrls = [];
+    globalThis.fetch = async (url) => {
+      const href = String(url);
+      requestedUrls.push(href);
+      if (href.includes("/index.json")) return jsonResponse(freshIndex);
+      detailAttempts += 1;
+      if (detailAttempts === 1) return jsonResponse(staleDetail);
+      return jsonResponse(freshDetail);
+    };
+
+    const lyrics = await importLyrics();
+    const document = await lyrics.fetchLyricsDocument(UNPUBLISHED_MUSIC_ID);
+    assert.equal(document.revision, 3);
+    assert.equal(document.lines[0].japanese, "新しい歌詞");
+    assert.equal(detailAttempts, 2, "must have retried detail once after mismatch");
+    assert.ok(requestedUrls.some((u) => u.includes(`music_${UNPUBLISHED_MUSIC_ID}.json?rev=3`)));
   } finally {
     globalThis.fetch = previousFetch;
     if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
@@ -935,10 +1007,10 @@ test("Public Lyrics v2 loads complete and explicit Game-only details while text-
   try {
     globalThis.fetch = async (url) => {
       const requestUrl = String(url);
-      if (requestUrl.endsWith("/index.json")) return jsonResponse(structuredClone(fixtureV2.index));
-      if (requestUrl.endsWith(`/music_${fixtureV2.document.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.document));
-      if (requestUrl.endsWith(`/music_${fixtureV2.fullOnlyDocument.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.fullOnlyDocument));
-      if (requestUrl.endsWith(`/music_${fixtureV2.gameOnlyDocument.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.gameOnlyDocument));
+      if (requestUrl.includes("/index.json")) return jsonResponse(structuredClone(fixtureV2.index));
+      if (requestUrl.includes(`/music_${fixtureV2.document.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.document));
+      if (requestUrl.includes(`/music_${fixtureV2.fullOnlyDocument.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.fullOnlyDocument));
+      if (requestUrl.includes(`/music_${fixtureV2.gameOnlyDocument.musicId}.json`)) return jsonResponse(structuredClone(fixtureV2.gameOnlyDocument));
       return new Response(null, { status: HTTP_NOT_FOUND });
     };
     const lyrics = await importLyrics();
@@ -1561,9 +1633,9 @@ test("detail fetch retries against a changed source instead of returning old-sou
     assert.equal(document.attribution, "Alternate synthetic attribution");
     assert.deepEqual(requests, [
       `${SOURCE_BASE_URL}/index.json`,
-      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json`,
+      `${SOURCE_BASE_URL}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
       `${alternateBaseUrl}/index.json`,
-      `${alternateBaseUrl}/music_${fixture.document.musicId}.json`,
+      `${alternateBaseUrl}/music_${fixture.document.musicId}.json?rev=${fixture.document.revision}`,
     ]);
   } finally {
     globalThis.fetch = previousFetch;
@@ -1587,6 +1659,8 @@ test("public lyrics fetches enforce named timeout and artifact byte limits witho
     assert.match(source, /const LYRICS_CACHE_TTL_MS =/);
     assert.match(source, /const LYRICS_FETCH_RETRY_LIMIT =/);
     assert.match(source, /const LYRICS_FETCH_RETRY_DELAY_MS =/);
+    assert.match(source, /const LYRICS_REVISION_MISMATCH_RETRY_LIMIT =/);
+    assert.match(source, /const LYRICS_REVISION_MISMATCH_RETRY_DELAY_MS =/);
     assert.match(source, /const LYRICS_FETCH_TIMEOUT_MS =/);
     assert.match(source, /const MAX_LYRICS_ARTIFACT_BYTES =/);
     assert.match(source, /parseStrictJson/);
@@ -2857,6 +2931,35 @@ test("Public Lyrics v4 loads canonical multi-edition translations without cross-
   }
 });
 
+test("Public Lyrics v4 multi-edition details validate and load under a v3 index", async () => {
+  const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+  const previousFetch = globalThis.fetch;
+  process.env.NEXT_PUBLIC_LYRICS_BASE_URL = SOURCE_BASE_URL;
+  try {
+    const document = structuredClone(fixtureV4.document);
+    const publication = structuredClone(fixtureV4Publication);
+    const v3Index = {
+      version: 3,
+      songs: [publication],
+    };
+    globalThis.fetch = async (url) => jsonResponse(
+      String(url).endsWith("/index.json") ? v3Index : document,
+    );
+    const lyrics = await importLyrics();
+    const loaded = await lyrics.fetchLyricsDocument(document.musicId);
+    assert.equal(loaded.version, 4);
+    assert.equal(loaded.defaultTranslationEditionKey, "official");
+    assert.deepEqual(
+      loaded.translationEditions.map((edition) => edition.key),
+      ["community", "official"],
+    );
+  } finally {
+    globalThis.fetch = previousFetch;
+    if (original === undefined) delete process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
+    else process.env.NEXT_PUBLIC_LYRICS_BASE_URL = original;
+  }
+});
+
 test("Public Lyrics v4 rejects open shapes, noncanonical editions, incomplete side coverage, and invalid exact projections", async () => {
   const original = process.env.NEXT_PUBLIC_LYRICS_BASE_URL;
   const previousFetch = globalThis.fetch;
@@ -3222,10 +3325,14 @@ test("lyrics detail cache is revision-keyed, TTL-bounded, and rejects unsynchron
 
     now += cacheTtlMs + SINGLE_INCREMENT;
     revision += SINGLE_INCREMENT;
+    // A persistent mismatch retries LYRICS_REVISION_MISMATCH_RETRY_LIMIT times before failing closed.
     await assert.rejects(lyrics.fetchLyricsDocument(fixture.document.musicId), /Invalid lyrics document/);
     detailRevision = revision;
     assert.equal((await lyrics.fetchLyricsDocument(fixture.document.musicId)).revision, revision);
-    const revisionChangeFetches = SINGLE_INCREMENT * 3;
+    const ttlRevalidateFetches = 1;
+    const persistentMismatchFetches = 4;
+    const recoveredFetch = 1;
+    const revisionChangeFetches = ttlRevalidateFetches + persistentMismatchFetches + recoveredFetch;
     assert.equal(detailFetches, initialDetailFetches + revisionChangeFetches, "revision mismatch is not cached and remains retryable");
   } finally {
     Date.now = originalNow;
@@ -3363,8 +3470,8 @@ test("lyric segments keep solid and gradient colors with deduplicated line-end a
   assert.doesNotMatch(`${source}\n${lyricsSource}\n${clientSource}`, /\b(?:romaji|romanized|romanization)\b/i);
 
   const performers = await importWebTypeScript("src/lib/lyrics-performers.ts");
-  assert.deepEqual(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.id), [1001, 1002, 1003, 1004, 1006, 1007, 1008, 1009, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019]);
-  assert.equal(new Set(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.sourceId)).size, 17);
+  assert.deepEqual(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.id), [1001, 1002, 1003, 1004, 1006, 1007, 1008, 1009, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1030, 1031]);
+  assert.equal(new Set(performers.EXTERNAL_LYRICS_PERFORMERS.map((item) => item.sourceId)).size, 19);
   assert.equal(performers.getExternalLyricsPerformerBySourceId("外部歌唱者-03")?.name, "flower");
   assert.equal(performers.getExternalLyricsPerformerBySourceId("外部歌唱者-13")?.name, "Adachi Rei");
   assert.equal(performers.getExternalLyricsPerformer(1004)?.avatarUrl, undefined);
@@ -3634,6 +3741,79 @@ test("resetting lyrics filters cancels a delayed scroll restoration", async () =
   }
 });
 
+test("bounded scroll restoration caps the restored count without capping load more", async () => {
+  const dom = new JSDOM("<!doctype html><html><body><div id=\"root\"></div></body></html>", {
+    url: "https://example.test/lyrics",
+    pretendToBeVisual: true,
+  });
+  const previousGlobals = {
+    window: globalThis.window,
+    document: globalThis.document,
+    sessionStorage: globalThis.sessionStorage,
+    requestAnimationFrame: globalThis.requestAnimationFrame,
+    cancelAnimationFrame: globalThis.cancelAnimationFrame,
+  };
+  dom.window.scrollTo = () => {};
+  dom.window.requestAnimationFrame = (callback) => dom.window.setTimeout(() => callback(Date.now()), 0);
+  dom.window.cancelAnimationFrame = (handle) => dom.window.clearTimeout(handle);
+  Object.assign(globalThis, {
+    window: dom.window,
+    document: dom.window.document,
+    sessionStorage: dom.window.sessionStorage,
+    requestAnimationFrame: dom.window.requestAnimationFrame,
+    cancelAnimationFrame: dom.window.cancelAnimationFrame,
+  });
+  sessionStorage.setItem("lyrics_displayCount", "300");
+  globalThis.__scrollRestoreRuntimeTest = { React };
+  const { useScrollRestore } = await importWebTypeScript("src/hooks/useScrollRestore.ts", [[
+    'import { useState, useEffect, useCallback, useRef } from "react";',
+    "const { useState, useEffect, useCallback, useRef } = globalThis.__scrollRestoreRuntimeTest.React;",
+  ]]);
+  const Harness = () => {
+    const controls = useScrollRestore({
+      storageKey: "lyrics",
+      defaultDisplayCount: 30,
+      increment: 30,
+      maxRestoredDisplayCount: 90,
+      isReady: true,
+    });
+    return React.createElement("button", {
+      type: "button",
+      "data-count": controls.displayCount,
+      onClick: controls.loadMore,
+    }, "load more");
+  };
+  const container = document.getElementById("root");
+  const element = React.createElement(Harness);
+  container.innerHTML = renderToString(element);
+  let root;
+  globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+  try {
+    await act(async () => {
+      root = hydrateRoot(container, element);
+      await new Promise((resolve) => setImmediate(resolve));
+    });
+    const button = container.querySelector("button");
+    assert.equal(button.getAttribute("data-count"), "90", "restored count stays bounded");
+    for (const expected of ["120", "150", "180"]) {
+      await act(async () => {
+        button.dispatchEvent(new dom.window.MouseEvent("click", { bubbles: true }));
+      });
+      assert.equal(button.getAttribute("data-count"), expected, "load more must keep growing past the restore bound");
+    }
+    assert.equal(sessionStorage.getItem("lyrics_displayCount"), "180");
+  } finally {
+    if (root) await act(async () => root.unmount());
+    dom.window.close();
+    sessionStorage.removeItem("lyrics_displayCount");
+    for (const [key, value] of Object.entries(previousGlobals)) {
+      if (value === undefined) delete globalThis[key];
+      else globalThis[key] = value;
+    }
+    delete globalThis.__scrollRestoreRuntimeTest;
+  }
+});
+
 test("lyrics alias index accepts only stable music-ID aliases and degrades closed", () => {
   assert.equal(
     LYRICS_ALIAS_INDEX_URL,
@@ -3674,6 +3854,8 @@ test("lyrics list and detail retain loading, empty, error, long-line, mobile, an
   assert.match(list, /aliases\?\.some\(\(alias\) => alias\.toLowerCase\(\)\.includes\(query\)\)/);
   assert.match(list, /<MusicFilters/);
   assert.match(list, /useQuickFilter\(/);
+  assert.match(list, /<section className="min-w-0"/,
+    "filters live in the global FilterDrawer, so the list body stays a single column");
   assert.match(list, /data-shortcut-load-more="true"/);
   assert.doesNotMatch(list, /<main className="min-w-0 flex-1"/);
   assert.match(list, /<MusicItem/);
