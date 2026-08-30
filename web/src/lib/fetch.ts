@@ -11,6 +11,7 @@
 import { MOE_BGM_DURATIONS_URL } from "./assets";
 import { getMasterDataCache, setMasterDataCache, isIndexedDBAvailable } from "./masterdata-cache";
 import { defaultContentRegionForPathname } from "./locale-routing";
+import { applyMasterdataPatches, patchFileForPath } from "./masterdata-patches";
 
 // Server source type
 export type ServerSourceType = "en" | "jp" | "cn" | "tw" | "kr";
@@ -170,6 +171,11 @@ export async function fetchMasterData<T>(path: string, noCache: boolean = false)
             try {
                 const cached = await getMasterDataCache<T>(path, localVersion);
                 if (cached !== null) {
+                    // Apply post-patches on the cached (original) payload
+                    const file = patchFileForPath(path);
+                    if (file !== null) {
+                        return applyMasterdataPatches(file, getCurrentServer(), cached);
+                    }
                     return cached;
                 }
             } catch {
@@ -184,9 +190,13 @@ export async function fetchMasterData<T>(path: string, noCache: boolean = false)
         const response = await fetchWithCompression(primaryUrl, fetchOptions);
         if (response.ok) {
             const data: T = await response.json();
-            // Write to IndexedDB cache (async, non-blocking)
+            // Write RAW data to IndexedDB cache (patches stay ephemeral)
             if (isIndexedDBAvailable() && localVersion) {
                 setMasterDataCache(path, data, localVersion).catch(() => { });
+            }
+            const file = patchFileForPath(path);
+            if (file !== null) {
+                return applyMasterdataPatches(file, getCurrentServer(), data);
             }
             return data;
         }
@@ -206,11 +216,15 @@ export async function fetchMasterData<T>(path: string, noCache: boolean = false)
     console.log(`[MasterData] Successfully fetched ${path} from fallback server`);
     const fallbackData: T = await fallbackResponse.json();
 
-    // Write to IndexedDB cache (async, non-blocking)
+    // Write RAW data to IndexedDB cache
     if (isIndexedDBAvailable() && localVersion) {
         setMasterDataCache(path, fallbackData, localVersion).catch(() => { });
     }
 
+    const fallbackFile = patchFileForPath(path);
+    if (fallbackFile !== null) {
+        return applyMasterdataPatches(fallbackFile, getCurrentServer(), fallbackData);
+    }
     return fallbackData;
 }
 
@@ -306,10 +320,15 @@ export async function fetchMasterDataForServer<T>(server: "cn" | "jp" | "tw" | "
     const localVersion = getLocalVersion();
     const query = localVersion ? `?v=${encodeURIComponent(localVersion)}` : "";
 
+    const file = patchFileForPath(path);
+
     const primaryUrl = `https://metadata.exmeaning.com/${server}/master/${path}${query}`;
     try {
         const response = await fetchWithCompression(primaryUrl);
-        if (response.ok) return response.json();
+        if (response.ok) {
+            const data: T = await response.json();
+            return file !== null ? applyMasterdataPatches(file, server, data) : data;
+        }
     } catch { /* fall through */ }
 
     const fallbackUrl = `https://metadata.pjsk.moe/${server}/master/${path}${query}`;
@@ -317,7 +336,8 @@ export async function fetchMasterDataForServer<T>(server: "cn" | "jp" | "tw" | "
     if (!fallbackResponse.ok) {
         throw new Error(`Failed to fetch ${path} for server ${server}`);
     }
-    return fallbackResponse.json();
+    const fallbackData: T = await fallbackResponse.json();
+    return file !== null ? applyMasterdataPatches(file, server, fallbackData) : fallbackData;
 }
 
 
