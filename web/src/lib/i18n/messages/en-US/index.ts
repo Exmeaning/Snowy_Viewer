@@ -694,6 +694,21 @@ export const enUSMessages = {
         },
     },
     search: {
+        syntax: {
+            title: "Search Syntax",
+            space: "Space = implicit AND",
+            andExplicit: "Uppercase AND = AND",
+            or: "Uppercase OR = OR (AND binds tighter; parentheses override)",
+            group: "Parentheses ( ) = group (nestable)",
+            range: "Dash = inclusive range",
+            quote: "Quotes = literal; also wrap field values containing spaces (\\\" escapes a quote)",
+            numericOnly: "Bare numbers match ID only (quote them to search text)",
+            id: "id: = ID filter (single / list / range)",
+            date: "date: = date range (YYYY[.M[.D]]; omit the year, e.g. 8.19 = Aug 19 this year)",
+            level: "level: = chart level for the selected difficulty",
+            difficulty: "difficulty: = song constant for the selected difficulty",
+            bpm: "bpm: = BPM range",
+        },
         commandPalette: {
             placeholder: "Search pages, cards, songs, events...",
             wildcard: "Wildcard (*, ?)",

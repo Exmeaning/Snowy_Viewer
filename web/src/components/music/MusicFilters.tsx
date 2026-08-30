@@ -45,6 +45,8 @@ interface MusicFiltersProps {
     onSortChange: (sortBy: "publishedAt" | "id" | "level" | "constant" | "bpm", sortOrder: "asc" | "desc") => void;
     /** Override default sort options (e.g. to hide level/constant in contexts without difficulty) */
     customSortOptions?: { id: string; label: string }[];
+    /** Advanced-search syntax help panel (rendered via the "?" button) */
+    searchHelp?: React.ReactNode;
     // Reset
     onReset: () => void;
     // Stats
@@ -101,6 +103,7 @@ export default function MusicFilters({
     sortOrder,
     onSortChange,
     customSortOptions,
+    searchHelp,
     onReset,
     totalMusics,
     filteredMusics,
@@ -135,6 +138,7 @@ export default function MusicFilters({
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
             searchPlaceholder={searchPlaceholder ?? t("page.music.searchPlaceholder")}
+            searchHelp={searchHelp}
             sortOptions={customSortOptions || SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}

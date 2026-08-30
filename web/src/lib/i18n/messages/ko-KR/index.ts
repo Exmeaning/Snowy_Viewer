@@ -691,6 +691,21 @@ export const koKRMessages = {
         }
     },
     search: {
+        syntax: {
+            title: "검색 문법",
+            space: "공백 = 암시적 AND",
+            andExplicit: "대문자 AND = AND",
+            or: "대문자 OR = OR (AND 우선, 괄호로 덮어쓰기 가능)",
+            group: "괄호 ( ) = 그룹화 (중첩 가능)",
+            range: "하이픈 = 양끝 포함 범위",
+            quote: "따옴표 = 리터럴 (공백 포함 필드 값도 따옴표로 감쌈, \\\" = 따옴표 이스케이프)",
+            numericOnly: "숫자만 = ID만 일치 (텍스트는 따옴표 사용)",
+            id: "id: = ID 필터 (단일 / 나열 / 범위)",
+            date: "date: = 날짜 범위 (YYYY[.M[.D]]; 연도 생략 가능, 8.19 = 올해 8월 19일)",
+            level: "level: = 선택 난이도의 레벨",
+            difficulty: "difficulty: = 선택 난이도의 정수",
+            bpm: "bpm: = BPM 범위",
+        },
         commandPalette: {
             placeholder: "페이지, 카드, 노래, 이벤트 검색...",
             wildcard: "와일드카드(*, ?)",

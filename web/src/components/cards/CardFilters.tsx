@@ -49,6 +49,9 @@ interface CardFiltersProps {
     // Extra sort options (e.g. for my-cards page)
     extraSortOptions?: { id: string; label: string }[];
 
+    // Advanced-search syntax help panel (rendered via the "?" button)
+    searchHelp?: React.ReactNode;
+
     // Reset
     onReset: () => void;
 
@@ -103,6 +106,7 @@ export default function CardFilters({
     sortOrder,
     onSortChange,
     extraSortOptions,
+    searchHelp,
     onReset,
     totalCards,
     filteredCards,
@@ -243,6 +247,7 @@ export default function CardFilters({
             searchQuery={searchQuery}
             onSearchChange={onSearchChange}
             searchPlaceholder={t("page.cards.searchPlaceholder")}
+            searchHelp={searchHelp}
             sortOptions={extraSortOptions ? [...SORT_OPTIONS, ...extraSortOptions] : SORT_OPTIONS}
             sortBy={sortBy}
             sortOrder={sortOrder}
