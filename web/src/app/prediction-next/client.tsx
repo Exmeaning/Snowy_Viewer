@@ -771,16 +771,10 @@ export default function PredictionNextClient() {
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
                         <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.prediction.badge")}</span>
-                        <span className="rounded-full bg-miku/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-miku">
-                            {t("page.predictionNext.badge")}
-                        </span>
                     </div>
                     <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
                         {t("page.prediction.title")} <span className="text-miku">{t("page.prediction.titleHighlight")} Next</span>
                     </h1>
-                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
-                        {t("page.predictionNext.description")}
-                    </p>
 
                     {/* Back to classic link */}
                     <div className="mt-4">
