@@ -28,6 +28,7 @@ import {
   type IEventStoryTranslation,
 } from "@/lib/eventStoryTranslation";
 import type { UiLocale } from "@/lib/i18n";
+import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
 
 const STORY_DETAIL_MIRROR_BASE_URL = "https://moe.exmeaning.com/story/detail";
 
@@ -270,6 +271,9 @@ export default function StoryEventDetailClient() {
   const [showEpImages, _setShowEpImages] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Restore scroll position when navigating back from an episode reader page
+  useSimpleScrollRestore(`story_event_detail_${eventId}`, !isLoading);
 
   useEffect(() => {
     if (!eventId) return;

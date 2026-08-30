@@ -8,6 +8,7 @@ import { getUnitStoryEpisodeImageUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { IUnitProfile } from "@/types/types";
 import { useI18n } from "@/contexts/I18nContext";
+import { useSimpleScrollRestore } from "@/hooks/useSimpleScrollRestore";
 
 function getUnitOutlineLogoUrl(unitCode: string, server: string): string {
     const s = server === "cn" ? "cn" : "jp";
@@ -57,6 +58,9 @@ export default function StoryUnitDetailClient() {
     const [episodeGroups, setEpisodeGroups] = useState<IUnitStoryEpisodeGroup[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    // Restore scroll position when navigating back from an episode reader page
+    useSimpleScrollRestore(`story_unit_detail_${unitId}`, !isLoading);
 
     // Locked episodes state and unlock haptics/animations
     const [unlockedStories, setUnlockedStories] = useState<Record<string, boolean>>({});
