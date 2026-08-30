@@ -3,6 +3,7 @@
 
 import React from 'react';
 import Link from "@/components/LocalizedLink";
+import { MOESEKAI_BILIBILI_SPACE_URL, MEMBER_LINKS } from "@/lib/team-links";
 
 interface ExternalLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
     href: string;
@@ -16,9 +17,13 @@ const SAFE_DOMAINS = [
     'pjsk.moe',
 ];
 
-const SAFE_URL_PREFIXES = [
-    'https://space.bilibili.com/5441521',
-];
+const SAFE_URL_PREFIXES = Array.from(
+    new Set([
+        'https://space.bilibili.com/5441521',
+        MOESEKAI_BILIBILI_SPACE_URL,
+        ...Object.values(MEMBER_LINKS),
+    ])
+);
 
 const isSafeTarget = (url: string): boolean => {
     try {

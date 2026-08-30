@@ -1058,7 +1058,7 @@ export const koKRMessages = {
                 literatureLabel: "Moesekai 문학예술부:",
                 literatureMembers: "@西꽃 @luxuriant @明日天気に @Aya @ Sakura风 @荇tea @ 가격대비 @망고 스무디에 유리슬래그를 섞은 @luoxia @东雪 @kuiling @차춘 @하쿠추무 @Rixi @Ghost 비닐봉지 @Feather Moon",
                 translationLabel: "Moesekai 번역팀:",
-                translationMembers: "번역/교정 @雪莹ちゃん @爱死天流 @虐酱",
+                translationMembers: "@雪莹ちゃん @爱死天流 @虐酱 @御明正",
                 artLabel: "Moesekai 아트팀: ",
                 artMembers: "@岓诚",
                 guideLabel: "Moesekai 공략팀:",

@@ -191,3 +191,30 @@ test("public origins are configured and never reflected from arbitrary request h
   assert.doesNotMatch(sitemap, /next\/headers|headers\(\)|get\(['"]host['"]\)/);
   assert.match(sitemap, /return getCanonicalOrigin\(\)/);
 });
+
+test("staff links are whitelisted in ExternalLink and team translation members are consistent across locales", async () => {
+  const teamLinks = await importWebTypeScript("src/lib/team-links.ts");
+  assert.equal(teamLinks.MEMBER_LINKS["@御明正"], "https://space.bilibili.com/10820191");
+  assert.equal(teamLinks.MEMBER_LINKS["御明正"], "https://space.bilibili.com/10820191");
+
+  const externalLinkSource = readWeb("src/components/ExternalLink.tsx");
+  assert.match(externalLinkSource, /import\s*\{[^}]*MEMBER_LINKS[^}]*\}\s*from\s*["']@\/lib\/team-links["']/);
+  assert.match(externalLinkSource, /Object\.values\(MEMBER_LINKS\)/);
+
+  const zhCN = readWeb("src/lib/i18n/messages/zh-CN/index.ts");
+  const zhTW = readWeb("src/lib/i18n/messages/zh-TW/page-primary.ts");
+  const enUS = readWeb("src/lib/i18n/messages/en-US/index.ts");
+  const jaJP = readWeb("src/lib/i18n/messages/ja-JP/index.ts");
+  const koKR = readWeb("src/lib/i18n/messages/ko-KR/index.ts");
+
+  for (const [sourceName, sourceContent] of [
+    ["zh-CN", zhCN],
+    ["zh-TW", zhTW],
+    ["en-US", enUS],
+    ["ja-JP", jaJP],
+    ["ko-KR", koKR],
+  ]) {
+    assert.doesNotMatch(sourceContent, /translationMembers:\s*["'](?:翻译\/校对|翻譯\/校對|Translation \/ proofreading:|번역\/교정)/, `${sourceName} should not have role prefix in translationMembers`);
+    assert.match(sourceContent, /translationMembers:.*@御明正/, `${sourceName} must include @御明正`);
+  }
+});

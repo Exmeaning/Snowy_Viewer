@@ -32,6 +32,7 @@ export function renderMemberText(
                     key={index}
                     href={link}
                     target="_blank"
+                    bypassLeave={true}
                     className={linkClassName}
                 >
                     {displayText}

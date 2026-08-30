@@ -1060,7 +1060,7 @@ export const jaJPMessages = {
         literatureLabel: 'Moesekai Literature Team: ',
         literatureMembers: '@惜花 @郁郁葱葱 @明日天気に @Aya @樱风 @荇荼 @性价比 @芒果冰沙拌玻璃渣 @luoxia @東雪 @魁灵 @茶椿 @Hakuchumu @瑞希 @幽灵塑料袋 @羽月',
         translationLabel: 'Moesekai Localization Team: ',
-        translationMembers: 'Translation / proofreading: @雪莹ちゃん @爱死天流 @虐酱',
+        translationMembers: '@雪莹ちゃん @爱死天流 @虐酱 @御明正',
         artLabel: 'Moesekai Art Team: ',
         artMembers: '@岓诚',
         guideLabel: 'Moesekai 攻略チーム: ',
