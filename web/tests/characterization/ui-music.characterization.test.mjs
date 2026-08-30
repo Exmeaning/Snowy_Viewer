@@ -148,13 +148,14 @@ function currentMusicMatch(music, queryText, cnById, enById, aliasesById) {
 test("music list/search preserves ID, original, cn, credits, and community alias matching", () => {
   const source = readWeb("src/app/music/client.tsx");
   for (const fragment of [
-    "if (m.id === queryAsNumber) return true;",
-    "if (m.title.toLowerCase().includes(query)) return true;",
-    "const chineseTitle = musicCnMap.get(m.id);",
-    "if (m.composer.toLowerCase().includes(query)) return true;",
-    "if (m.lyricist.toLowerCase().includes(query)) return true;",
-    "if (m.arranger.toLowerCase().includes(query)) return true;",
-    "aliases.some(alias => alias.toLowerCase().includes(query))",
+    'case "id-eq":',
+    "return music.id === term.value;",
+    "music.title.toLowerCase().includes(q)",
+    "const cn = musicCnMap.get(music.id);",
+    "music.composer.toLowerCase().includes(q)",
+    "music.lyricist.toLowerCase().includes(q)",
+    "music.arranger.toLowerCase().includes(q)",
+    "aliases && aliases.some(alias => alias.toLowerCase().includes(q))",
   ]) assert.ok(source.includes(fragment), fragment);
 
   const music = { id: 1, title: "ロキ", composer: "みきとP", lyricist: "みきとP", arranger: "-" };

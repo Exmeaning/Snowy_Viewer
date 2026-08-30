@@ -3921,7 +3921,7 @@ test("search keeps n/cn, adds en, and music list no longer waits for search inde
   assert.match(palette, /useDeferredValue\(query\)/);
   assert.match(palette, /Aliases are optional and must not delay the primary multilingual index/);
   assert.match(music, /const \[musicEnMap/);
-  assert.match(music, /englishTitle\.toLowerCase\(\)\.includes\(query\)/);
+  assert.match(music, /en\.toLowerCase\(\)\.includes\(q\)/);
   assert.match(music, /useDeferredValue\(searchQuery\)/);
   assert.match(readWeb("src/app/lyrics/client.tsx"), /useDeferredValue\(searchQuery\)/);
 

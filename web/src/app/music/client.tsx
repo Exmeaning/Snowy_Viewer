@@ -5,6 +5,8 @@ import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import MusicFilters from "@/components/music/MusicFilters";
 import MusicItem from "@/components/music/MusicItem";
+import SearchSyntaxHelp from "@/components/search/SearchSyntaxHelp";
+import { parseSearchQuery, matchExpr, makeNumericField, type SearchTerm, type SearchExpr, type FieldRegistry } from "@/lib/searchQuery";
 import { MUSIC_GRID_CLASS } from "@/components/music/music-layout";
 import {
     IMusicInfo,
@@ -37,6 +39,14 @@ interface SearchIndexItem {
     en?: string;  // name (EN translation)
     g: string;    // group: cards, music, events, gacha
 }
+
+// Music-specific search fields (registered into the advanced search parser).
+// level/difficulty values are resolved against the currently selected difficulty.
+const MUSIC_SEARCH_FIELDS: FieldRegistry = {
+    level: makeNumericField("level-range", { decimal: false }),
+    difficulty: makeNumericField("difficulty-range", { decimal: true }),
+    bpm: makeNumericField("bpm-range", { decimal: false }),
+};
 
 // Level Separator Card Component
 function LevelSeparatorCard({ level, difficulty }: { level: number; difficulty: string }) {
@@ -270,6 +280,52 @@ function MusicContent() {
         return map;
     }, [musicDifficulties]);
 
+    // Advanced search: parse the query into a boolean expression tree
+    const parsedSearch = useMemo<SearchExpr | null>(
+        () => parseSearchQuery(deferredSearchQuery, MUSIC_SEARCH_FIELDS),
+        [deferredSearchQuery]
+    );
+
+    // Term matcher for the music page (level/difficulty follow the selected difficulty)
+    const matchMusicTerm = useCallback((term: SearchTerm, music: IMusicInfo): boolean => {
+        switch (term.kind) {
+            case "text": {
+                const q = term.value.toLowerCase().trim();
+                if (!q) return true;
+                if (music.title.toLowerCase().includes(q)) return true;
+                const cn = musicCnMap.get(music.id);
+                if (cn && cn.toLowerCase().includes(q)) return true;
+                const en = musicEnMap.get(music.id);
+                if (en && en.toLowerCase().includes(q)) return true;
+                if (music.composer.toLowerCase().includes(q)) return true;
+                if (music.lyricist.toLowerCase().includes(q)) return true;
+                if (music.arranger.toLowerCase().includes(q)) return true;
+                const aliases = musicAliasesMap.get(music.id);
+                if (aliases && aliases.some(alias => alias.toLowerCase().includes(q))) return true;
+                return false;
+            }
+            case "id-eq":
+                return music.id === term.value;
+            case "id-range":
+                return music.id >= term.lo && music.id <= term.hi;
+            case "date-range": {
+                return music.publishedAt >= term.loTs && music.publishedAt <= term.hiTs;
+            }
+            case "level-range": {
+                const lv = musicDifficultiesMap[music.id]?.[selectedDifficulty] || 0;
+                return lv >= term.lo && lv <= term.hi;
+            }
+            case "difficulty-range": {
+                const c = songConstantsMap[music.id]?.[selectedDifficulty] || 0;
+                return c >= term.lo && c <= term.hi;
+            }
+            case "bpm-range": {
+                const bpm = musicBpmMap.get(music.id)?.bpm || 0;
+                return bpm >= term.lo && bpm <= term.hi;
+            }
+        }
+    }, [musicCnMap, musicEnMap, musicAliasesMap, musicDifficultiesMap, songConstantsMap, musicBpmMap, selectedDifficulty]);
+
     // Filter and sort musics
     const filteredMusics = useMemo(() => {
         let result = [...musics];
@@ -319,31 +375,9 @@ function MusicContent() {
             result = result.filter((m) => eventMusicIds.has(m.id));
         }
 
-        // Apply search query (supports IDs, Japanese/Chinese/English text, and aliases)
-        if (deferredSearchQuery.trim()) {
-            const query = deferredSearchQuery.toLowerCase().trim();
-            const queryAsNumber = parseInt(query, 10);
-
-            result = result.filter((m) => {
-                // Match by ID
-                if (m.id === queryAsNumber) return true;
-                // Match by Japanese title
-                if (m.title.toLowerCase().includes(query)) return true;
-                // Match by Chinese title from search index
-                const chineseTitle = musicCnMap.get(m.id);
-                if (chineseTitle && chineseTitle.toLowerCase().includes(query)) return true;
-                // Match by English title from search index
-                const englishTitle = musicEnMap.get(m.id);
-                if (englishTitle && englishTitle.toLowerCase().includes(query)) return true;
-                // Match by composer/lyricist/arranger
-                if (m.composer.toLowerCase().includes(query)) return true;
-                if (m.lyricist.toLowerCase().includes(query)) return true;
-                if (m.arranger.toLowerCase().includes(query)) return true;
-                // Match by aliases
-                const aliases = musicAliasesMap.get(m.id);
-                if (aliases && aliases.some(alias => alias.toLowerCase().includes(query))) return true;
-                return false;
-            });
+        // Apply search query (advanced syntax: space/AND/OR/parens/quotes/fields)
+        if (parsedSearch) {
+            result = result.filter((m) => matchExpr(parsedSearch, m, matchMusicTerm));
         }
 
         // Spoiler filter
@@ -384,7 +418,7 @@ function MusicContent() {
         });
 
         return result;
-    }, [musics, musicTags, eventMusicIds, selectedTag, selectedCategories, hasEventOnly, deferredSearchQuery, sortBy, sortOrder, isShowSpoiler, musicCnMap, musicEnMap, musicDifficultiesMap, selectedDifficulty, songConstantsMap, musicAliasesMap, musicBpmMap]);
+    }, [musics, musicTags, eventMusicIds, selectedTag, selectedCategories, hasEventOnly, sortBy, sortOrder, isShowSpoiler, musicDifficultiesMap, selectedDifficulty, songConstantsMap, musicBpmMap, parsedSearch, matchMusicTerm]);
 
     // Displayed musics with level separators (only when sorting by level)
     const displayedMusicsWithSeparators = useMemo(() => {
@@ -462,6 +496,17 @@ function MusicContent() {
             onSearchChange={(q) => {
                 setSearchQuery(q);
             }}
+            searchHelp={
+                <SearchSyntaxHelp
+                    fieldItems={[
+                        { label: t("search.syntax.id"), example: "id:1-100" },
+                        { label: t("search.syntax.date"), example: "date:2026.8.19-2026.8.23" },
+                        { label: t("search.syntax.level"), example: "level:35-36" },
+                        { label: t("search.syntax.difficulty"), example: "difficulty:35.5-36.5" },
+                        { label: t("search.syntax.bpm"), example: "bpm:150-160" },
+                    ]}
+                />
+            }
             selectedDifficulty={selectedDifficulty}
             onDifficultyChange={setSelectedDifficulty}
             showDifficulty={showDifficulty}

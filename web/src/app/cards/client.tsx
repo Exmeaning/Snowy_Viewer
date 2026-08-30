@@ -5,6 +5,8 @@ import { replaceCurrentUrlSearchParams } from "@/lib/localized-path";
 import MainLayout from "@/components/MainLayout";
 import CardGrid from "@/components/cards/CardGrid";
 import CardFilters from "@/components/cards/CardFilters";
+import SearchSyntaxHelp from "@/components/search/SearchSyntaxHelp";
+import { parseSearchQuery, matchExpr, type SearchTerm, type SearchExpr } from "@/lib/searchQuery";
 import { ICardInfo, CardRarityType, CardAttribute, getRarityNumber, SupportUnit, ISkillInfo } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { fetchMasterData } from "@/lib/fetch";
@@ -194,6 +196,37 @@ function CardsContent() {
         fetchCards();
     }, []);
 
+    // Advanced search: parse the query into a boolean expression tree
+    const parsedSearch = useMemo<SearchExpr | null>(
+        () => parseSearchQuery(searchQuery),
+        [searchQuery]
+    );
+
+    // Term matcher for the cards page (text = fuzzy match on prefix/translation/skill name)
+    const matchCardTerm = useCallback((term: SearchTerm, card: ICardInfo & { cardSupplyType: string }): boolean => {
+        switch (term.kind) {
+            case "text": {
+                const q = term.value.toLowerCase().trim();
+                if (!q) return true;
+                if (card.prefix.toLowerCase().includes(q)) return true;
+                const chinesePrefix = translations?.cards?.prefix?.[card.prefix];
+                if (chinesePrefix && chinesePrefix.toLowerCase().includes(q)) return true;
+                if (card.cardSkillName.toLowerCase().includes(q)) return true;
+                return false;
+            }
+            case "id-eq":
+                return card.id === term.value;
+            case "id-range":
+                return card.id >= term.lo && card.id <= term.hi;
+            case "date-range": {
+                const ts = card.releaseAt || 0;
+                return ts >= term.loTs && ts <= term.hiTs;
+            }
+            default:
+                return false; // level/difficulty/bpm are not registered on this page
+        }
+    }, [translations]);
+
     // Filter and sort cards
     const filteredCards = useMemo(() => {
         let result = [...cards];
@@ -257,23 +290,9 @@ function CardsContent() {
             });
         }
 
-        // Apply search query (supports both name, ID, and Chinese translations)
-        if (searchQuery.trim()) {
-            const query = searchQuery.toLowerCase().trim();
-            const queryAsNumber = parseInt(query, 10);
-
-            result = result.filter(card => {
-                // Match by ID
-                if (card.id === queryAsNumber) return true;
-                // Match by Japanese prefix
-                if (card.prefix.toLowerCase().includes(query)) return true;
-                // Match by Chinese prefix translation
-                const chinesePrefix = translations?.cards?.prefix?.[card.prefix];
-                if (chinesePrefix && chinesePrefix.toLowerCase().includes(query)) return true;
-                // Match by skill name
-                if (card.cardSkillName.toLowerCase().includes(query)) return true;
-                return false;
-            });
+        // Apply search query (advanced syntax: space/AND/OR/parens/quotes/fields)
+        if (parsedSearch) {
+            result = result.filter(card => matchExpr(parsedSearch, card, matchCardTerm));
         }
 
         // Spoiler filter
@@ -302,7 +321,7 @@ function CardsContent() {
         });
 
         return result;
-    }, [cards, skills, selectedCharacters, selectedUnitIds, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, selectedSkillTypes, searchQuery, sortBy, sortOrder, isShowSpoiler, translations]);
+    }, [cards, skills, selectedCharacters, selectedUnitIds, selectedAttrs, selectedRarities, selectedSupplyTypes, selectedSupportUnits, selectedSkillTypes, sortBy, sortOrder, isShowSpoiler, parsedSearch, matchCardTerm]);
 
 
     // Displayed cards (with pagination)
@@ -353,6 +372,14 @@ function CardsContent() {
             onSkillTypeChange={setSelectedSkillTypes}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            searchHelp={
+                <SearchSyntaxHelp
+                    fieldItems={[
+                        { label: t("search.syntax.id"), example: "id:1-100" },
+                        { label: t("search.syntax.date"), example: "date:2026.8.19-2026.8.23" },
+                    ]}
+                />
+            }
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSortChange={handleSortChange}

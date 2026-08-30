@@ -693,6 +693,21 @@ export const jaJPMessages = {
     }
   },
   search: {
+    syntax: {
+      title: '検索構文',
+      space: 'スペース = 暗黙の AND',
+      andExplicit: '大文字 AND = AND',
+      or: '大文字 OR = OR（AND 優先、括弧で上書き可）',
+      group: '丸括弧 ( ) = グループ化（ネスト可）',
+      range: 'ハイフン = 両端を含む範囲',
+      quote: '引用符 = リテラル（スペースを含むフィールド値も引用符で囲む、\\" で引用符をエスケープ）',
+      numericOnly: '数字のみ = ID のみ一致（テキスト検索は引用符で）',
+      id: 'id: = ID フィルター（単一 / 列挙 / 範囲）',
+      date: 'date: = 日付範囲（YYYY[.M[.D]]、年省略可・8.19 = 今年の8月19日）',
+      level: 'level: = 選択難易度の譜面レベル',
+      difficulty: 'difficulty: = 選択難易度の定数',
+      bpm: 'bpm: = BPM 範囲',
+    },
     commandPalette: {
       placeholder: 'Search pages, cards, songs, events...',
       wildcard: 'Wildcard (*, ?)',

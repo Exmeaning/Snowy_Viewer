@@ -140,6 +140,21 @@ export const zhTWLayout = {
 } as const satisfies MessageTree;
 
 export const zhTWSearch = {
+    syntax: {
+        title: "搜尋語法",
+        space: "空格 = 隱式與（AND）",
+        andExplicit: "大寫 AND = 與",
+        or: "大寫 OR = 或（AND 優先，括號可覆蓋）",
+        group: "圓括號 ( ) = 分組（可巢狀）",
+        range: "短橫 = 左閉右閉區間",
+        quote: "雙引號 = 字面量；欄位值含空格時也用引號（\\\" 轉義為引號）",
+        numericOnly: "裸數字 = 僅比對 ID（想搜文字請加引號）",
+        id: "id: = ID 篩選（相等 / 列舉 / 範圍）",
+        date: "date: = 日期範圍（YYYY[.M[.D]]，可省略年份如 8.19 = 今年 8 月 19 日）",
+        level: "level: = 目前難度的譜面等級",
+        difficulty: "difficulty: = 目前難度的定數",
+        bpm: "bpm: = BPM 範圍",
+    },
     commandPalette: {
         placeholder: "搜尋頁面、卡牌、歌曲、活動...",
         wildcard: "萬用字元 (*, ?)",

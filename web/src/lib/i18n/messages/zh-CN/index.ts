@@ -693,6 +693,21 @@ export const zhCNMessages = {
         },
     },
     search: {
+        syntax: {
+            title: "搜索语法",
+            space: "空格 = 隐式与（AND）",
+            andExplicit: "大写 AND = 与",
+            or: "大写 OR = 或（AND 优先，括号可覆盖）",
+            group: "圆括号 ( ) = 分组（可嵌套）",
+            range: "短横 = 左闭右闭区间",
+            quote: "双引号 = 字面量；字段值含空格时也用引号（\\\" 转义为引号）",
+            numericOnly: "裸数字 = 仅匹配 ID（想搜文本请加引号）",
+            id: "id: = ID 过滤（相等 / 枚举 / 范围）",
+            date: "date: = 日期范围（YYYY[.M[.D]]，可省略年份如 8.19 = 今年 8 月 19 日）",
+            level: "level: = 当前难度的谱面等级",
+            difficulty: "difficulty: = 当前难度的定数",
+            bpm: "bpm: = BPM 范围",
+        },
         commandPalette: {
             placeholder: "搜索页面、卡牌、歌曲、活动...",
             wildcard: "通配符 (*, ?)",
