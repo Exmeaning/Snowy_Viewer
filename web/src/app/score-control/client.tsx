@@ -5,18 +5,19 @@ import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { IMusicInfo, IMusicMeta } from "@/types/music";
 import type { ICardInfo } from "@/types/types";
-import { fetchMasterData } from "@/lib/fetch";
+import { fetchMasterData, fetchMusicMetas } from "@/lib/fetch";
 import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, isValidServer, SERVER_OPTIONS, type ServerType } from "@/lib/account";
 import AccountSelector from "@/components/AccountSelector";
 import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
+import { preloadDeckEngine } from "@/lib/deck-engine/wasm-loader";
 
 import { useI18n } from "@/contexts/I18nContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getCharacterName } from "@/lib/i18n";
-import { getMusicJacketUrl, MOE_MUSIC_META_URL } from "@/lib/assets";
+import { getMusicJacketUrl } from "@/lib/assets";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import {
     getValidScores,
@@ -26,8 +27,6 @@ import {
     type SmartRoutePlan,
 } from "@/lib/score-control/score-control-calculator";
 import "./score-control.css";
-
-const MUSIC_META_API = MOE_MUSIC_META_URL;
 
 const _DIFFICULTY_OPTIONS = [
     { value: "easy", label: "Easy" },
@@ -302,12 +301,13 @@ export default function ScoreControlClient() {
 
     // Load initial data
     useEffect(() => {
+        preloadDeckEngine();
+
         fetchMasterData<IMusicInfo[]>("musics.json")
             .then((data) => setMusics(data))
             .catch((err) => console.error("Failed to fetch musics", err));
 
-        fetch(MUSIC_META_API)
-            .then((res) => res.json())
+        fetchMusicMetas()
             .then((data) => setMusicMetas(data))
             .catch((err) => console.error("Failed to fetch music meta", err));
 

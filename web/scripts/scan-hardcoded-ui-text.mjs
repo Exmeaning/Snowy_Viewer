@@ -36,6 +36,8 @@ const ALLOWLIST = new Map([
 const COMMENT_ONLY_ALLOWLIST = new Map([
     ["src/app/realtime-ranking-next/_components/ChangeTime.tsx", "Comments describing time format"],
     ["src/app/realtime-ranking-next/u/[userId]/client.tsx", "Comments about source feed"],
+    ["src/lib/deck-engine/wasm-loader.ts", "Comments describing WASM loader internals"],
+    ["src/lib/deck-engine/wasm-version.ts", "Generated file header comment"],
 ]);
 
 function isCommentOnlyLine(line) {

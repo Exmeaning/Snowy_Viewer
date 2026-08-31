@@ -18,6 +18,7 @@ import { getCharacterName } from "@/lib/i18n";
 import AccountSelector from "@/components/AccountSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
+import { preloadDeckEngine } from "@/lib/deck-engine/wasm-loader";
 import "./deck-recommend.css";
 
 // ==================== Types ====================
@@ -360,6 +361,7 @@ export default function DeckRecommendClient() {
     const effectiveEventId = mode === "wl3" ? (selectedWl3Simulation?.eventId?.toString() ?? "") : eventId;
 
     useEffect(() => {
+        preloadDeckEngine();
         fetchMasterData<CardMasterInfo[]>("cards.json").then(setCardsMaster).catch(console.error);
 
         if (isScreenshotMode) return;
@@ -1313,7 +1315,7 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                 <div className="flex items-center justify-between sm:justify-start gap-3">
                     <div className="flex items-center gap-3">
                         <div className={`dr-rank flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${rank === 1 ? "bg-amber-400 text-white" : rank === 2 ? "bg-slate-400 text-white" : rank === 3 ? "bg-amber-700 text-white" : "bg-slate-100 text-slate-500"}`}>{rank}</div>
-                        <div className="flex-shrink-0 min-w-[80px]">
+                        <div className="flex-shrink-0 min-w-[72px] sm:min-w-[80px]">
                             <div className="text-xs text-slate-400">{scoreLabel}</div>
                             <div className="font-bold text-primary-text text-sm">
                                 {mode === "strongest" && strongestTarget === "skill" && deck.multiLiveScoreUp != null
@@ -1322,33 +1324,23 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                             </div>
                         </div>
                         {effectiveSkill > 0 && mode !== "challenge" && mode !== "mysekai" && mode !== "strongest" && (
-                            <div className="flex-shrink-0 min-w-[60px]">
+                            <div className="flex-shrink-0 min-w-[56px] sm:min-w-[60px]">
                                 <div className="text-xs text-slate-400">{t("page.deckRecommend.result.effectiveSkill")}</div>
                                 <div className="font-bold text-emerald-600 text-sm">{effectiveSkill.toFixed(1)}%</div>
                             </div>
                         )}
-                        {totalPower > 0 && (
-                            <div className="flex-shrink-0 min-w-[60px] sm:hidden">
-                                <div className="text-xs text-slate-400">{t("page.deckRecommend.result.power")}</div>
-                                <div className="font-bold text-miku text-sm">{formatNumber(totalPower)}</div>
-                            </div>
-                        )}
                         {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
-                            <div className="flex-shrink-0 min-w-[60px] hidden sm:block">
+                            <div className="flex-shrink-0 min-w-[56px] sm:min-w-[60px] hidden sm:block">
                                 <div className="text-xs text-slate-400">{totalBonusLabel}</div>
                                 <div className="font-bold text-miku text-sm">{totalEventBonusText}</div>
-                                {showSupportBonusBreakdown && (
-                                    <div className="text-[10px] text-slate-500 leading-tight">{t("page.deckRecommend.result.mainDeckPlusSupport", { base: baseEventBonusText, support: supportDeckBonusText })}</div>
-                                )}
                             </div>
                         )}
-
                     </div>
                     <svg className={`w-4 h-4 text-slate-400 transition-transform sm:hidden ${detailsExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
-                <div className="flex gap-1 flex-1 overflow-x-auto no-scrollbar mask-gradient-right sm:overflow-visible sm:mask-none">
+                <div className="flex gap-1 flex-1 overflow-x-auto no-scrollbar mask-gradient-right sm:overflow-visible sm:mask-none justify-start sm:justify-end">
                     {deck.cards?.slice(0, 5).map((card: DeckCardResult, i: number) => {
                         const masterCard = getCardMaster(card.cardId);
                         const userCard = userCards.find((u) => u.cardId === card.cardId);
@@ -1373,18 +1365,45 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                         );
                     })}
                 </div>
-                {totalPower > 0 && (
-                    <div className="flex-shrink-0 text-right hidden sm:block">
-                        <div className="text-xs text-slate-400">{t("page.deckRecommend.result.power")}</div>
-                        <div className="font-bold text-sm text-miku">{formatNumber(totalPower)}</div>
-                    </div>
-                )}
                 <svg className={`w-4 h-4 text-slate-400 transition-transform flex-shrink-0 hidden sm:block ${detailsExpanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
             {detailsExpanded && (
                 <div className="px-3 sm:px-4 pb-3 sm:pb-4 border-t border-slate-100">
+                    {/* Summary stats bar in details panel */}
+                    <div className="py-2.5 flex flex-wrap items-center gap-2 sm:gap-3 text-xs border-b border-slate-100">
+                        {totalPower > 0 && (
+                            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-2.5 py-1.5">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">{t("page.deckRecommend.result.power")}:</span>
+                                <span className="font-bold text-miku font-mono text-sm">{formatNumber(totalPower)}</span>
+                            </div>
+                        )}
+                        {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
+                            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-2.5 py-1.5">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">{totalBonusLabel}:</span>
+                                <span className="font-bold text-miku font-mono text-sm">{totalEventBonusText}</span>
+                                {showSupportBonusBreakdown && (
+                                    <span className="text-slate-400 text-[11px] leading-tight">({t("page.deckRecommend.result.mainDeckPlusSupport", { base: baseEventBonusText, support: supportDeckBonusText })})</span>
+                                )}
+                            </div>
+                        )}
+                        {effectiveSkill > 0 && mode !== "challenge" && mode !== "mysekai" && mode !== "strongest" && (
+                            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-2.5 py-1.5">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">{t("page.deckRecommend.result.effectiveSkill")}:</span>
+                                <span className="font-bold text-emerald-600 font-mono text-sm">{effectiveSkill.toFixed(1)}%</span>
+                            </div>
+                        )}
+                        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-2.5 py-1.5">
+                            <span className="text-slate-500 dark:text-slate-400 font-medium">{scoreLabel}:</span>
+                            <span className="font-bold text-primary-text font-mono text-sm">
+                                {mode === "strongest" && strongestTarget === "skill" && deck.multiLiveScoreUp != null
+                                    ? `${deck.multiLiveScoreUp.toFixed(1)}%`
+                                    : formatNumber(Math.floor(deck.score))}
+                            </span>
+                        </div>
+                    </div>
+
                     <div className="mt-3 overflow-x-auto">
                         <table className="w-full text-xs">
                             <thead><tr className="text-slate-400">
@@ -1427,14 +1446,6 @@ function DeckResultRow({ deck, rank, getCardMaster, mode, userCards, scoreLabel,
                                 })}
                             </tbody>
                         </table>
-                    </div>
-                    <div className="mt-2 flex gap-4 sm:hidden text-xs">
-                        {(mode === "event" || mode === "wl3" || mode === "mysekai" || mode === "custom") && totalEventBonus > 0 && (
-                            <span className="text-slate-500">
-                                {totalBonusLabel}: <span className="font-bold text-miku">{totalEventBonusText}</span>
-                                {showSupportBonusBreakdown && <span className="text-slate-400"> ({t("page.deckRecommend.result.mainDeckPlusSupport", { base: baseEventBonusText, support: supportDeckBonusText })})</span>}
-                            </span>
-                        )}
                     </div>
                 </div>
             )}

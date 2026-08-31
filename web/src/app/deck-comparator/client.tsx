@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import ExternalLink from "@/components/ExternalLink";
 import { useI18n } from "@/contexts/I18nContext";
 import { IMusicInfo, IMusicMeta } from "@/types/music";
-import { fetchMasterData } from "@/lib/fetch";
+import { fetchMasterData, fetchMusicMetas } from "@/lib/fetch";
 import MainLayout from "@/components/MainLayout";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import {
@@ -17,8 +17,6 @@ import {
     type PTResult,
 } from "@/lib/deck-comparator/calculator";
 import "./deck-comparator.css";
-
-const MUSIC_META_API = "https://moe.exmeaning.com/data/music_meta/music_metas.json";
 
 const DIFFICULTY_OPTIONS = [
     { value: "easy", labelKey: "page.deckComparator.difficulties.easy" },
@@ -104,7 +102,7 @@ export default function DeckComparatorClient() {
             .catch(err => console.error("Failed to fetch musics", err));
 
         // Load meta
-        fetch(MUSIC_META_API).then(res => res.json())
+        fetchMusicMetas()
             .then(data => setMusicMetas(data))
             .catch(err => console.error("Failed to fetch music meta", err));
 

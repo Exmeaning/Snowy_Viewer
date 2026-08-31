@@ -13,6 +13,7 @@ import {
 import { isValidServer, SERVER_IDS, type ServerType } from "../account-servers";
 import { getHarukiPublicApiBase } from "../haruki-public-api";
 import { augmentMasterDataWithWorldBloomSimulation } from "../world-bloom-simulation";
+import { fetchMusicMetas } from "../fetch";
 
 // ==================== Types ====================
 
@@ -266,11 +267,8 @@ export class SnowyDataProvider implements DataProvider {
     }
 
     async getMusicMeta(): Promise<MusicMeta[]> {
-        const response = await fetch(MUSIC_META_URL);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch music meta (${response.status})`);
-        }
-        return response.json();
+        const metas = await fetchMusicMetas();
+        return metas as unknown as MusicMeta[];
     }
 
     async getUserData<T>(key: string): Promise<T> {

@@ -15,13 +15,9 @@ import {
     DIFFICULTY_NAMES,
     getMusicJacketUrl,
 } from "@/types/music";
-import { fetchMasterData } from "@/lib/fetch";
+import { fetchMasterData, fetchMusicMetas } from "@/lib/fetch";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
-import { MOE_MUSIC_META_URL } from "@/lib/assets";
-
-// Music Meta API URL
-const MUSIC_META_API = MOE_MUSIC_META_URL;
 
 // Items per page options
 const PAGE_SIZE_OPTIONS = [20, 50, 100];
@@ -267,7 +263,7 @@ function MusicMetaContent() {
             try {
                 setIsLoading(true);
                 const [metaData, musicsData, difficultiesData] = await Promise.all([
-                    fetch(MUSIC_META_API).then((res) => res.json()),
+                    fetchMusicMetas(),
                     fetchMasterData<IMusicInfo[]>("musics.json"),
                     fetchMasterData<IMusicDifficultyInfo[]>("musicDifficulties.json"),
                 ]);

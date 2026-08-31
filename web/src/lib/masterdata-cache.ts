@@ -230,5 +230,5 @@ export async function clearAllCache(): Promise<void> {
  * Check if IndexedDB is available in this environment
  */
 export function isIndexedDBAvailable(): boolean {
-    return typeof window !== "undefined" && typeof indexedDB !== "undefined";
+    return typeof indexedDB !== "undefined";
 }

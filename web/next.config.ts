@@ -86,6 +86,14 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'storage.exmeaning.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.pjsk.moe',
+      },
+      {
+        protocol: 'https',
         hostname: 'avatars.githubusercontent.com',
       },
       {

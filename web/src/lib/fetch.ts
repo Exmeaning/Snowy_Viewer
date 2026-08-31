@@ -8,10 +8,11 @@
  * invalidation. Cache is transparent to all callers of fetchMasterData().
  */
 
-import { MOE_BGM_DURATIONS_URL } from "./assets";
+import { MOE_BGM_DURATIONS_URL, MOE_MUSIC_META_URL } from "./assets";
 import { getMasterDataCache, setMasterDataCache, isIndexedDBAvailable } from "./masterdata-cache";
 import { defaultContentRegionForPathname } from "./locale-routing";
 import { applyMasterdataPatches, patchFileForPath } from "./masterdata-patches";
+import type { IMusicMeta } from "@/types/music";
 
 // Server source type
 export type ServerSourceType = "en" | "jp" | "cn" | "tw" | "kr";
@@ -20,11 +21,14 @@ export type ServerSourceType = "en" | "jp" | "cn" | "tw" | "kr";
  * Get current server from localStorage (client-side only)
  */
 function getCurrentServer(): ServerSourceType {
-    if (typeof window === "undefined") return "cn";
-    const saved = localStorage.getItem("server-source");
-    if (saved === "en" || saved === "jp" || saved === "cn" || saved === "tw" || saved === "kr") return saved;
-
-    return defaultContentRegionForPathname(window.location.pathname);
+    if (typeof window === "undefined" || typeof localStorage === "undefined") return "cn";
+    try {
+        const saved = localStorage.getItem("server-source");
+        if (saved === "en" || saved === "jp" || saved === "cn" || saved === "tw" || saved === "kr") return saved;
+        return defaultContentRegionForPathname(window?.location?.pathname);
+    } catch {
+        return "cn";
+    }
 }
 
 /**
@@ -32,23 +36,28 @@ function getCurrentServer(): ServerSourceType {
  * Used to ensure we fetch data matching the currently active version (cache persistence)
  */
 function getLocalVersion(): string | null {
-    if (typeof window === "undefined") return null;
-    return localStorage.getItem(MASTERDATA_VERSION_KEY);
+    if (typeof window === "undefined" || typeof localStorage === "undefined") return null;
+    try {
+        return localStorage.getItem(MASTERDATA_VERSION_KEY);
+    } catch {
+        return null;
+    }
 }
 
-/**
- * Get master base URL for runtime (respects server selection)
- */
 /**
  * Get current asset source from localStorage (client-side only)
  */
 function getCurrentAssetSource(): "main" | "overseas" {
-    if (typeof window === "undefined") return "main";
-    const saved = localStorage.getItem("asset-source");
-    if (saved === "overseas" || saved?.startsWith("overseas")) {
-        return "overseas";
+    if (typeof window === "undefined" || typeof localStorage === "undefined") return "main";
+    try {
+        const saved = localStorage.getItem("asset-source");
+        if (saved === "overseas" || saved?.startsWith("overseas")) {
+            return "overseas";
+        }
+        return "main";
+    } catch {
+        return "main";
     }
-    return "main";
 }
 
 /**
@@ -114,8 +123,10 @@ const CACHE_BYPASS_KEY = "masterdata-cache-bypass";
  * This must be called BEFORE cleaning the URL param
  */
 export function setCacheBypassFlag(): void {
-    if (typeof window !== "undefined") {
-        sessionStorage.setItem(CACHE_BYPASS_KEY, 'true');
+    if (typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+        try {
+            sessionStorage.setItem(CACHE_BYPASS_KEY, 'true');
+        } catch { /* ignore */ }
     }
 }
 
@@ -124,16 +135,22 @@ export function setCacheBypassFlag(): void {
  * Uses sessionStorage flag that was set by MasterDataContext
  */
 function shouldBypassCache(): boolean {
-    if (typeof window === "undefined") return false;
-    return sessionStorage.getItem(CACHE_BYPASS_KEY) === 'true';
+    if (typeof window === "undefined" || typeof sessionStorage === "undefined") return false;
+    try {
+        return sessionStorage.getItem(CACHE_BYPASS_KEY) === 'true';
+    } catch {
+        return false;
+    }
 }
 
 /**
  * Clear the cache bypass flag (call after all data is loaded)
  */
 export function clearCacheBypassFlag(): void {
-    if (typeof window !== "undefined") {
-        sessionStorage.removeItem(CACHE_BYPASS_KEY);
+    if (typeof window !== "undefined" && typeof sessionStorage !== "undefined") {
+        try {
+            sessionStorage.removeItem(CACHE_BYPASS_KEY);
+        } catch { /* ignore */ }
     }
 }
 
@@ -384,4 +401,75 @@ export async function fetchBgmDurationsData<T>(): Promise<T> {
         throw new Error(`Failed to fetch BGM duration data: HTTP ${response.status}`);
     }
     return response.json();
+}
+
+// ==================== Music Metas Data Fetching ====================
+
+let musicMetasInFlightPromise: Promise<IMusicMeta[]> | null = null;
+let cachedMusicMetasMemory: IMusicMeta[] | null = null;
+
+/**
+ * Fetch music metas with in-flight deduplication, memory cache, and IndexedDB persistence.
+ * Prevents duplicate downloads across components and workers.
+ */
+export async function fetchMusicMetas(noCache: boolean = false): Promise<IMusicMeta[]> {
+    if (!noCache && cachedMusicMetasMemory) {
+        return cachedMusicMetasMemory;
+    }
+
+    if (!noCache && musicMetasInFlightPromise) {
+        return musicMetasInFlightPromise;
+    }
+
+    const localVersion = getLocalVersion() || "static_v1";
+
+    musicMetasInFlightPromise = (async () => {
+        // Try IndexedDB first
+        if (!noCache && isIndexedDBAvailable()) {
+            try {
+                const cached = await getMasterDataCache<IMusicMeta[]>("music_metas.json", localVersion);
+                if (cached && Array.isArray(cached) && cached.length > 0) {
+                    cachedMusicMetasMemory = cached;
+                    return cached;
+                }
+            } catch {
+                // Ignore IDB read error and fallback to network
+            }
+        }
+
+        const fetchOptions: RequestInit = noCache ? { cache: "no-store" } : {};
+
+        // Try primary CDN
+        try {
+            const response = await fetchWithCompression(MOE_MUSIC_META_URL, fetchOptions);
+            if (response.ok) {
+                const data: IMusicMeta[] = await response.json();
+                cachedMusicMetasMemory = data;
+                if (isIndexedDBAvailable()) {
+                    setMasterDataCache("music_metas.json", data, localVersion).catch(() => {});
+                }
+                return data;
+            }
+            console.warn(`[MusicMeta] Primary fetch failed (${response.status}), trying fallback...`);
+        } catch (e) {
+            console.warn("[MusicMeta] Primary fetch error, trying fallback...", e);
+        }
+
+        // Fallback CDN
+        const fallbackUrl = "https://metadata.pjsk.moe/data/music_meta/music_metas.json";
+        const fallbackResponse = await fetchWithCompression(fallbackUrl, fetchOptions);
+        if (!fallbackResponse.ok) {
+            throw new Error(`Failed to fetch music metas (both primary and fallback failed, status: ${fallbackResponse.status})`);
+        }
+        const fallbackData: IMusicMeta[] = await fallbackResponse.json();
+        cachedMusicMetasMemory = fallbackData;
+        if (isIndexedDBAvailable()) {
+            setMasterDataCache("music_metas.json", fallbackData, localVersion).catch(() => {});
+        }
+        return fallbackData;
+    })().finally(() => {
+        musicMetasInFlightPromise = null;
+    });
+
+    return musicMetasInFlightPromise;
 }

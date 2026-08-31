@@ -4,17 +4,16 @@
  * using a Cache First strategy for optimal performance.
  */
 
-const CACHE_NAME = "snowy-assets-v2";
+const CACHE_NAME = "snowy-assets-v3";
 
 // Max cache size (number of entries). Prevents unbounded growth.
 const MAX_CACHE_ENTRIES = 2000;
 
 // Asset domains to cache
 const CACHEABLE_DOMAINS = [
+    "storage.exmeaning.com",
+    "storage.pjsk.moe",
     "moe.exmeaning.com",
-    "assets.unipjsk.com",
-    "sekai-assets-bdf29c81.seiunx.net",
-    "snowyassets.exmeaning.com",
 ];
 
 // File extensions to cache

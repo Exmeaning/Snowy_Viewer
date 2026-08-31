@@ -15,8 +15,12 @@ export const ASSET_DOMAIN_MAIN = "https://storage.exmeaning.com";
 export const ASSET_DOMAIN_OVERSEAS = "https://storage.pjsk.moe";
 
 function getCurrentRegion(): string {
-    if (typeof window === "undefined") return "cn";
-    return localStorage.getItem("server-source") || defaultContentRegionForPathname(window.location.pathname);
+    if (typeof window === "undefined" || typeof localStorage === "undefined") return "cn";
+    try {
+        return localStorage.getItem("server-source") || defaultContentRegionForPathname(window?.location?.pathname);
+    } catch {
+        return "cn";
+    }
 }
 
 export function getAssetBaseUrl(source: AssetSourceType): string {

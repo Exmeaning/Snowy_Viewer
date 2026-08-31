@@ -110,3 +110,12 @@ local-dist/
 *.code-workspace
 coverage/
 refer/re_sekai-calculator/coverage/
+
+# 组卡 wasm 引擎产物：构建期由 web/scripts/copy-wasm-artifacts.mjs
+# 从 node_modules/haruki-sekai-deck-recommend-cpp 拷贝，不入库。
+# （public/wasm/mmw-preview.* 是另一套、手工维护的产物，仍然入库。）
+# 注意 src/lib/deck-engine/wasm-version.ts 是生成的但**入库**，
+# 否则 lint / build:next 在没跑 copy:wasm 的干净 clone 上会因缺文件报错。
+web/public/wasm/sekai-deck-recommend.js
+web/public/wasm/sekai_deck_recommend.js
+web/public/wasm/sekai_deck_recommend.wasm

@@ -25,10 +25,10 @@ import {
     buildMusicCategoriesMap,
 } from "@/types/music";
 import { getCharacterName } from "@/lib/i18n";
-import { useTheme, AssetSourceType } from "@/contexts/ThemeContext";
-import { getCharacterIconUrl, getEventBannerUrl, MOE_MUSIC_META_URL, MOE_RANKINGS_URL } from "@/lib/assets";
+import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
+import { getCharacterIconUrl, getEventBannerUrl, MOE_RANKINGS_URL } from "@/lib/assets";
 import { getOutsideCharacterAvatarUrl } from "@/lib/lyrics-performers";
-import { fetchMasterData } from "@/lib/fetch";
+import { fetchMasterData, fetchMusicMetas } from "@/lib/fetch";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
 import { getPublishedLyricsIndexEntry, hasLyricsDetail } from "@/lib/lyrics";
@@ -41,15 +41,7 @@ import { useI18n } from "@/contexts/I18nContext";
 const DIFFICULTY_ORDER: MusicDifficultyType[] = ["easy", "normal", "hard", "expert", "master", "append"];
 
 // External data URLs
-const MUSIC_META_API = MOE_MUSIC_META_URL;
 const RANKINGS_API = MOE_RANKINGS_URL;
-
-// Music meta data structure
-interface MusicMetaData {
-    music_id: number;
-    difficulty: string;
-    music_time: number;
-}
 
 // Rankings raw data structure  
 interface RankingItem {
@@ -241,13 +233,10 @@ export default function MusicDetailPage() {
             // Fetch optional meta and rankings data (don't block main content)
             async function fetchMetaData() {
                 try {
-                    const metaRes = await fetch(MUSIC_META_API);
-                    if (metaRes.ok) {
-                        const metaData: MusicMetaData[] = await metaRes.json();
-                        const thisMusicMeta = metaData.find(m => m.music_id === musicId);
-                        if (thisMusicMeta) {
-                            setMusicDuration(thisMusicMeta.music_time);
-                        }
+                    const metaData = await fetchMusicMetas();
+                    const thisMusicMeta = metaData.find(m => m.music_id === musicId);
+                    if (thisMusicMeta) {
+                        setMusicDuration(thisMusicMeta.music_time);
                     }
                 } catch (err) {
                     console.warn("Failed to fetch music duration:", err);
