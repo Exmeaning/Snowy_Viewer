@@ -107,18 +107,19 @@ export default function AccountSelectorBar({
                         return (
                             <button
                                 key={acc.id}
+                                type="button"
                                 onClick={() => onSelect(acc)}
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border ${isActive
+                                className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all border max-w-full min-w-0 ${isActive
                                     ? "bg-miku/10 border-miku/40 text-miku shadow-sm"
                                     : "bg-white/60 border-slate-200/60 text-slate-600 hover:border-miku/30 hover:bg-miku/5"
                                     }`}
                             >
                                 <AccountAvatar account={acc} size="sm" />
                                 {displayName && (
-                                    <span className="font-bold truncate max-w-[80px]">{displayName}</span>
+                                    <span className="font-bold truncate max-w-[65px] sm:max-w-[85px] flex-shrink-0">{displayName}</span>
                                 )}
-                                <span className="font-mono">{acc.gameId}</span>
-                                <span className={`px-1 py-0.5 rounded text-[10px] font-bold ${isActive ? "bg-miku/20 text-miku" : "bg-slate-100 text-slate-500"}`}>
+                                <span className="font-mono truncate min-w-0 flex-1">{acc.gameId}</span>
+                                <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold flex-shrink-0 whitespace-nowrap ${isActive ? "bg-miku/20 text-miku" : "bg-slate-100 text-slate-500"}`}>
                                     {t(`common.server.${acc.server}`)}
                                 </span>
                             </button>
