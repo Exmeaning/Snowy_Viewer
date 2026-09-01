@@ -37,12 +37,16 @@ const COMMENT_ONLY_ALLOWLIST = new Map([
     ["src/app/realtime-ranking-next/_components/ChangeTime.tsx", "Comments describing time format"],
     ["src/app/realtime-ranking-next/u/[userId]/client.tsx", "Comments about source feed"],
     ["src/lib/deck-engine/wasm-loader.ts", "Comments describing WASM loader internals"],
+    ["src/app/deck-recommend/client.tsx", "Comments describing deck recommendation page internals"],
+    ["src/lib/deck-recommend/engine-worker.ts", "Comments describing deck engine worker internals"],
+    ["src/lib/deck-recommend/engine-types.ts", "Comments describing deck engine worker contract"],
+    ["src/components/deck-recommend/CardPickerModal.tsx", "Comments describing the deck card picker internals"],
     ["src/lib/deck-engine/wasm-version.ts", "Generated file header comment"],
 ]);
 
 function isCommentOnlyLine(line) {
     const trimmed = line.trim();
-    return trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*") || trimmed.startsWith("*/") || line.includes("//");
+    return trimmed.startsWith("//") || trimmed.startsWith("*") || trimmed.startsWith("/*") || trimmed.startsWith("*/") || trimmed.startsWith("{/*") || line.includes("//");
 }
 
 const violations = [];

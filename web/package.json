@@ -7,6 +7,7 @@
     "build": "npm run copy:wasm && npm run sitemap && npm run generate:metadata && next build",
     "build:next": "next build",
     "copy:wasm": "node scripts/copy-wasm-artifacts.mjs",
+    "test:deck-params": "node --experimental-strip-types scripts/test-deck-engine-params.mjs",
     "sitemap": "node scripts/generate-sitemaps.mjs",
     "generate:metadata": "node scripts/generate-metadata-map.mjs",
     "start": "next start",
@@ -16,6 +17,7 @@
     "test:ssr-localized-links": "npm run build:next && node scripts/check-localized-link-ssr.mjs"
   },
   "dependencies": {
+    "@empty-sekai/allium-deck-wasm": "0.0.9",
     "@supabase/supabase-js": "2.106.0",
     "@swc/helpers": "^0.5.15",
     "@types/qrcode": "^1.5.6",
@@ -40,7 +42,6 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.11",
     "eslint-plugin-react-hooks": "7.0.1",
-    "haruki-sekai-deck-recommend-cpp": "0.3.5",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4",
     "typescript": "^5"
