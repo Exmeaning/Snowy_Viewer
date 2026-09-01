@@ -1,44 +1,56 @@
 /**
  * 组卡 wasm 引擎冒烟测试（Node，不进构建）。
  *
- * 目的：在往上搭共享层之前，先证明
- *   1) wasm 能实例化
- *   2) 我们下发的 master 表集合能被 loadMasterData 接受（不缺必需表）
- *   3) createUserData + recommend 能跑出非空结果
+ * 目的：在接入组卡页面之前，先证明
+ *   1) allium-deck wasm 能实例化
+ *   2) 站点下发的 master 表集合能被 loadMasterData 接受
+ *      （可选表缺失时走引擎内建 fallback，不阻断）
+ *   3) createUserData + recommend 在活动/控分/WL3 模拟路径都能出非空结果
  *
  * 用真实 master data（和 app 同源）+ 合成的用户数据，所以不需要真实账号。
  *
  * 使用方法: node scripts/smoke-deck-engine.mjs
+ *   ALLIUM_DECK_WASM_DIR=... 可指定本地 wasm 产物目录，默认用 public/wasm。
  */
 
-import { createRequire } from 'module';
 import { readFileSync } from 'fs';
+import { pathToFileURL } from 'url';
+import { resolve } from 'path';
 
 const MASTER_BASE = 'https://metadata.exmeaning.com/jp/master';
 const MUSIC_META_URL = 'https://moe.exmeaning.com/data/music_meta/music_metas.json';
 
-const REQUIRED_KEYS = [
-    'areaItemLevels', 'areaItems', 'areas', 'cardEpisodes', 'cards',
-    'cardRarities', 'characterRanks', 'eventCards', 'eventDeckBonuses',
-    'eventExchangeSummaries', 'events', 'eventItems', 'eventRarityBonusRates',
-    'gameCharacters', 'gameCharacterUnits', 'honors', 'masterLessons',
-    'musicDifficulties', 'musics', 'musicVocals', 'shopItems', 'skills',
-    'worldBloomDifferentAttributeBonuses', 'worldBlooms',
-    'worldBloomSupportDeckBonuses',
-];
-
-const OPTIONAL_KEYS = [
+/** 与 src/lib/deck-recommend/data-provider.ts 的 PRELOAD_MASTER_KEYS 保持一致。 */
+const PRELOAD_MASTER_KEYS = [
+    'areaItemLevels', 'cards', 'cardMysekaiCanvasBonuses', 'cardRarities',
+    'characterRanks', 'cardEpisodes', 'events', 'eventCards',
+    'eventRarityBonusRates', 'eventDeckBonuses', 'gameCharacters',
+    'gameCharacterUnits', 'honors', 'masterLessons', 'mysekaiGates',
+    'mysekaiGateLevels', 'skills', 'worldBloomDifferentAttributeBonuses',
+    'worldBloomSupportDeckBonuses', 'worldBloomSupportDeckBonusesWL1',
+    'worldBloomSupportDeckBonusesWL2', 'worldBloomSupportDeckBonusesWL3',
     'worldBloomSupportDeckUnitEventLimitedBonuses',
-    'cardMysekaiCanvasBonuses',
-    'mysekaiGates',
-    'mysekaiGateLevels',
 ];
 
-/** worldBloomSupportDeckBonusesWL{1,2,3} 不需要我们提供：
- *  它们在构建期就用 --embed-file 嵌进了 wasm，引擎从虚拟文件系统的
- *  /data/ 读取。所以 staticDataPath 必须保持默认值 "/data"——
- *  把它指到真实的 URL 路径（比如 public/data）反而会让加载失败。 */
-const STATIC_DATA_DIR = '/data';
+/** 引擎可选表：缺失时走内建 fallback，与组卡 worker 的容错一致。 */
+const ENGINE_OPTIONAL_MASTER_KEYS = [
+    'eventCardBonusLimits',
+    'eventHonorBonuses',
+    'eventSkillScoreUpLimits',
+];
+
+const webRoot = resolve(import.meta.dirname ?? '.', '..');
+
+/** WL 支援加成表不在远端 master data 里，站点从本地 /data/ 下发，
+ *  与 src/lib/deck-recommend/data-provider.ts 的 LOCAL_MASTER_DATA_PATHS 一致。 */
+const LOCAL_MASTER_KEYS = [
+    'worldBloomSupportDeckBonusesWL1',
+    'worldBloomSupportDeckBonusesWL2',
+    'worldBloomSupportDeckBonusesWL3',
+];
+
+// WL3 模拟第 1 组（成员与 src/lib/world-bloom-simulation.ts 一致）。
+const WL3_GROUP1 = { groupId: 1, eventId: 3200001, members: [21, 1, 6, 14, 17] };
 
 async function fetchJson(url, attempts = 3) {
     let lastErr;
@@ -71,18 +83,25 @@ async function mapWithConcurrency(items, limit, fn) {
 }
 
 async function fetchMasterData() {
-    const keys = [...REQUIRED_KEYS, ...OPTIONAL_KEYS];
-    const entries = await mapWithConcurrency(keys, 4, async (key) => {
+    const optional = new Set(ENGINE_OPTIONAL_MASTER_KEYS);
+    const remote = [...PRELOAD_MASTER_KEYS, ...ENGINE_OPTIONAL_MASTER_KEYS].filter(
+        (key) => !LOCAL_MASTER_KEYS.includes(key),
+    );
+    const entries = await mapWithConcurrency(remote, 4, async (key) => {
         try {
             return [key, await fetchJson(`${MASTER_BASE}/${key}.json`)];
         } catch (err) {
-            if (REQUIRED_KEYS.includes(key)) throw err;
-            console.warn(`  (可选表缺失，跳过) ${key}: ${err.message}`);
+            if (!optional.has(key)) throw err;
+            console.warn(`  (引擎可选表缺失，跳过) ${key}: ${err.message}`);
             return null;
         }
     });
-    const master = Object.fromEntries(entries.filter(Boolean));
-    return master;
+    for (const key of LOCAL_MASTER_KEYS) {
+        // Node 下没有站点根，直接读仓库内的 public/data 副本。
+        const localPath = resolve(webRoot, 'public', 'data', `${key}.json`);
+        entries.push([key, JSON.parse(readFileSync(localPath, 'utf8'))]);
+    }
+    return Object.fromEntries(entries.filter(Boolean));
 }
 
 /** 合成一份最小用户数据：每个角色拿一张能找到的 4 星卡。 */
@@ -122,124 +141,97 @@ function buildSyntheticUserData(master) {
 }
 
 async function main() {
-    const require = createRequire(import.meta.url);
-    const pkgEntry = require.resolve(
-        'haruki-sekai-deck-recommend-cpp/sekai_deck_recommend.js',
-    );
-    const packageDir = pkgEntry.replace(/[\\/]sekai_deck_recommend\.js$/, '');
+const artDir = resolve(process.env.ALLIUM_DECK_WASM_DIR || `${webRoot}/public/wasm`);
+    const glueUrl = pathToFileURL(`${artDir}/allium-deck.js`).href;
 
     console.log('1) 加载 wasm 模块…');
-    const { createSekaiDeckRecommend } = await import(
-        `file://${packageDir.replace(/\\/g, '/')}/index.js`
-    );
-    const engine = await createSekaiDeckRecommend({
-        // 该包是面向浏览器的构建，Node 下既不走 fs 分支、fetch 又不支持 file://。
-        // 直接把 wasm 字节喂给 emscripten，绕开所有加载路径。
-        moduleOptions: {
-            wasmBinary: readFileSync(`${packageDir}/sekai_deck_recommend.wasm`),
-        },
-        staticDataPath: STATIC_DATA_DIR,
-    });
+    // 与 lib/deck-engine/wasm-loader.ts 相同的动态 import 方式；Node 下
+    // fetch 不支持 file://，直接把 wasm 字节喂给 init。
+    const mod = await import(glueUrl);
+    await mod.default(new Uint8Array(readFileSync(`${artDir}/allium-deck_bg.wasm`)));
     console.log('   ok');
 
     console.log('2) 拉取 master data…');
     const master = await fetchMasterData();
     console.log(`   ${Object.keys(master).length} 张表, cards=${master.cards.length}`);
 
-    console.log('3) loadMasterData / loadMusicMetas…');
-    engine.loadMasterData('jp', master);
     const musicMetas = await fetchJson(MUSIC_META_URL);
-    engine.loadMusicMetas('jp', musicMetas);
-    console.log(`   ok, musicMetas=${musicMetas.length}`);
+    console.log(`   musicMetas=${musicMetas.length}`);
 
-    console.log('4) createUserData（合成账号）…');
-    const userData = engine.createUserData('jp', buildSyntheticUserData(master));
+    console.log('3) loadMasterData…');
+    // 与 lib/deck-engine/wasm-loader.ts 相同的载荷约定：裸表名 → JSON 原文。
+    const payload = {};
+    for (const [name, rows] of Object.entries(master)) {
+        payload[`${name}.json`] = JSON.stringify(rows);
+    }
+    mod.load_masterdata(JSON.stringify(payload), JSON.stringify(musicMetas));
     console.log('   ok');
 
-    console.log('5) recommend(target=power, algorithm=dfs)…');
+    console.log('4) createUserData（合成账号）…');
+    const userData = mod.create_user_data(JSON.stringify(buildSyntheticUserData(master)), 'jp');
+    console.log('   ok');
+
     const meta = musicMetas[0];
-    const result = engine.recommend(
-        {
-            region: 'jp',
-            live_type: 'multi',
-            music_id: meta.music_id,
-            music_diff: meta.difficulty,
-            target: 'power',
-            algorithm: 'dfs',
-            limit: 3,
-            timeout_ms: 15000,
-        },
-        userData,
+    const base = { live_type: 'multi', music_id: meta.music_id, music_diff: meta.difficulty, limit: 3, timeout_ms: 15000 };
+    const run = (options) => JSON.parse(mod.recommendWithUserData(JSON.stringify({ ...base, ...options }), userData));
+
+    console.log('5) recommend(target=power)…');
+    const power = run({ target: 'power' });
+    console.log(
+        `   decks=${power.decks.length}, pool=${power.performance.pool_size}, ` +
+            `top: power=${power.decks[0]?.total_power} cards=[${power.decks[0]?.cards.map((c) => c.card_id).join(', ')}]`,
     );
+    if (power.decks.length === 0) throw new Error('没有返回任何卡组');
 
-    console.log(`   cost_ms=${result.cost_ms}, decks=${result.decks.length}`);
-    for (const [i, deck] of result.decks.entries()) {
-        console.log(
-            `   #${i + 1} power=${deck.total_power} score=${deck.score} ` +
-                `cards=[${deck.cards.map((c) => c.card_id).join(', ')}]`,
-        );
-    }
-
-    if (result.decks.length === 0) throw new Error('没有返回任何卡组');
-
-    // 活动组卡：验证 event_id 路径与分数目标。
     const latestEvent = [...master.events].sort((a, b) => a.startAt - b.startAt).at(-1);
-    console.log(`6) recommend(event_id=${latestEvent.id}, target=score, dfs)…`);
-    const eventResult = engine.recommend(
-        {
-            region: 'jp',
-            live_type: 'multi',
-            music_id: meta.music_id,
-            music_diff: meta.difficulty,
-            event_id: latestEvent.id,
-            target: 'score',
-            algorithm: 'dfs',
-            limit: 3,
-            timeout_ms: 15000,
-        },
-        userData,
-    );
+    console.log(`6) recommend(event_id=${latestEvent.id}, target=score)…`);
+    const score = run({ event_id: latestEvent.id, target: 'score' });
     console.log(
-        `   cost_ms=${eventResult.cost_ms}, decks=${eventResult.decks.length}` +
-            (eventResult.decks[0]
-                ? `, top: pt=${eventResult.decks[0].score} bonus=${eventResult.decks[0].event_bonus_rate}%`
-                : ''),
+        `   decks=${score.decks.length}` +
+            (score.decks[0] ? `, top: pt=${score.decks[0].event_point} bonus=${score.decks[0].event_bonus_total}%` : ''),
     );
+    if (score.decks.length === 0) throw new Error('活动 PT 路径没有返回卡组');
 
-    // 控分组卡：target=bonus + target_bonus_list（score-control 的核心路径）。
-    // 目标区间取实际能达到的附近，否则合法地返回空集、证明不了机制通不通。
-    const topBonus = Math.round(eventResult.decks[0]?.event_bonus_rate ?? 0);
-    const lo = Math.max(0, topBonus - 30);
-    const hi = topBonus + 5;
-    console.log(`7) recommend(target=bonus, target_bonus_list=[${lo}..${hi}], dfs)…`);
-    const bonusResult = engine.recommend(
-        {
-            region: 'jp',
-            live_type: 'multi',
-            music_id: meta.music_id,
-            music_diff: meta.difficulty,
-            event_id: latestEvent.id,
-            target: 'bonus',
-            algorithm: 'dfs',
-            target_bonus_list: Array.from({ length: hi - lo + 1 }, (_, i) => lo + i),
-            limit: 1,
-            timeout_ms: 15000,
-        },
-        userData,
-    );
-    const reachable = [
-        ...new Set(bonusResult.decks.map((d) => d.event_bonus_rate)),
-    ].sort((a, b) => a - b);
+    // 控分组卡：target=bonus + target_bonus_list（精确加成档位）。
+    const topBonus = Math.round(score.decks[0]?.event_bonus_total ?? 0);
+    const lo = Math.max(0, topBonus - 26);
+    const hi = Math.min(topBonus + 5, lo + 31); // 引擎单次最多 32 档
+    console.log(`7) recommend(target=bonus, target_bonus_list=[${lo}..${hi}])…`);
+    const bonus = run({
+        event_id: latestEvent.id,
+        target: 'bonus',
+        target_bonus_list: Array.from({ length: hi - lo + 1 }, (_, i) => lo + i),
+        limit: 1,
+    });
+    console.log(`   decks=${bonus.decks.length}, 可达加成=${bonus.decks.map((d) => d.event_bonus_total).join(', ')}`);
+    if (bonus.decks.length === 0) throw new Error('target=bonus 在可达区间内没返回卡组');
+
+    console.log(`8) WL3 模拟（turn=3, characterId=${WL3_GROUP1.members[1]}）…`);
+    const wl3 = run({
+        world_bloom_event_turn: 3,
+        world_bloom_character_id: WL3_GROUP1.members[1],
+        target: 'score',
+    });
     console.log(
-        `   cost_ms=${bonusResult.cost_ms}, decks=${bonusResult.decks.length}, ` +
-            `可达加成=[${reachable.join(', ')}]`,
+        `   decks=${wl3.decks.length}` +
+            (wl3.decks[0] ? `, top: pt=${wl3.decks[0].event_point} bonus=${wl3.decks[0].event_bonus_total}%` : ''),
     );
-    if (bonusResult.decks.length === 0) {
-        throw new Error('target=bonus 在可达区间内没返回卡组');
-    }
+    if (wl3.decks.length === 0) throw new Error('WL3 模拟路径没有返回卡组');
 
-    userData.dispose();
-    engine.dispose();
+    console.log('9) getWorldBloomSupportCards…');
+    const support = JSON.parse(
+        mod.get_world_bloom_support_cards(
+            JSON.stringify({
+                user_data_str: JSON.stringify(buildSyntheticUserData(master)),
+                world_bloom_event_turn: 3,
+                world_bloom_character_id: WL3_GROUP1.members[1],
+            }),
+        ),
+    );
+    console.log(`   support cards=${support.length}, top bonus=${support[0]?.bonus}`);
+    if (support.length === 0) throw new Error('WL 支援卡列表为空');
+
+    userData.free();
     console.log('\n冒烟测试通过。');
 }
 
