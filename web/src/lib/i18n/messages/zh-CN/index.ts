@@ -1574,6 +1574,8 @@ export const zhCNMessages = {
             openChartImagePreview: "打开 {difficulty} 谱面图片预览",
             open3dChartPreview: "在线 3D 谱面预览",
             bpmListToggle: "展开/收起 BPM 列表",
+            aliasesLabel: "别名",
+            aliasesToggle: "展开/收起别名",
             vocalVersions: "演唱版本（已跳过{seconds}秒空白）",
             downloadAudio: "下载音频",
             relatedEvents: "相关活动",

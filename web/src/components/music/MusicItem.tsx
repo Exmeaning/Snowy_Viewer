@@ -23,9 +23,11 @@ interface MusicItemProps {
     href?: string;
     hrefBase?: string;
     jacketTopLeftLabel?: string;
+    /** Aliases that caused the current search hit (one per text term not explained by title/credits) */
+    matchedAliases?: string[];
 }
 
-export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, bpm, cnTitle, enTitle, href, hrefBase = "/music", jacketTopLeftLabel }: MusicItemProps) {
+export default function MusicItem({ music, isSpoiler, constant, difficulties, showDifficulty, bpm, cnTitle, enTitle, href, hrefBase = "/music", jacketTopLeftLabel, matchedAliases }: MusicItemProps) {
     const { assetSource, useLLMTranslation } = useTheme();
     const { locale, t } = useI18n();
     const { t: translateMasterText } = useTranslation();
@@ -131,6 +133,27 @@ export default function MusicItem({ music, isSpoiler, constant, difficulties, sh
                         {music.composer}
                         {music.composer !== music.arranger && music.arranger !== "-" && ` / ${music.arranger}`}
                     </p>
+                    {matchedAliases && matchedAliases.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap items-center gap-1 text-[11px] leading-4">
+                            <svg
+                                className="h-3 w-3 shrink-0 text-miku"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <span className="shrink-0 text-slate-500 dark:text-slate-400">{t("page.music.aliasesLabel")}</span>
+                            {matchedAliases.map((alias) => (
+                                <span
+                                    key={alias}
+                                    className="max-w-full truncate rounded-full bg-miku/10 px-1.5 py-0.5 font-bold text-miku"
+                                    title={alias}
+                                >
+                                    {alias}
+                                </span>
+                            ))}
+                        </div>
+                    )}
                     {showDifficulty && difficulties && (
                         <div className="flex justify-center gap-1 mt-1.5">
                             {ALL_DIFFICULTIES.map(diff => {
