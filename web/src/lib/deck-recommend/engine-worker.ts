@@ -1,14 +1,15 @@
 /**
  * 组卡计算 worker（allium-deck 引擎）。
  *
- * 数据链路沿用站点既有基建：SnowyDataProvider/CachedDataProvider 负责
- * master data、用户数据与音乐元数据的拉取和缓存；计算交给 allium-deck
- * wasm 引擎（lib/deck-engine/wasm-loader）。连接世界/WL3 模拟由引擎按
- * world_bloom 参数在内部合成，不再改写 master data。
+ * 数据链路：SnowyDataProvider/CachedDeckDataProvider 负责 master data、
+ * 用户数据与音乐元数据的拉取和缓存；计算交给 allium-deck wasm 引擎
+ * （lib/deck-engine/wasm-loader）。连接世界/WL3 模拟由引擎按 world_bloom
+ * 参数在内部合成，不再改写 master data。
  */
-import { CachedDataProvider } from "sekai-calculator";
 import {
-    MUSIC_META_URL,
+    CachedDeckDataProvider,
+    ENGINE_OPTIONAL_MASTER_KEYS,
+    fetchEngineMusicMetas,
     PRELOAD_MASTER_KEYS,
     SnowyDataProvider,
     type HarukiServer,
@@ -19,6 +20,7 @@ import {
     type DeckEngineUserHandle,
 } from "@/lib/deck-engine/wasm-loader";
 import { resolveDeckScore } from "./deck-score";
+import { applyUserDataOverrides } from "./user-data-overrides";
 import type {
     DeckResultCard,
     DeckResultDeck,
@@ -32,13 +34,6 @@ interface EventInfoLite {
     eventType?: string;
 }
 
-/** 引擎可选表：缺失时走内建 fallback，有则提升点数/技能上限精度。 */
-const ENGINE_OPTIONAL_MASTER_KEYS = [
-    "eventCardBonusLimits",
-    "eventHonorBonuses",
-    "eventSkillScoreUpLimits",
-];
-
 const RARITY_CONFIG_KEYS: Record<string, string> = {
     rarity_1: "rarity1Config",
     rarity_2: "rarity2Config",
@@ -46,23 +41,6 @@ const RARITY_CONFIG_KEYS: Record<string, string> = {
     rarity_4: "rarity4Config",
     rarity_birthday: "rarityBirthdayConfig",
 };
-
-/** 引擎用的音乐元数据直接取线上原文：站点的 IndexedDB 缓存可能缺
- *  multi_skill_scores 等技能系数数组，引擎会因此算出全 0 分数。 */
-async function fetchEngineMusicMetas(): Promise<unknown[]> {
-    let lastErr: unknown;
-    for (let attempt = 0; attempt < 3; attempt++) {
-        try {
-            const res = await fetch(MUSIC_META_URL, { cache: "no-store" });
-            if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-            return (await res.json()) as unknown[];
-        } catch (err) {
-            lastErr = err;
-            await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
-        }
-    }
-    throw lastErr instanceof Error ? lastErr : String(lastErr);
-}
 
 function sendProgress(stage: string, percent: number, progressKey: string) {
     const message: DeckWorkerOutput = { type: "progress", stage, percent, progressKey };
@@ -84,47 +62,88 @@ interface MusicRequest {
     };
 }
 
+/** worker 常驻缓存：master data 按区服缓存一次，用户句柄按账号缓存一次。
+ *  二次计算跳过全部网络与 wasm 数据加载，只有引擎搜索本身的开销。 */
+let dataCache: {
+    key: string;
+    tables: Record<string, unknown[]>;
+    musicMetas: unknown[];
+    userData: Record<string, unknown>;
+} | null = null;
+let handleCache: { key: string; handle: DeckEngineUserHandle } | null = null;
+
 async function runDeck(input: DeckWorkerInput): Promise<DeckWorkerOutput> {
     const { mode, userId, server, oauthAccessToken, target } = input;
 
-    sendProgress("fetching", 5, "page.deckRecommend.progress.fetchingUserData");
-
-    const dataProvider = new CachedDataProvider(
-        new SnowyDataProvider(userId, server as HarukiServer, oauthAccessToken || null),
-    );
-
-    const [userData, musicMetas] = await Promise.all([
-        dataProvider.getUserDataAll(),
-        fetchEngineMusicMetas(),
-        dataProvider.preloadMasterData(PRELOAD_MASTER_KEYS),
-    ]);
-
-    const uploadTime = (userData as Record<string, unknown>).upload_time as number | undefined;
-    const userCards = ((userData as Record<string, unknown>).userCards ?? []) as DeckUserCard[];
-
-    sendProgress("processing", 25, "page.deckRecommend.progress.loadingEngine");
-
-    // wasm 实例在 worker 内加载；master data 一次性扁平化后供本次搜索复用。
+    // wasm 实例在 worker 内加载（同 worker 单例，二次调用零成本）。
     const engine = await loadDeckEngine();
-    const tables: Record<string, unknown[]> = {};
-    for (const key of PRELOAD_MASTER_KEYS) {
-        tables[key] = await dataProvider.getMasterData(key);
-    }
-    for (const key of ENGINE_OPTIONAL_MASTER_KEYS) {
-        try {
+
+    const dataKey = server;
+    if (!dataCache || dataCache.key !== dataKey) {
+        sendProgress("fetching", 5, "page.deckRecommend.progress.fetchingUserData");
+
+        const dataProvider = new CachedDeckDataProvider(
+            new SnowyDataProvider(userId, server as HarukiServer, oauthAccessToken || null),
+        );
+
+        const [userData, musicMetas] = await Promise.all([
+            dataProvider.getUserDataAll(),
+            fetchEngineMusicMetas(),
+            dataProvider.preloadMasterData(PRELOAD_MASTER_KEYS),
+        ]);
+
+        sendProgress("processing", 25, "page.deckRecommend.progress.loadingEngine");
+
+        const tables: Record<string, unknown[]> = {};
+        for (const key of PRELOAD_MASTER_KEYS) {
             tables[key] = await dataProvider.getMasterData(key);
-        } catch {
-            // 站点不下发的表：引擎走内建 fallback（上限 4/5、终章 140%）。
+        }
+        for (const key of ENGINE_OPTIONAL_MASTER_KEYS) {
+            try {
+                tables[key] = await dataProvider.getMasterData(key);
+            } catch {
+                // 站点不下发的表：引擎走内建 fallback（上限 4/5、终章 140%）。
+            }
+        }
+        engine.loadMasterData(tables, musicMetas as unknown[]);
+        dataCache = {
+            key: dataKey,
+            tables,
+            musicMetas: musicMetas as unknown[],
+            userData: userData as Record<string, unknown>,
+        };
+    }
+    const { tables, userData } = dataCache;
+    const uploadTime = userData.upload_time as number | undefined;
+    const userCards = (userData.userCards ?? []) as DeckUserCard[];
+
+    // 进阶数据覆盖与角色过滤：按 Haruki 语义改写快照后交给引擎。
+    // 无覆盖且账号未变时直接复用已解析的用户句柄（跳过 createUserData）。
+    const hasOverrides = Boolean(input.userDataOverrides || input.characterFilterIds);
+    const userKey = `${userId}|${server}|${oauthAccessToken ?? ""}`;
+    let user: DeckEngineUserHandle;
+    let reusable = false;
+    if (!hasOverrides && handleCache && handleCache.key === userKey) {
+        user = handleCache.handle;
+        reusable = true;
+    } else {
+        const preparedUserData = applyUserDataOverrides(
+            userData,
+            input.userDataOverrides,
+            tables,
+            input.characterFilterIds,
+        );
+        user = engine.createUserData(server, preparedUserData);
+        if (!hasOverrides) {
+            if (handleCache) engine.disposeUser(handleCache.handle);
+            handleCache = { key: userKey, handle: user };
         }
     }
-    engine.loadMasterData(tables, musicMetas as unknown[]);
-
-    const user: DeckEngineUserHandle = engine.createUserData(server, userData);
 
     try {
         sendProgress("calculating", 50, "page.deckRecommend.progress.calculating");
 
-        const options = await buildOptions(input, dataProvider);
+        const options = await buildOptions(input, (tables.events ?? []) as EventInfoLite[]);
         const { decks, performance } = engine.recommend(options, user);
 
         const result = decks.map(
@@ -176,7 +195,8 @@ async function runDeck(input: DeckWorkerInput): Promise<DeckWorkerOutput> {
             upload_time: uploadTime,
         };
     } finally {
-        engine.disposeUser(user);
+        // 复用路径不释放句柄（handleCache 持有）；覆盖路径的临时句柄在此释放。
+        if (!reusable) engine.disposeUser(user);
     }
 }
 
@@ -190,7 +210,7 @@ function toEngineSkillOrder(text: string): string | undefined {
 /** 组装引擎 options；活动类型相关的 live_type 转换在此完成。 */
 async function buildOptions(
     input: DeckWorkerInput,
-    dataProvider: CachedDataProvider,
+    eventRows: EventInfoLite[],
 ): Promise<Record<string, unknown>> {
     const {
         mode, eventId, eventType, simulatedEvent, liveType, supportCharacterId,
@@ -207,8 +227,7 @@ async function buildOptions(
     let computedLiveType: string = liveType;
     const usesRealEvent = Boolean(eventId) && !simulatedEvent;
     if (usesRealEvent && (mode === "event" || mode === "mysekai")) {
-        const events = await dataProvider.getMasterData<EventInfoLite>("events");
-        const event0 = events.find((it) => it.id === eventId);
+        const event0 = eventRows.find((it) => it.id === eventId);
         if (event0?.eventType === "cheerful_carnival" && computedLiveType === "multi") {
             computedLiveType = "cheerful";
         }
@@ -357,8 +376,15 @@ async function buildOptions(
     return options;
 }
 
-self.onmessage = async (event: MessageEvent<{ args?: DeckWorkerInput; music?: MusicRequest }>) => {
+self.onmessage = async (event: MessageEvent<{ args?: DeckWorkerInput; music?: MusicRequest; warmup?: boolean }>) => {
     const { args, music } = event.data;
+    if (event.data.warmup) {
+        // 预热：提前加载 wasm 实例，让首次真实计算跳过引擎启动。
+        loadDeckEngine()
+            .then(() => postMessage({ type: "warm" }))
+            .catch(() => postMessage({ type: "warm" }));
+        return;
+    }
     if (music) {
         // 单曲收益：master data 已在 worker 内缓存；音乐推荐不依赖用户数据。
         try {

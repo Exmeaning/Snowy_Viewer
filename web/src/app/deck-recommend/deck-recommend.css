@@ -241,3 +241,18 @@
     border-color: rgba(71, 85, 105, 0.7);
     color: #e2e8f0;
 }
+
+/* Advanced settings sub-cards */
+.dr-group-card {
+    border: 1px solid rgba(203, 213, 225, 0.55);
+    border-radius: 1rem;
+    padding: 1rem 1rem 0.75rem;
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+[data-theme="dark"] .dr-group-card {
+    background: rgba(30, 41, 59, 0.35);
+    border-color: rgba(148, 163, 184, 0.15);
+}

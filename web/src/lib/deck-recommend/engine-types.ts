@@ -37,6 +37,49 @@ export interface DeckSingleCardOverride {
     canvas?: boolean;
 }
 
+/** 区域道具单项覆盖（等级）。 */
+export interface DeckAreaItemOverride {
+    areaItemId: number;
+    level: number;
+}
+
+/** 角色等级单项覆盖。 */
+export interface DeckCharacterRankOverride {
+    characterId: number;
+    rank: number;
+}
+
+/** 烤森门单项覆盖（等级）。 */
+export interface DeckMysekaiGateOverride {
+    mysekaiGateId: number;
+    level: number;
+}
+
+/** 烤森玩偶加成单项覆盖（角色 → 综合力加成值）。 */
+export interface DeckMysekaiFixtureOverride {
+    characterId: number;
+    totalBonusRate: number;
+}
+
+/**
+ * 进阶数据覆盖：统一值 + 单项覆盖（单项优先）。
+ * 全部留空时按账号真实数据计算；统一值对所有项生效并 clamp 到各自上限。
+ */
+export interface DeckUserDataOverrides {
+    /** 区域道具统一等级（1..上限；0/空不覆盖）。 */
+    areaItemLevel?: number | null;
+    areaItemLevelOverrides?: DeckAreaItemOverride[];
+    /** 角色等级统一值（1..上限；0/空不覆盖）。 */
+    characterRank?: number | null;
+    characterRankOverrides?: DeckCharacterRankOverride[];
+    /** 烤森门统一等级（1..上限；0/空不覆盖）。 */
+    mysekaiGateLevel?: number | null;
+    mysekaiGateLevelOverrides?: DeckMysekaiGateOverride[];
+    /** 玩偶加成统一值（数值；0/空不覆盖）。 */
+    mysekaiFixtureBonusRate?: number | null;
+    mysekaiFixtureBonusRateOverrides?: DeckMysekaiFixtureOverride[];
+}
+
 /** 模拟活动：不依赖已发布活动的自定义活动条件。 */
 export interface DeckSimulatedEvent {
     /** marathon / cheerful_carnival / world_bloom。 */
@@ -115,6 +158,8 @@ export interface DeckWorkerInput {
     unitFilter?: string;
     /** 属性过滤。 */
     attrFilter?: string;
+    /** 角色过滤：卡池只保留这些角色的卡（Haruki 的 characterFilters）。 */
+    characterFilterIds?: number[];
     /** 指定队长角色（引擎 forced_leader_character_id）。 */
     leaderCharacterId?: number;
     /** 固定卡牌（最多 5 张，同角色仅 1 张）。 */
@@ -125,6 +170,8 @@ export interface DeckWorkerInput {
     excludedCards?: number[];
     /** 单卡养成覆盖。 */
     singleCardOverrides?: DeckSingleCardOverride[];
+    /** 进阶数据覆盖（区域道具/角色等级/烤森门/玩偶加成）。 */
+    userDataOverrides?: DeckUserDataOverrides;
     /** 返回卡组条数（1-30，默认 10）。 */
     limit?: number;
     /** 搜索超时毫秒（默认 120000，上限 300000）。 */

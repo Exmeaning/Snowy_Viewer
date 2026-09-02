@@ -1,15 +1,9 @@
 /**
- * Shared Data Provider for sekai-calculator workers
- * Used by both deck-recommend worker and score-control deck-builder worker
- *
- * Deck-building code source: sekai-calculator (https://github.com/pjsek-ai/sekai-calculator)
- * Some algorithm optimizations are adapted from https://github.com/NeuraXmy/sekai-deck-recommend-cpp by luna-cha
+ * Shared data provider for the deck engine workers (deck-recommend and
+ * score-control deck building). Master data comes from the self-hosted
+ * official source; user data comes from the Haruki suite API.
  */
-import {
-    CachedDataProvider,
-    DataProvider,
-    MusicMeta,
-} from "sekai-calculator";
+import type { IMusicMeta } from "@/types/music";
 import { isValidServer, SERVER_IDS, type ServerType } from "../account-servers";
 import { getHarukiPublicApiBase } from "../haruki-public-api";
 import { augmentMasterDataWithWorldBloomSimulation } from "../world-bloom-simulation";
@@ -19,6 +13,17 @@ import { fetchMusicMetas } from "../fetch";
 
 /** Deck-recommend accepts every server the account system supports. */
 export type HarukiServer = ServerType;
+
+/** User data key/value map consumed by the workers. */
+export type UserDataMap = Record<string, unknown>;
+
+/** Data-plane interface: master data, user data and music metas. */
+export interface DeckDataProvider {
+    getMasterData<T>(key: string): Promise<T[]>;
+    getUserData<T>(key: string): Promise<T>;
+    getUserDataAll(): Promise<UserDataMap>;
+    getMusicMeta(): Promise<IMusicMeta[]>;
+}
 
 // ==================== Constants ====================
 
@@ -55,7 +60,7 @@ const USER_DATA_KEYS_LIST = USER_DATA_KEYS.split(",");
 
 // Master data keys needed for preloading
 export const PRELOAD_MASTER_KEYS = [
-    "areaItemLevels", "cards", "cardMysekaiCanvasBonuses", "cardRarities",
+    "areaItems", "areaItemLevels", "cards", "cardMysekaiCanvasBonuses", "cardRarities",
     "characterRanks", "cardEpisodes", "events", "eventCards",
     "eventRarityBonusRates", "eventDeckBonuses", "gameCharacters",
     "gameCharacterUnits", "honors", "masterLessons", "mysekaiGates",
@@ -64,6 +69,33 @@ export const PRELOAD_MASTER_KEYS = [
     "worldBloomSupportDeckBonusesWL2", "worldBloomSupportDeckBonusesWL3",
     "worldBloomSupportDeckUnitEventLimitedBonuses",
 ];
+
+/** Optional engine tables: absent ones fall back to engine built-ins. */
+export const ENGINE_OPTIONAL_MASTER_KEYS = [
+    "eventCardBonusLimits",
+    "eventHonorBonuses",
+    "eventSkillScoreUpLimits",
+];
+
+/**
+ * Engine music metas are fetched from the source: the site's IndexedDB
+ * cache may lack multi_skill_scores arrays, which would make the engine
+ * compute all-zero scores.
+ */
+export async function fetchEngineMusicMetas(): Promise<unknown[]> {
+    let lastErr: unknown;
+    for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+            const res = await fetch(MUSIC_META_URL, { cache: "no-store" });
+            if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+            return (await res.json()) as unknown[];
+        } catch (err) {
+            lastErr = err;
+            await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
+        }
+    }
+    throw lastErr instanceof Error ? lastErr : String(lastErr);
+}
 
 const LOCAL_MASTER_DATA_PATHS: Partial<Record<string, string>> = {
     worldBloomSupportDeckBonusesWL1: "/data/worldBloomSupportDeckBonusesWL1.json",
@@ -94,8 +126,6 @@ interface UserHonorEntry {
     honorId: number;
     [key: string]: unknown;
 }
-
-type UserDataMap = Record<string, unknown>;
 
 function getDefaultUserDataValue(key: string): unknown {
     if (key === "userGamedata") return null;
@@ -189,7 +219,7 @@ export function calcDuration() {
 
 // ==================== Data Provider ====================
 
-export class SnowyDataProvider implements DataProvider {
+export class SnowyDataProvider implements DeckDataProvider {
     private userDataCache: UserDataMap | null = null;
     private masterDataRawCache = new Map<string, Promise<unknown[]>>();
 
@@ -203,8 +233,8 @@ export class SnowyDataProvider implements DataProvider {
         }
     }
 
-    public static getCachedInstance(userId: string, server: HarukiServer = "jp", oauthAccessToken: string | null = null): CachedDataProvider {
-        return new CachedDataProvider(new SnowyDataProvider(userId, server, oauthAccessToken));
+    public static getCachedInstance(userId: string, server: HarukiServer = "jp", oauthAccessToken: string | null = null): CachedDeckDataProvider {
+        return new CachedDeckDataProvider(new SnowyDataProvider(userId, server, oauthAccessToken));
     }
 
     private async fetchJsonArray(url: string): Promise<unknown[] | null> {
@@ -266,9 +296,9 @@ export class SnowyDataProvider implements DataProvider {
         return data as T[];
     }
 
-    async getMusicMeta(): Promise<MusicMeta[]> {
+    async getMusicMeta(): Promise<IMusicMeta[]> {
         const metas = await fetchMusicMetas();
-        return metas as unknown as MusicMeta[];
+        return metas;
     }
 
     async getUserData<T>(key: string): Promise<T> {
@@ -387,5 +417,37 @@ export class SnowyDataProvider implements DataProvider {
 
         this.userDataCache = data;
         return data;
+    }
+}
+
+/**
+ * Cached data-plane wrapper: caches the user data request per instance.
+ * (SnowyDataProvider already caches master data requests; this adds the
+ * user-data and batch-preload caching semantics.)
+ */
+export class CachedDeckDataProvider implements DeckDataProvider {
+    private userDataPromise: Promise<UserDataMap> | null = null;
+
+    constructor(private provider: SnowyDataProvider) {}
+
+    getMasterData<T>(key: string): Promise<T[]> {
+        return this.provider.getMasterData<T>(key);
+    }
+
+    getUserData<T>(key: string): Promise<T> {
+        return this.provider.getUserData<T>(key);
+    }
+
+    getUserDataAll(): Promise<UserDataMap> {
+        this.userDataPromise ??= this.provider.getUserDataAll();
+        return this.userDataPromise;
+    }
+
+    getMusicMeta(): Promise<IMusicMeta[]> {
+        return this.provider.getMusicMeta();
+    }
+
+    async preloadMasterData(keys: readonly string[]): Promise<unknown[]> {
+        return Promise.all(keys.map((key) => this.getMasterData(key)));
     }
 }

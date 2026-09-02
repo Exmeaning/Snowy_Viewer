@@ -11,7 +11,7 @@ import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import CardSelectorModal from "@/components/cards/CardSelectorModal";
 import { fetchMasterDataForServer } from "@/lib/fetch";
-import { getCharacterIconUrl, getCardThumbnailUrl } from "@/lib/assets";
+import { getCharacterIconUrl } from "@/lib/assets";
 import {
     getOAuthAccessTokenForGameUser,
     isValidServer,
@@ -27,6 +27,8 @@ import AccountSelector from "@/components/AccountSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import { preloadDeckEngine } from "@/lib/deck-engine/wasm-loader";
+import DataOverridePanel, { type OverrideCatalogItem } from "@/components/deck-recommend/DataOverridePanel";
+import { SnowyDataProvider } from "@/lib/deck-recommend/data-provider";
 import type {
     DeckRecommendMode,
     DeckResultDeck,
@@ -37,8 +39,188 @@ import type {
     DeckTarget,
     DeckSkillOrder,
     DeckSkillReference,
+    DeckAreaItemOverride,
+    DeckCharacterRankOverride,
+    DeckMysekaiFixtureOverride,
+    DeckMysekaiGateOverride,
 } from "@/lib/deck-recommend/engine-types";
 import "./deck-recommend.css";
+
+type RawRow = Record<string, unknown>;
+
+function rowsOf(value: unknown): RawRow[] {
+    return Array.isArray(value)
+        ? (value.filter((item) => item !== null && typeof item === "object") as RawRow[])
+        : [];
+}
+
+function numOf(value: unknown): number {
+    return typeof value === "number" && Number.isFinite(value) ? Math.floor(value) : 0;
+}
+
+/** 数据覆盖面板的真实值快照（只取覆盖需要的键）。 */
+interface OverrideUserSnapshot {
+    userAreas?: { areaItems?: { areaItemId?: number; level?: number }[] }[];
+    userCharacters?: { characterId?: number; characterRank?: number }[];
+    userMysekaiGates?: { mysekaiGateId?: number; mysekaiGateLevel?: number }[];
+    userMysekaiFixtureGameCharacterPerformanceBonuses?: { gameCharacterId?: number; totalBonusRate?: number }[];
+    userDecks?: { member1?: number; member2?: number; member3?: number; member4?: number; member5?: number }[];
+}
+
+/** 用账号区服主数据 + 用户数据构建覆盖面板的四组目录。 */
+function buildOverrideCatalogs(
+    master: {
+        areaItems: unknown;
+        areaItemLevels: unknown;
+        characterRanks: unknown;
+        gameCharacters: unknown;
+        gameCharacterUnits: unknown;
+        mysekaiGates: unknown;
+        mysekaiGateLevels: unknown;
+    },
+    userSnapshot: OverrideUserSnapshot | null,
+    t: TranslationFn,
+): {
+    areaItems: OverrideCatalogItem[];
+    characters: OverrideCatalogItem[];
+    gates: OverrideCatalogItem[];
+    fixtureCharacters: OverrideCatalogItem[];
+} {
+    // 区域道具：每个道具的目标（角色/团/属性）与上限。
+    const areaMax = new Map<number, number>();
+    const areaTarget = new Map<number, { unit?: string; attr?: string; characterId?: number }>();
+    for (const row of rowsOf(master.areaItemLevels)) {
+        const id = numOf(row.areaItemId);
+        const level = numOf(row.level);
+        if (id > 0 && level > 0) {
+            areaMax.set(id, Math.max(areaMax.get(id) ?? 0, level));
+            if (!areaTarget.has(id)) {
+                areaTarget.set(id, {
+                    unit: typeof row.targetUnit === "string" ? row.targetUnit : undefined,
+                    attr: typeof row.targetCardAttr === "string" ? row.targetCardAttr : undefined,
+                    characterId: numOf(row.targetGameCharacterId) || undefined,
+                });
+            }
+        }
+    }
+    const userAreaItems = new Map<number, number>();
+    for (const area of (userSnapshot?.userAreas ?? []) as { areaItems?: { areaItemId?: number; level?: number }[] }[]) {
+        for (const item of area.areaItems ?? []) {
+            const id = numOf(item.areaItemId);
+            if (id > 0) userAreaItems.set(id, numOf(item.level));
+        }
+    }
+    const areaItems: OverrideCatalogItem[] = rowsOf(master.areaItems)
+        .map((row): OverrideCatalogItem | null => {
+            const id = numOf(row.id);
+            const max = areaMax.get(id) ?? 0;
+            if (id <= 0 || max <= 0) return null;
+            const target = areaTarget.get(id);
+            let sub = "";
+            if (target?.characterId) {
+                sub = getCharacterName(t, target.characterId, "full");
+            } else if (target?.unit) {
+                const unit = UNIT_BONUS_OPTIONS.find((option) => option.value === target.unit);
+                sub = unit ? t(unit.labelKey) : target.unit;
+            } else if (target?.attr) {
+                const attr = ATTR_OPTIONS.find((option) => option.value === target.attr);
+                sub = attr ? attr.label : target.attr;
+            }
+            return {
+                id,
+                name: typeof row.name === "string" && row.name ? row.name : `#${id}`,
+                sub,
+                max,
+                current: userAreaItems.get(id) ?? null,
+            };
+        })
+        .filter((item): item is OverrideCatalogItem => item !== null)
+        .sort((a, b) => a.id - b.id);
+
+    // 角色等级：每角色上限 + 真实 rank。
+    const userRanks = new Map<number, number>();
+    for (const character of userSnapshot?.userCharacters ?? []) {
+        const id = numOf(character.characterId);
+        if (id > 0) userRanks.set(id, numOf(character.characterRank));
+    }
+    const rankMax = new Map<number, number>();
+    let globalRankMax = 0;
+    for (const row of rowsOf(master.characterRanks)) {
+        const rank = numOf(row.characterRank);
+        if (rank <= 0) continue;
+        globalRankMax = Math.max(globalRankMax, rank);
+        const characterId = numOf(row.characterId);
+        if (characterId > 0) rankMax.set(characterId, Math.max(rankMax.get(characterId) ?? 0, rank));
+    }
+    const characters: OverrideCatalogItem[] = rowsOf(master.gameCharacters)
+        .map((row): OverrideCatalogItem | null => {
+            const id = numOf(row.id);
+            if (id <= 0) return null;
+            const unitRow = rowsOf(master.gameCharacterUnits).find((entry) => numOf(entry.gameCharacterId) === id);
+            const unit = UNIT_BONUS_OPTIONS.find((option) => option.value === unitRow?.unit);
+            return {
+                id,
+                name: getCharacterName(t, id, "full"),
+                sub: unit ? t(unit.labelKey) : "",
+                max: rankMax.get(id) ?? globalRankMax,
+                current: userRanks.get(id) ?? null,
+            };
+        })
+        .filter((item): item is OverrideCatalogItem => item !== null);
+
+    // 烤森门：上限 + 真实等级。
+    const gateMax = new Map<number, number>();
+    for (const row of rowsOf(master.mysekaiGateLevels)) {
+        const id = numOf(row.mysekaiGateId);
+        const level = numOf(row.level);
+        if (id > 0 && level > 0) gateMax.set(id, Math.max(gateMax.get(id) ?? 0, level));
+    }
+    const userGateLevels = new Map<number, number>();
+    for (const gate of userSnapshot?.userMysekaiGates ?? []) {
+        const id = numOf(gate.mysekaiGateId);
+        if (id > 0) userGateLevels.set(id, numOf(gate.mysekaiGateLevel));
+    }
+    const gates: OverrideCatalogItem[] = rowsOf(master.mysekaiGates)
+        .map((row): OverrideCatalogItem | null => {
+            const id = numOf(row.id);
+            const max = gateMax.get(id) ?? 0;
+            if (id <= 0 || max <= 0) return null;
+            const unit = UNIT_BONUS_OPTIONS.find((option) => option.value === row.unit);
+            return {
+                id,
+                name: typeof row.name === "string" && row.name ? row.name : `#${id}`,
+                sub: unit ? t(unit.labelKey) : "",
+                max,
+                current: userGateLevels.get(id) ?? null,
+            };
+        })
+        .filter((item): item is OverrideCatalogItem => item !== null)
+        .sort((a, b) => a.id - b.id);
+
+    // 玩偶加成：按角色。
+    const userFixtureRates = new Map<number, number>();
+    for (const fixture of userSnapshot?.userMysekaiFixtureGameCharacterPerformanceBonuses ?? []) {
+        const id = numOf(fixture.gameCharacterId);
+        if (id > 0 && !userFixtureRates.has(id)) userFixtureRates.set(id, numOf(fixture.totalBonusRate));
+    }
+    const fixtureCharacters: OverrideCatalogItem[] = rowsOf(master.gameCharacters)
+        .map((row): OverrideCatalogItem | null => {
+            const id = numOf(row.id);
+            if (id <= 0) return null;
+            const unitRow = rowsOf(master.gameCharacterUnits).find((entry) => numOf(entry.gameCharacterId) === id);
+            const unit = UNIT_BONUS_OPTIONS.find((option) => option.value === unitRow?.unit);
+            return {
+                id,
+                name: getCharacterName(t, id, "full"),
+                sub: unit ? t(unit.labelKey) : "",
+                max: 0,
+                current: userFixtureRates.get(id) ?? null,
+            };
+        })
+        .filter((item): item is OverrideCatalogItem => item !== null);
+
+    return { areaItems, characters, gates, fixtureCharacters };
+}
 
 const MODE_OPTIONS: { value: DeckRecommendMode }[] = [
     { value: "event" },
@@ -154,6 +336,18 @@ interface SavedConfig {
     fixedCharacters: number[];
     excludedCards: number[];
     singleCardOverrides: DeckSingleCardOverride[];
+    areaItemLevel: string;
+    areaItemOverrides: DeckAreaItemOverride[];
+    characterRank: string;
+    characterRankOverrides: DeckCharacterRankOverride[];
+    mysekaiGateLevel: string;
+    mysekaiGateOverrides: DeckMysekaiGateOverride[];
+    mysekaiFixtureBonusRate: string;
+    mysekaiFixtureOverrides: DeckMysekaiFixtureOverride[];
+    unitFilter: string;
+    attrFilter: string;
+    characterFilterIds: number[];
+    useCurrentDeck: boolean;
     limit: string;
     timeoutSeconds: string;
 }
@@ -201,6 +395,18 @@ const DEFAULT_SAVED_CONFIG: SavedConfig = {
     fixedCharacters: [],
     excludedCards: [],
     singleCardOverrides: [],
+    areaItemLevel: "",
+    areaItemOverrides: [],
+    characterRank: "",
+    characterRankOverrides: [],
+    mysekaiGateLevel: "",
+    mysekaiGateOverrides: [],
+    mysekaiFixtureBonusRate: "",
+    mysekaiFixtureOverrides: [],
+    unitFilter: "",
+    attrFilter: "",
+    characterFilterIds: [],
+    useCurrentDeck: false,
     limit: "10",
     timeoutSeconds: "120",
 };
@@ -685,6 +891,9 @@ export default function DeckRecommendClient() {
         skillOrder, specificSkillOrder, skillReference, keepAfterTrainingState,
         bestSkillAsLeader, minimize, boost, otherScore, fixedCards, fixedCharacters,
         excludedCards, singleCardOverrides, limit, timeoutSeconds,
+        areaItemLevel, areaItemOverrides, characterRank, characterRankOverrides,
+        mysekaiGateLevel, mysekaiGateOverrides, mysekaiFixtureBonusRate, mysekaiFixtureOverrides,
+        unitFilter, attrFilter, characterFilterIds, useCurrentDeck,
     } = state;
 
     // 页面布局模式：快速只显示基础配置；进阶把合并后的完整配置展开置顶。
@@ -710,6 +919,79 @@ export default function DeckRecommendClient() {
     const [showLeaderSelect, setShowLeaderSelect] = useState(false);
     const [leaderCharacterId, setLeaderCharacterId] = useState<number | null>(null);
 
+    // 进阶数据覆盖的主数据目录（区域道具/角色等级/烤森门/玩偶加成）
+    // 获取与派生分离：目录派生依赖 i18n t（引用不稳定），只按 server/userId 拉取原始数据。
+    const [overrideRaw, setOverrideRaw] = useState<{
+        master: {
+            areaItems: unknown[];
+            areaItemLevels: unknown[];
+            characterRanks: unknown[];
+            gameCharacters: unknown[];
+            gameCharacterUnits: unknown[];
+            mysekaiGates: unknown[];
+            mysekaiGateLevels: unknown[];
+        };
+        snapshot: OverrideUserSnapshot | null;
+    } | null>(null);
+    const emptyOverrideCatalogs = useMemo(() => ({
+        areaItems: [] as OverrideCatalogItem[],
+        characters: [] as OverrideCatalogItem[],
+        gates: [] as OverrideCatalogItem[],
+        fixtureCharacters: [] as OverrideCatalogItem[],
+    }), []);
+
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const [areaItems, areaItemLevels, characterRanks, gameCharacters, gameCharacterUnits, mysekaiGates, mysekaiGateLevels] =
+                    await Promise.all([
+                        fetchMasterDataForServer<unknown[]>(server, "areaItems.json"),
+                        fetchMasterDataForServer<unknown[]>(server, "areaItemLevels.json"),
+                        fetchMasterDataForServer<unknown[]>(server, "characterRanks.json"),
+                        fetchMasterDataForServer<unknown[]>(server, "gameCharacters.json"),
+                        fetchMasterDataForServer<unknown[]>(server, "gameCharacterUnits.json"),
+                        fetchMasterDataForServer<unknown[]>(server, "mysekaiGates.json"),
+                        fetchMasterDataForServer<unknown[]>(server, "mysekaiGateLevels.json"),
+                    ]);
+                if (cancelled) return;
+
+                let snapshot: OverrideUserSnapshot | null = null;
+                if (userId.trim()) {
+                    try {
+                        const provider = SnowyDataProvider.getCachedInstance(
+                            userId.trim(),
+                            server,
+                            getOAuthAccessTokenForGameUser(server, userId.trim()),
+                        );
+                        const userData = await provider.getUserDataAll();
+                        snapshot = userData as OverrideUserSnapshot;
+                    } catch {
+                        // 用户数据拉取失败时仍展示主数据目录；当前值显示「-」。
+                    }
+                }
+                if (cancelled) return;
+
+                setOverrideRaw({
+                    master: { areaItems, areaItemLevels, characterRanks, gameCharacters, gameCharacterUnits, mysekaiGates, mysekaiGateLevels },
+                    snapshot,
+                });
+            } catch {
+                // 目录表拉取失败：面板显示为空项（用户仍可自行输入统一值）。
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, [server, userId]);
+
+    const overrideCatalogs = useMemo(
+        () => overrideRaw
+            ? buildOverrideCatalogs(overrideRaw.master, overrideRaw.snapshot, t)
+            : emptyOverrideCatalogs,
+        [overrideRaw, t, emptyOverrideCatalogs],
+    );
+
     // 卡名与缩略图必须与账号数据同区服：站点默认数据库区服不一定等于所选账号区服。
     useEffect(() => {
         let cancelled = false;
@@ -728,9 +1010,13 @@ export default function DeckRecommendClient() {
         };
     }, [server]);
 
-    // Warm the wasm cache
+    // Warm the wasm cache + spin a warmup worker so the first real search
+    // skips both the download and the worker chunk compile.
     useEffect(() => {
         preloadDeckEngine();
+        const warmup = new Worker(new URL("@/lib/deck-recommend/engine-worker.ts", import.meta.url));
+        warmup.postMessage({ warmup: true });
+        return () => warmup.terminate();
     }, []);
 
     // Restore last used account + saved config
@@ -923,14 +1209,32 @@ export default function DeckRecommendClient() {
             fixedCharacters: fixedCharacters.length ? fixedCharacters : undefined,
             excludedCards: excludedCards.length ? excludedCards : undefined,
             singleCardOverrides: singleCardOverrides.length ? singleCardOverrides : undefined,
+            // 进阶数据覆盖：仅进阶模式发送；最弱组卡（仅快速模式）始终用账号真实数据。
+            userDataOverrides: layoutMode === "advanced"
+                ? {
+                      areaItemLevel: areaItemLevel ? parseInt(areaItemLevel) : null,
+                      areaItemLevelOverrides: areaItemOverrides.length ? areaItemOverrides : undefined,
+                      characterRank: characterRank ? parseInt(characterRank) : null,
+                      characterRankOverrides: characterRankOverrides.length ? characterRankOverrides : undefined,
+                      mysekaiGateLevel: mysekaiGateLevel ? parseInt(mysekaiGateLevel) : null,
+                      mysekaiGateOverrides: mysekaiGateOverrides.length ? mysekaiGateOverrides : undefined,
+                      mysekaiFixtureBonusRate: mysekaiFixtureBonusRate !== "" ? parseInt(mysekaiFixtureBonusRate) : null,
+                      mysekaiFixtureOverrides: mysekaiFixtureOverrides.length ? mysekaiFixtureOverrides : undefined,
+                  }
+                : undefined,
+            unitFilter: unitFilter || undefined,
+            attrFilter: attrFilter || undefined,
+            characterFilterIds: characterFilterIds.length ? characterFilterIds : undefined,
             leaderCharacterId: showLeaderSelect && leaderCharacterId ? leaderCharacterId : undefined,
             limit: Math.min(30, Math.max(1, parseInt(limit) || 10)),
             timeoutMs: Math.min(300, Math.max(5, parseInt(timeoutSeconds) || 120)) * 1000,
         };
 
-        if (workerRef.current) workerRef.current.terminate();
-        const worker = new Worker(new URL("@/lib/deck-recommend/engine-worker.ts", import.meta.url));
-        workerRef.current = worker;
+        // 复用常驻 worker（wasm 与数据缓存在 worker 内热着）；不存在则新建。
+        if (!workerRef.current) {
+            workerRef.current = new Worker(new URL("@/lib/deck-recommend/engine-worker.ts", import.meta.url));
+        }
+        const worker = workerRef.current;
 
         type WorkerMessage =
             | DeckWorkerOutput
@@ -964,8 +1268,6 @@ export default function DeckRecommendClient() {
             setError(t("page.deckRecommend.errors.workerError", { message: err.message }));
             setIsCalculating(false);
             setProgressPercent(0);
-            worker.terminate();
-            workerRef.current = null;
         };
         const oauthAccessToken = getOAuthAccessTokenForGameUser(server, userId.trim());
         worker.postMessage({ args: { ...workerArgs, oauthAccessToken } });
@@ -1103,7 +1405,7 @@ export default function DeckRecommendClient() {
                             <span className="w-1.5 h-6 bg-miku rounded-full" />
                             {t("page.deckRecommend.config.layers.advanced")}
                         </h2>
-                    <div className="pt-1">
+                    <div className="pt-1 dr-group-card">
                         {/* 协力参数 */}
                         <div className="mb-5">
                             <SectionTitle text={t("page.deckRecommend.config.multiLiveTitle")} />
@@ -1145,7 +1447,7 @@ export default function DeckRecommendClient() {
 
                         <div className="mt-5 pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
                         {/* 技能与支援 */}
-                        <div className="mb-5">
+                        <div className="dr-group-card mb-5">
                             <SectionTitle text={t("page.deckRecommend.config.skillsTitle")} />
                             <label className="block text-xs text-slate-400 mb-1.5">{t("page.deckRecommend.config.skillOrder")}</label>
                             <div className="flex flex-wrap gap-2 mb-3">
@@ -1194,7 +1496,7 @@ export default function DeckRecommendClient() {
                         </div>
 
                         {/* 连接世界支援 */}
-                        <div className="mb-5">
+                        <div className="dr-group-card mb-5">
                             <SectionTitle text={t("page.deckRecommend.config.supportGroupTitle")} />
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                 {(["supportMasterMax", "supportSkillMax", "filterOtherUnit"] as const).map((typedKey) => (
@@ -1214,10 +1516,123 @@ export default function DeckRecommendClient() {
                             </div>
                         </div>
 
+                        {/* 卡池过滤（团/属性/角色） */}
+                        <div className="dr-group-card mb-5">
+                            <SectionTitle text={t("page.deckRecommend.config.filterGroupTitle")} />
+                            <div className="grid gap-3">
+                                <div>
+                                    <label className="text-xs text-slate-400 mb-1.5 block">{t("page.deckRecommend.config.filterUnit")}</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button type="button" onClick={() => patch({ unitFilter: "" })} className={pill(unitFilter === "")}>{t("page.deckRecommend.config.filterAny")}</button>
+                                        {UNIT_BONUS_OPTIONS.map((option) => (
+                                            <button key={option.value} type="button" onClick={() => patch({ unitFilter: unitFilter === option.value ? "" : option.value })} className={pill(unitFilter === option.value)}>
+                                                {t(option.labelKey)}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs text-slate-400 mb-1.5 block">{t("page.deckRecommend.config.filterAttr")}</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        <button type="button" onClick={() => patch({ attrFilter: "" })} className={pill(attrFilter === "")}>{t("page.deckRecommend.config.filterAny")}</button>
+                                        {ATTR_OPTIONS.map((option) => (
+                                            <button key={option.value} type="button" onClick={() => patch({ attrFilter: attrFilter === option.value ? "" : option.value })} className={pill(attrFilter === option.value)}>
+                                                {option.label}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex items-center justify-between mb-1.5">
+                                        <label className="text-xs text-slate-400">{t("page.deckRecommend.config.filterCharacter")}</label>
+                                        {characterFilterIds.length > 0 && (
+                                            <button type="button" onClick={() => patch({ characterFilterIds: [] })} className="text-xs text-red-400 hover:text-red-500">
+                                                {t("page.deckRecommend.config.filterClear")}
+                                            </button>
+                                        )}
+                                    </div>
+                                    {characterFilterIds.length === 0 ? (
+                                        <p className="text-xs text-slate-300 dark:text-slate-600 mb-2">{t("page.deckRecommend.config.filterCharacterEmpty")}</p>
+                                    ) : (
+                                        <div className="flex gap-1.5 flex-wrap mb-2">
+                                            {characterFilterIds.map((id) => (
+                                                <button
+                                                    key={id}
+                                                    type="button"
+                                                    onClick={() => patch({ characterFilterIds: characterFilterIds.filter((v) => v !== id) })}
+                                                    className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-full pl-1 pr-2 py-0.5 hover:opacity-70"
+                                                >
+                                                    <img src={getCharacterIconUrl(id)} alt="" className="w-6 h-6 rounded-full object-contain" loading="lazy" />
+                                                    <span className="text-xs text-slate-500 dark:text-slate-300">{getCharacterName(t, id, "short")}</span>
+                                                    <span className="text-red-400 text-xs">×</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <CharacterMultiGrid
+                                        selected={characterFilterIds}
+                                        onToggle={(id) => patch({
+                                            characterFilterIds: characterFilterIds.includes(id)
+                                                ? characterFilterIds.filter((v) => v !== id)
+                                                : [...characterFilterIds, id].sort((a, b) => a - b),
+                                        })}
+                                        maxCount={5}
+                                    />
+                                    <p className="text-[11px] text-slate-400 mt-1">{t("page.deckRecommend.config.filterCharacterHint")}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* 进阶数据覆盖（区域道具/角色等级/烤森门/玩偶加成） */}
+                        <div className="dr-group-card">
+                        <DataOverridePanel
+                            areaItems={overrideCatalogs.areaItems}
+                            characters={overrideCatalogs.characters}
+                            gates={overrideCatalogs.gates}
+                            fixtureCharacters={overrideCatalogs.fixtureCharacters}
+                            values={{
+                                areaItemLevel,
+                                areaItemOverrides,
+                                characterRank,
+                                characterRankOverrides,
+                                mysekaiGateLevel,
+                                mysekaiGateOverrides,
+                                mysekaiFixtureBonusRate,
+                                mysekaiFixtureOverrides,
+                            }}
+                            onChange={patch}
+                        />
+                        </div>
+
                         {/* 卡组约束 */}
-                        <div className="mb-5">
+                        <div className="dr-group-card mb-5">
                             <SectionTitle text={t("page.deckRecommend.config.constraintsTitle")} />
                             <p className="text-xs text-slate-400 mb-2">{t("page.deckRecommend.config.constraintsHint")}</p>
+                            {/* 使用当前编组 */}
+                            <div className="mb-3">
+                                <label className="flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer bg-white/40 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-3 py-2">
+                                    <span>{t("page.deckRecommend.config.useCurrentDeck")}</span>
+                                    <span className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${useCurrentDeck ? "bg-miku" : "bg-slate-200 dark:bg-slate-700"}`}>
+                                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${useCurrentDeck ? "translate-x-4" : ""}`} />
+                                    </span>
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only"
+                                        checked={useCurrentDeck}
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                const deck = overrideRaw?.snapshot?.userDecks?.[0];
+                                                const cards = [deck?.member1, deck?.member2, deck?.member3, deck?.member4, deck?.member5]
+                                                    .filter((v): v is number => typeof v === "number" && v > 0);
+                                                patch({ useCurrentDeck: true, ...(cards.length === 5 ? { fixedCards: cards } : {}) });
+                                            } else {
+                                                patch({ useCurrentDeck: false });
+                                            }
+                                        }}
+                                    />
+                                </label>
+                                <p className="text-[11px] text-slate-400 mt-1">{t("page.deckRecommend.config.useCurrentDeckHint")}</p>
+                            </div>
                             {([["fixedCards", "fixedCards", "fixed"], ["excludedCards", "excludedCards", "excluded"]] as const).map(([key, label, modalKey]) => {
                                 const typedKey = key as "fixedCards" | "excludedCards";
                                 const list = state[typedKey];
@@ -1316,7 +1731,7 @@ export default function DeckRecommendClient() {
                         </div>
 
                         {/* 单卡养成覆盖 */}
-                        <div>
+                        <div className="dr-group-card">
                             <div className="flex items-center justify-between mb-1.5">
                                 <SectionTitle text={t("page.deckRecommend.config.singleCardTitle")} />
                                 <button type="button" onClick={() => setCardModal("single")} className="text-xs text-miku font-medium hover:underline">
