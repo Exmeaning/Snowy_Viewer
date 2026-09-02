@@ -275,7 +275,7 @@ export const zhTWSettings = {
         refreshing: "重新整理中...",
     },
     footer: {
-        version: "Moesekai · 1.7-preview-beta2",
+        version: "Moesekai · 1.8-preview-beta1",
     },
     sidebar: {
         notLoggedIn: "尚未登入",

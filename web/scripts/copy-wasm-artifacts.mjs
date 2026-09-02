@@ -1,12 +1,9 @@
 /**
- * WASM Deck Recommend Artifact Copier
+ * WASM Deck Engine Artifact Copier
  *
- * 把 npm 包 haruki-sekai-deck-recommend-cpp 的产物拷贝到 public/wasm/，
- * 让浏览器在运行时直接从 /wasm/ 加载，而不经过 Turbopack 打包。
- *
- * 之所以不直接 import 该包：其 emscripten glue（sekai_deck_recommend.js，96KB）
- * 依赖 import.meta.url 与 ENVIRONMENT_IS_NODE 分支，交给打包器处理容易出问题。
- * 这与 public/wasm/mmw-preview.js 的既有做法一致。
+ * 把 npm 包 @empty-sekai/allium-deck-wasm 的产物拷贝到 public/wasm/，
+ * 让浏览器在运行时直接从 /wasm/ 加载，而不经过打包器。
+ * 产物只来自已安装的 npm 包；先 `npm install` 再跑本脚本。
  *
  * 同时生成 src/lib/deck-engine/wasm-version.ts，供加载器做缓存击穿。
  *
@@ -21,15 +18,14 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const webRoot = path.resolve(__dirname, '..');
 
-const PACKAGE_NAME = 'haruki-sekai-deck-recommend-cpp';
+const PACKAGE_NAME = '@empty-sekai/allium-deck-wasm';
 
 /** 需要拷贝到 public/wasm/ 的文件（源文件名 → 目标文件名）。
- *  index.js 改名以免和 public/wasm/ 下别的产物撞名；它内部对
- *  ./sekai_deck_recommend.js 的相对导入不受改名影响，同目录下浏览器原生解析。 */
+ *  wasm-bindgen glue（allium_deck.js）按默认模块路径查找同名 .wasm，
+ *  这里显式传 URL 初始化，改名不影响加载。 */
 const ARTIFACTS = [
-    ['index.js', 'sekai-deck-recommend.js'],
-    ['sekai_deck_recommend.js', 'sekai_deck_recommend.js'],
-    ['sekai_deck_recommend.wasm', 'sekai_deck_recommend.wasm'],
+    ['allium_deck.js', 'allium-deck.js'],
+    ['allium_deck_bg.wasm', 'allium-deck_bg.wasm'],
 ];
 
 const OUT_DIR = path.join(webRoot, 'public', 'wasm');
@@ -37,9 +33,8 @@ const VERSION_FILE = path.join(webRoot, 'src', 'lib', 'deck-engine', 'wasm-versi
 
 function resolvePackageDir() {
     // workspaces 会把依赖提升到仓库根 node_modules，所以用 require.resolve 而不是拼路径。
-    // 该包的 exports 没有暴露 ./package.json，所以走一个确实导出的子路径再取目录。
     const require = createRequire(import.meta.url);
-    const entry = require.resolve(`${PACKAGE_NAME}/sekai_deck_recommend.js`, {
+    const entry = require.resolve(`${PACKAGE_NAME}/allium_deck.js`, {
         paths: [webRoot, path.resolve(webRoot, '..')],
     });
     return path.dirname(entry);

@@ -31,6 +31,7 @@
       "name": "moesekai",
       "version": "0.1.0",
       "dependencies": {
+        "@empty-sekai/allium-deck-wasm": "0.0.11",
         "@supabase/supabase-js": "2.106.0",
         "@swc/helpers": "^0.5.15",
         "@types/qrcode": "^1.5.6",
@@ -55,7 +56,6 @@
         "eslint": "^9",
         "eslint-config-next": "16.2.11",
         "eslint-plugin-react-hooks": "7.0.1",
-        "haruki-sekai-deck-recommend-cpp": "0.3.5",
         "jsdom": "^29.1.1",
         "tailwindcss": "^4",
         "typescript": "^5",
@@ -175,6 +175,8 @@
     "@emnapi/runtime": ["@emnapi/runtime@1.10.0", "https://registry.npmmirror.com/@emnapi/runtime/-/runtime-1.10.0.tgz", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-ewvYlk86xUoGI0zQRNq/mC+16R1QeDlKQy21Ki3oSYXNgLb45GV1P6A0M+/s6nyCuNDqe5VpaY84BzXGwVbwFA=="],
 
     "@emnapi/wasi-threads": ["@emnapi/wasi-threads@1.2.1", "https://registry.npmmirror.com/@emnapi/wasi-threads/-/wasi-threads-1.2.1.tgz", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-uTII7OYF+/Mes/MrcIOYp5yOtSMLBWSIoLPpcgwipoiKbli6k322tcoFsxoIIxPDqW01SQGAgko4EzZi2BNv2w=="],
+
+    "@empty-sekai/allium-deck-wasm": ["@empty-sekai/allium-deck-wasm@0.0.11", "https://registry.npmmirror.com/@empty-sekai/allium-deck-wasm/-/allium-deck-wasm-0.0.11.tgz", {}, "sha512-p1XRMwEKsJSdTrnEM+1FO3u+/tkOq9vtBkF4LHP6TFQQk+U9gLaYdEf3wJCVEjCkS5Q3j6Hy/OUAUNdK392WkA=="],
 
     "@eslint-community/eslint-utils": ["@eslint-community/eslint-utils@4.9.1", "https://registry.npmmirror.com/@eslint-community/eslint-utils/-/eslint-utils-4.9.1.tgz", { "dependencies": { "eslint-visitor-keys": "^3.4.3" }, "peerDependencies": { "eslint": "^6.0.0 || ^7.0.0 || >=8.0.0" } }, "sha512-phrYmNiYppR7znFEdqgfWHXR6NCkZEK7hwWDHZUjit/2/U0r6XvkDl0SYnoM51Hq7FhCGdLDT6zxCCOY1hexsQ=="],
 
@@ -939,8 +941,6 @@
     "graphemer": ["graphemer@1.4.0", "https://registry.npmmirror.com/graphemer/-/graphemer-1.4.0.tgz", {}, ""],
 
     "handlebars": ["handlebars@4.7.9", "https://registry.npmmirror.com/handlebars/-/handlebars-4.7.9.tgz", { "dependencies": { "minimist": "^1.2.5", "neo-async": "^2.6.2", "source-map": "^0.6.1", "wordwrap": "^1.0.0" }, "optionalDependencies": { "uglify-js": "^3.1.4" }, "bin": "bin/handlebars" }, "sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ=="],
-
-    "haruki-sekai-deck-recommend-cpp": ["haruki-sekai-deck-recommend-cpp@0.3.5", "https://registry.npmmirror.com/haruki-sekai-deck-recommend-cpp/-/haruki-sekai-deck-recommend-cpp-0.3.5.tgz", {}, "sha512-ezZ9yLe22pETT9/wsStjka8qAHNhgyehnNrw7+KPT2UeeWnwV7EpOJCHnKhqNWb6Grkc50fjRwaD7BIa9yfLfQ=="],
 
     "has-bigints": ["has-bigints@1.1.0", "https://registry.npmmirror.com/has-bigints/-/has-bigints-1.1.0.tgz", {}, "sha512-R3pbpkcIqv2Pm3dUwgjclDRVmWpTJW2DcMzcIhEXEx1oh/CEMObMm3KLmRJOdvhM7o4uQBnwr8pzRK2sJWIqfg=="],
 
