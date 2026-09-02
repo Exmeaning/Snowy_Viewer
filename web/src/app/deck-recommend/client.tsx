@@ -13,6 +13,7 @@ import CardSelectorModal from "@/components/cards/CardSelectorModal";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import {
+    getAccounts,
     getOAuthAccessTokenForGameUser,
     isValidServer,
     SERVER_OPTIONS,
@@ -1010,16 +1011,77 @@ export default function DeckRecommendClient() {
         };
     }, [server]);
 
-    // Warm the wasm cache + spin a warmup worker so the first real search
-    // skips both the download and the worker chunk compile.
+    const getOrCreateWorker = useCallback(() => {
+        if (workerRef.current) return workerRef.current;
+        const worker = new Worker(new URL("@/lib/deck-recommend/engine-worker.ts", import.meta.url));
+        type WorkerMessage =
+            | DeckWorkerOutput
+            | { type: "music"; requestId: number; rows: MusicRankRow[] }
+            | { type: "warm"; ready: boolean };
+        worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
+            const data = event.data;
+            if (data.type === "warm") {
+                return;
+            }
+            if (data.type === "progress") {
+                setProgressStage(data.stage);
+                setProgressPercent(data.percent);
+                setProgressLabel(data.progressKey ? t(data.progressKey) : data.stageLabel ?? "");
+                return;
+            }
+            if (data.type === "music") {
+                const deckRank = data.requestId ?? 0;
+                setMusicLoadingByDeck((prev) => ({ ...prev, [deckRank]: false }));
+                setMusicByDeck((prev) => ({ ...prev, [deckRank]: data.rows ?? [] }));
+                return;
+            }
+            if (data.error) {
+                setError(getErrorMessage(data.error, t));
+            } else {
+                setResults(data.result ?? []);
+                if (data.userCards) setUserCards(data.userCards);
+                setDuration(data.duration ?? null);
+            }
+            setIsCalculating(false);
+            setProgressPercent(0);
+        };
+        worker.onerror = (err) => {
+            setError(t("page.deckRecommend.errors.workerError", { message: err.message }));
+            setIsCalculating(false);
+            setProgressPercent(0);
+        };
+        workerRef.current = worker;
+        return worker;
+    }, [t]);
+
+    // 页面加载及区服/账号切换时，在常驻 Worker 内后台预热 wasm 引擎、主数据与玩家数据，
+    // 使首次点击“开始推荐”也能秒出结果。
     useEffect(() => {
         preloadDeckEngine();
-        const warmup = new Worker(new URL("@/lib/deck-recommend/engine-worker.ts", import.meta.url));
-        warmup.postMessage({ warmup: true });
-        return () => warmup.terminate();
+        const worker = getOrCreateWorker();
+        const trimmedUid = userId.trim();
+        const oauthAccessToken = trimmedUid ? getOAuthAccessTokenForGameUser(server, trimmedUid) : undefined;
+        worker.postMessage({
+            warmup: {
+                server,
+                userId: trimmedUid || undefined,
+                oauthAccessToken,
+            },
+        });
+    }, [server, userId, getOrCreateWorker]);
+
+    // 卸载组件时终止常驻 worker
+    useEffect(() => {
+        return () => {
+            if (workerRef.current) {
+                workerRef.current.terminate();
+                workerRef.current = null;
+            }
+        };
     }, []);
 
     // Restore last used account + saved config
+    /* eslint-disable react-hooks/set-state-in-effect */
     useEffect(() => {
         const storedServer = localStorage.getItem(SERVER_STORAGE_KEY);
         const storedUserId = localStorage.getItem(USER_ID_STORAGE_KEY);
@@ -1033,12 +1095,20 @@ export default function DeckRecommendClient() {
                 // ignore broken config
             }
         }
-        queueMicrotask(() => {
-            if (storedServer && isValidServer(storedServer)) setServer(storedServer);
-            if (storedUserId) setUserId(storedUserId);
-            if (restored) setState((prev) => ({ ...prev, ...restored }));
-        });
+        let targetServer = storedServer;
+        let targetUserId = storedUserId;
+        if (!targetUserId) {
+            const accounts = getAccounts();
+            if (accounts.length > 0) {
+                targetUserId = accounts[0].gameId;
+                targetServer = accounts[0].server;
+            }
+        }
+        if (targetServer && isValidServer(targetServer)) setServer(targetServer);
+        if (targetUserId) setUserId(targetUserId);
+        if (restored) setState((prev) => ({ ...prev, ...restored }));
     }, []);
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     const selectedWl3Simulation: Wl3SimulationGroup | null = useMemo(
         () => getWl3SimulationGroupByEventId(eventId),
@@ -1158,8 +1228,9 @@ export default function DeckRecommendClient() {
         setMusicByDeck({});
         setMusicLoadingByDeck({});
         setIsCalculating(true);
-        setProgressPercent(5);
-        setProgressLabel(t("page.deckRecommend.progress.fetchingUserData"));
+        setProgressPercent(30);
+        setProgressStage("calculating");
+        setProgressLabel(t("page.deckRecommend.progress.calculating"));
 
         const workerArgs = {
             mode,
@@ -1217,9 +1288,9 @@ export default function DeckRecommendClient() {
                       characterRank: characterRank ? parseInt(characterRank) : null,
                       characterRankOverrides: characterRankOverrides.length ? characterRankOverrides : undefined,
                       mysekaiGateLevel: mysekaiGateLevel ? parseInt(mysekaiGateLevel) : null,
-                      mysekaiGateOverrides: mysekaiGateOverrides.length ? mysekaiGateOverrides : undefined,
+                      mysekaiGateLevelOverrides: mysekaiGateOverrides.length ? mysekaiGateOverrides : undefined,
                       mysekaiFixtureBonusRate: mysekaiFixtureBonusRate !== "" ? parseInt(mysekaiFixtureBonusRate) : null,
-                      mysekaiFixtureOverrides: mysekaiFixtureOverrides.length ? mysekaiFixtureOverrides : undefined,
+                      mysekaiFixtureBonusRateOverrides: mysekaiFixtureOverrides.length ? mysekaiFixtureOverrides : undefined,
                   }
                 : undefined,
             unitFilter: unitFilter || undefined,
@@ -1230,45 +1301,8 @@ export default function DeckRecommendClient() {
             timeoutMs: Math.min(300, Math.max(5, parseInt(timeoutSeconds) || 120)) * 1000,
         };
 
-        // 复用常驻 worker（wasm 与数据缓存在 worker 内热着）；不存在则新建。
-        if (!workerRef.current) {
-            workerRef.current = new Worker(new URL("@/lib/deck-recommend/engine-worker.ts", import.meta.url));
-        }
-        const worker = workerRef.current;
-
-        type WorkerMessage =
-            | DeckWorkerOutput
-            | { type: "music"; requestId: number; rows: MusicRankRow[] };
-        worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
-            const data = event.data;
-            if (data.type === "progress") {
-                setProgressStage(data.stage);
-                setProgressPercent(data.percent);
-                setProgressLabel(data.progressKey ? t(data.progressKey) : data.stageLabel ?? "");
-                return;
-            }
-            if (data.type === "music") {
-                const deckRank = data.requestId ?? 0;
-                setMusicLoadingByDeck((prev) => ({ ...prev, [deckRank]: false }));
-                setMusicByDeck((prev) => ({ ...prev, [deckRank]: data.rows ?? [] }));
-                return;
-            }
-            if (data.error) {
-                setError(getErrorMessage(data.error, t));
-            } else {
-                setResults(data.result ?? []);
-                if (data.userCards) setUserCards(data.userCards);
-                setDuration(data.duration ?? null);
-            }
-            setIsCalculating(false);
-            setProgressPercent(0);
-            // worker 保留给单曲收益查询；下次计算时再 terminate
-        };
-        worker.onerror = (err) => {
-            setError(t("page.deckRecommend.errors.workerError", { message: err.message }));
-            setIsCalculating(false);
-            setProgressPercent(0);
-        };
+        // 复用常驻 worker（wasm 与数据已在后台预热或在 worker 内热着）；不存在则新建。
+        const worker = getOrCreateWorker();
         const oauthAccessToken = getOAuthAccessTokenForGameUser(server, userId.trim());
         worker.postMessage({ args: { ...workerArgs, oauthAccessToken } });
     };
@@ -1283,8 +1317,8 @@ export default function DeckRecommendClient() {
     }, []);
 
     const requestMusic = (deck: DeckResultDeck) => {
-        const worker = workerRef.current;
-        if (!worker || musicLoadingByDeck[deck.rank]) return;
+        const worker = getOrCreateWorker();
+        if (musicLoadingByDeck[deck.rank]) return;
         setMusicLoadingByDeck((prev) => ({ ...prev, [deck.rank]: true }));
         // 音乐推荐不需要用户数据，但 UI 用 rank 关联面板；requestId 即 rank。
         worker.postMessage({

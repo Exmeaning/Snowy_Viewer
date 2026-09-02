@@ -64,35 +64,83 @@ interface MusicRequest {
 
 /** worker 常驻缓存：master data 按区服缓存一次，用户句柄按账号缓存一次。
  *  二次计算跳过全部网络与 wasm 数据加载，只有引擎搜索本身的开销。 */
-let dataCache: {
-    key: string;
+let masterCache: {
+    server: string;
     tables: Record<string, unknown[]>;
     musicMetas: unknown[];
+} | null = null;
+let masterInFlight: {
+    server: string;
+    promise: Promise<{ engine: DeckEngine; master: NonNullable<typeof masterCache> }>;
+} | null = null;
+
+let userCache: {
+    key: string;
     userData: Record<string, unknown>;
 } | null = null;
+let userInFlight: {
+    key: string;
+    promise: Promise<{
+        engine: DeckEngine;
+        master: NonNullable<typeof masterCache>;
+        userCache: NonNullable<typeof userCache>;
+        handleCache: NonNullable<typeof handleCache>;
+    }>;
+} | null = null;
+
 let handleCache: { key: string; handle: DeckEngineUserHandle } | null = null;
 
-async function runDeck(input: DeckWorkerInput): Promise<DeckWorkerOutput> {
-    const { mode, userId, server, oauthAccessToken, target } = input;
+function hasEffectiveUserDataOverrides(input: DeckWorkerInput): boolean {
+    if (input.characterFilterIds && input.characterFilterIds.length > 0) {
+        return true;
+    }
+    const o = input.userDataOverrides;
+    if (!o) return false;
+    if (o.areaItemLevel !== null && o.areaItemLevel !== undefined && o.areaItemLevel > 0) return true;
+    if (o.areaItemLevelOverrides && o.areaItemLevelOverrides.length > 0) return true;
+    if (o.characterRank !== null && o.characterRank !== undefined && o.characterRank > 0) return true;
+    if (o.characterRankOverrides && o.characterRankOverrides.length > 0) return true;
+    if (o.mysekaiGateLevel !== null && o.mysekaiGateLevel !== undefined && o.mysekaiGateLevel > 0) return true;
+    if (o.mysekaiGateLevelOverrides && o.mysekaiGateLevelOverrides.length > 0) return true;
+    if (o.mysekaiFixtureBonusRate !== null && o.mysekaiFixtureBonusRate !== undefined && o.mysekaiFixtureBonusRate >= 0) return true;
+    if (o.mysekaiFixtureBonusRateOverrides && o.mysekaiFixtureBonusRateOverrides.length > 0) return true;
+    return false;
+}
 
-    // wasm 实例在 worker 内加载（同 worker 单例，二次调用零成本）。
+async function ensureMasterData(
+    server: string,
+    userId?: string,
+    oauthAccessToken?: string,
+    onProgress?: (stage: string, percent: number, progressKey: string) => void,
+): Promise<{ engine: DeckEngine; master: NonNullable<typeof masterCache> }> {
     const engine = await loadDeckEngine();
+    if (masterCache && masterCache.server === server) {
+        return { engine, master: masterCache };
+    }
+    if (masterInFlight && masterInFlight.server === server) {
+        return await masterInFlight.promise;
+    }
 
-    const dataKey = server;
-    if (!dataCache || dataCache.key !== dataKey) {
-        sendProgress("fetching", 5, "page.deckRecommend.progress.fetchingUserData");
+    if (handleCache) {
+        engine.disposeUser(handleCache.handle);
+        handleCache = null;
+    }
+    userCache = null;
+    userInFlight = null;
 
+    onProgress?.("fetching", 5, "page.deckRecommend.progress.fetchingUserData");
+
+    const promise = (async () => {
         const dataProvider = new CachedDeckDataProvider(
-            new SnowyDataProvider(userId, server as HarukiServer, oauthAccessToken || null),
+            new SnowyDataProvider(userId || "0", server as HarukiServer, oauthAccessToken || null),
         );
 
-        const [userData, musicMetas] = await Promise.all([
-            dataProvider.getUserDataAll(),
+        const [musicMetas] = await Promise.all([
             fetchEngineMusicMetas(),
             dataProvider.preloadMasterData(PRELOAD_MASTER_KEYS),
         ]);
 
-        sendProgress("processing", 25, "page.deckRecommend.progress.loadingEngine");
+        onProgress?.("processing", 25, "page.deckRecommend.progress.loadingEngine");
 
         const tables: Record<string, unknown[]> = {};
         for (const key of PRELOAD_MASTER_KEYS) {
@@ -106,26 +154,101 @@ async function runDeck(input: DeckWorkerInput): Promise<DeckWorkerOutput> {
             }
         }
         engine.loadMasterData(tables, musicMetas as unknown[]);
-        dataCache = {
-            key: dataKey,
+        masterCache = {
+            server,
             tables,
             musicMetas: musicMetas as unknown[],
-            userData: userData as Record<string, unknown>,
         };
+        return { engine, master: masterCache };
+    })().finally(() => {
+        if (masterInFlight?.server === server) {
+            masterInFlight = null;
+        }
+    });
+
+    masterInFlight = { server, promise };
+    return await promise;
+}
+
+async function ensureUserData(
+    server: string,
+    userId: string,
+    oauthAccessToken?: string,
+    onProgress?: (stage: string, percent: number, progressKey: string) => void,
+): Promise<{
+    engine: DeckEngine;
+    master: NonNullable<typeof masterCache>;
+    userCache: NonNullable<typeof userCache>;
+    handleCache: NonNullable<typeof handleCache>;
+}> {
+    const { engine, master } = await ensureMasterData(server, userId, oauthAccessToken, onProgress);
+    const userKey = `${userId}|${server}|${oauthAccessToken ?? ""}`;
+
+    if (userCache && userCache.key === userKey && handleCache && handleCache.key === userKey) {
+        return { engine, master, userCache, handleCache };
     }
-    const { tables, userData } = dataCache;
+
+    if (userInFlight && userInFlight.key === userKey) {
+        return await userInFlight.promise;
+    }
+
+    const promise = (async () => {
+        if (!userCache || userCache.key !== userKey) {
+            if (handleCache) {
+                engine.disposeUser(handleCache.handle);
+                handleCache = null;
+            }
+            onProgress?.("fetching", 10, "page.deckRecommend.progress.fetchingUserData");
+            const dataProvider = new CachedDeckDataProvider(
+                new SnowyDataProvider(userId, server as HarukiServer, oauthAccessToken || null),
+            );
+            const userData = (await dataProvider.getUserDataAll()) as Record<string, unknown>;
+            userCache = { key: userKey, userData };
+        }
+
+        if (!handleCache || handleCache.key !== userKey) {
+            if (handleCache) {
+                engine.disposeUser(handleCache.handle);
+            }
+            const user = engine.createUserData(server, userCache.userData);
+            handleCache = { key: userKey, handle: user };
+        }
+
+        return { engine, master, userCache: userCache!, handleCache: handleCache! };
+    })().finally(() => {
+        if (userInFlight?.key === userKey) {
+            userInFlight = null;
+        }
+    });
+
+    userInFlight = { key: userKey, promise };
+    return await promise;
+}
+
+async function runDeck(input: DeckWorkerInput): Promise<DeckWorkerOutput> {
+    const { mode, userId, server, oauthAccessToken, target } = input;
+
+    // 1. 确保 Master data 与 User data 已加载进引擎缓存
+    const { engine, master, userCache: cachedUser } = await ensureUserData(
+        server,
+        userId,
+        oauthAccessToken,
+        sendProgress,
+    );
+
+    const { tables } = master;
+    const { userData } = cachedUser;
     const uploadTime = userData.upload_time as number | undefined;
     const userCards = (userData.userCards ?? []) as DeckUserCard[];
 
-    // 进阶数据覆盖与角色过滤：按 Haruki 语义改写快照后交给引擎。
+    // 2. 进阶数据覆盖与角色过滤：按 Haruki 语义改写快照后交给引擎。
     // 无覆盖且账号未变时直接复用已解析的用户句柄（跳过 createUserData）。
-    const hasOverrides = Boolean(input.userDataOverrides || input.characterFilterIds);
+    const hasOverrides = hasEffectiveUserDataOverrides(input);
     const userKey = `${userId}|${server}|${oauthAccessToken ?? ""}`;
     let user: DeckEngineUserHandle;
-    let reusable = false;
+    let isTempUser = false;
     if (!hasOverrides && handleCache && handleCache.key === userKey) {
         user = handleCache.handle;
-        reusable = true;
     } else {
         const preparedUserData = applyUserDataOverrides(
             userData,
@@ -137,6 +260,8 @@ async function runDeck(input: DeckWorkerInput): Promise<DeckWorkerOutput> {
         if (!hasOverrides) {
             if (handleCache) engine.disposeUser(handleCache.handle);
             handleCache = { key: userKey, handle: user };
+        } else {
+            isTempUser = true;
         }
     }
 
@@ -195,8 +320,10 @@ async function runDeck(input: DeckWorkerInput): Promise<DeckWorkerOutput> {
             upload_time: uploadTime,
         };
     } finally {
-        // 复用路径不释放句柄（handleCache 持有）；覆盖路径的临时句柄在此释放。
-        if (!reusable) engine.disposeUser(user);
+        // 复用路径不释放句柄（handleCache 持有）；仅临时创建的覆盖句柄在此释放。
+        if (isTempUser) {
+            engine.disposeUser(user);
+        }
     }
 }
 
@@ -376,13 +503,43 @@ async function buildOptions(
     return options;
 }
 
-self.onmessage = async (event: MessageEvent<{ args?: DeckWorkerInput; music?: MusicRequest; warmup?: boolean }>) => {
-    const { args, music } = event.data;
-    if (event.data.warmup) {
-        // 预热：提前加载 wasm 实例，让首次真实计算跳过引擎启动。
-        loadDeckEngine()
-            .then(() => postMessage({ type: "warm" }))
-            .catch(() => postMessage({ type: "warm" }));
+interface WarmupMessage {
+    server?: string;
+    userId?: string;
+    oauthAccessToken?: string;
+}
+
+self.onmessage = async (
+    event: MessageEvent<{
+        args?: DeckWorkerInput;
+        music?: MusicRequest;
+        warmup?: boolean | WarmupMessage;
+        server?: string;
+        userId?: string;
+        oauthAccessToken?: string;
+    }>
+) => {
+    const { args, music, warmup } = event.data;
+    if (warmup) {
+        // 预热：提前加载 wasm 实例、区服 master data 与用户数据，让首次真实计算零延迟直接产出结果。
+        const warmupData: WarmupMessage = typeof warmup === "object" ? warmup : {};
+        const warmupServer = warmupData.server || event.data.server;
+        const warmupUserId = warmupData.userId || event.data.userId;
+        const warmupToken = warmupData.oauthAccessToken || event.data.oauthAccessToken;
+
+        (async () => {
+            if (warmupServer && warmupUserId && warmupUserId.trim()) {
+                await ensureUserData(warmupServer, warmupUserId.trim(), warmupToken);
+            } else if (warmupServer) {
+                await ensureMasterData(warmupServer);
+            } else {
+                await loadDeckEngine();
+            }
+            postMessage({ type: "warm", ready: true });
+        })().catch((err) => {
+            console.warn("deck worker warmup failed:", err);
+            postMessage({ type: "warm", ready: false });
+        });
         return;
     }
     if (music) {

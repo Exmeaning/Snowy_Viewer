@@ -90,10 +90,13 @@ const RARITY_CONFIG_KEYS: Record<string, string> = {
 };
 
 /** Persistent worker cache: master data by server, user handle by account. */
-let dataCache: {
-    key: string;
+let masterCache: {
+    server: string;
     tables: Record<string, unknown[]>;
     musicMetas: unknown[];
+} | null = null;
+let userCache: {
+    key: string;
     userData: Record<string, unknown>;
 } | null = null;
 let handleCache: { key: string; handle: DeckEngineUserHandle } | null = null;
@@ -108,14 +111,19 @@ async function deckBuilderRunner(args: DeckBuilderInput): Promise<DeckBuilderOut
     const currentDuration = calcDuration();
     const engine = await loadDeckEngine();
 
-    const dataKey = server;
-    if (!dataCache || dataCache.key !== dataKey) {
+    if (!masterCache || masterCache.server !== server) {
+        if (handleCache) {
+            engine.disposeUser(handleCache.handle);
+            handleCache = null;
+        }
+        userCache = null;
+
         const dataProvider = new CachedDeckDataProvider(
             new SnowyDataProvider(userId, server as HarukiServer, oauthAccessToken || null),
         );
-        const [userData, musicMetas] = await Promise.all([
-            dataProvider.getUserDataAll(),
+        const [musicMetas] = await Promise.all([
             fetchEngineMusicMetas(),
+            dataProvider.preloadMasterData(PRELOAD_MASTER_KEYS),
         ]);
         const tables: Record<string, unknown[]> = {};
         for (const key of PRELOAD_MASTER_KEYS) {
@@ -129,26 +137,37 @@ async function deckBuilderRunner(args: DeckBuilderInput): Promise<DeckBuilderOut
             }
         }
         engine.loadMasterData(tables, musicMetas as unknown[]);
-        dataCache = {
-            key: dataKey,
+        masterCache = {
+            server,
             tables,
             musicMetas: musicMetas as unknown[],
-            userData: userData as Record<string, unknown>,
         };
     }
-    const { tables, userData } = dataCache;
+
+    const userKey = `${userId}|${server}|${oauthAccessToken ?? ""}`;
+    if (!userCache || userCache.key !== userKey) {
+        if (handleCache) {
+            engine.disposeUser(handleCache.handle);
+            handleCache = null;
+        }
+        const dataProvider = new CachedDeckDataProvider(
+            new SnowyDataProvider(userId, server as HarukiServer, oauthAccessToken || null),
+        );
+        const userData = (await dataProvider.getUserDataAll()) as Record<string, unknown>;
+        userCache = { key: userKey, userData };
+    }
+
+    const { tables } = masterCache;
+    const { userData } = userCache;
     const userCards = (userData.userCards as UserCardEntry[] | undefined) ?? [];
     const uploadTime = userData.upload_time as number | undefined;
 
-    const userKey = `${userId}|${server}|${oauthAccessToken ?? ""}`;
-    let user;
-    let reusable = false;
+    let user: DeckEngineUserHandle;
     if (handleCache && handleCache.key === userKey) {
         user = handleCache.handle;
-        reusable = true;
     } else {
-        user = engine.createUserData(server, userData);
         if (handleCache) engine.disposeUser(handleCache.handle);
+        user = engine.createUserData(server, userData);
         handleCache = { key: userKey, handle: user };
     }
 
@@ -222,7 +241,7 @@ async function deckBuilderRunner(args: DeckBuilderInput): Promise<DeckBuilderOut
             upload_time: uploadTime,
         };
     } finally {
-        if (!reusable) engine.disposeUser(user);
+        // User handle is kept in handleCache across multiple calls
     }
 }
 
