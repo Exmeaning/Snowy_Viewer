@@ -41,7 +41,8 @@ RUN --mount=type=secret,id=public_lyrics_ca,required=false \
       export NODE_EXTRA_CA_CERTS=/run/secrets/public_lyrics_ca; \
     fi; \
     export REQUIRE_PUBLIC_LYRICS_SOURCE=1; \
-    bun run sitemap && bun run generate:metadata && bun run build:next
+    bun run copy:wasm && bun run sitemap && bun run generate:metadata && bun run build:next
+RUN test -f /app/web/public/wasm/allium-deck.js && test -f /app/web/public/wasm/allium-deck_bg.wasm
 
 # Build Stage for Backend
 FROM golang:1.23.12-alpine3.22 AS builder-go
@@ -68,6 +69,7 @@ COPY --from=builder-web --chown=node:node /app/public-lyrics-base-url-build-cont
 COPY --from=builder-web --chown=node:node /app/web/.next/standalone ./nextjs/
 COPY --from=builder-web --chown=node:node /app/web/.next/static ./nextjs/web/.next/static
 COPY --from=builder-web --chown=node:node /app/web/public ./nextjs/web/public
+RUN test -f /app/nextjs/web/public/wasm/allium-deck.js && test -f /app/nextjs/web/public/wasm/allium-deck_bg.wasm
 COPY --chown=node:node --chmod=755 scripts/start-container.sh ./start.sh
 RUN mkdir -p /app/data && chown node:node /app/data
 
