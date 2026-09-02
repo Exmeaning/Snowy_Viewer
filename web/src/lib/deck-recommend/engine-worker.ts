@@ -137,6 +137,10 @@ async function runDeck(input: DeckWorkerInput): Promise<DeckWorkerOutput> {
         if (!hasOverrides) {
             if (handleCache) engine.disposeUser(handleCache.handle);
             handleCache = { key: userKey, handle: user };
+            // The handle now lives in the cache, so the finally block must
+            // not free it (freeing it here made the next search pass a
+            // dangling pointer back into wasm).
+            reusable = true;
         }
     }
 

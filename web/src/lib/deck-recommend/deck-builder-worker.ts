@@ -150,6 +150,8 @@ async function deckBuilderRunner(args: DeckBuilderInput): Promise<DeckBuilderOut
         user = engine.createUserData(server, userData);
         if (handleCache) engine.disposeUser(handleCache.handle);
         handleCache = { key: userKey, handle: user };
+        // Same as above: cached handles survive the finally block.
+        reusable = true;
     }
 
     try {
