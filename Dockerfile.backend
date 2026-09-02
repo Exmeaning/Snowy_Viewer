@@ -3,9 +3,6 @@ FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
-# 安装 ca-certificates 确保 HTTPS 抓取外部数据正常
-RUN apk add --no-cache ca-certificates
-
 COPY go.mod go.sum ./
 RUN go mod download
 

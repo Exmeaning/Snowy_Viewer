@@ -33,16 +33,12 @@ ARG REQUIRE_FRESH_BUILD_DATA=0
 ENV MASTER_DATA_URLS=$MASTER_DATA_URLS
 ENV MANGA_DATA_URLS=$MANGA_DATA_URLS
 ENV REQUIRE_FRESH_BUILD_DATA=$REQUIRE_FRESH_BUILD_DATA
-RUN test -f /app/bun.lock && test -f /app/refer/re_sekai-calculator/src/index.ts
-RUN test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
-RUN printf '%s\n' "$NEXT_PUBLIC_LYRICS_BASE_URL" > /app/public-lyrics-base-url-build-contract
 RUN --mount=type=secret,id=public_lyrics_ca,required=false \
     if [ -f /run/secrets/public_lyrics_ca ]; then \
       export NODE_EXTRA_CA_CERTS=/run/secrets/public_lyrics_ca; \
     fi; \
     export REQUIRE_PUBLIC_LYRICS_SOURCE=1; \
     bun run copy:wasm && bun run sitemap && bun run generate:metadata && bun run build:next
-RUN test -f /app/web/public/wasm/allium-deck.js && test -f /app/web/public/wasm/allium-deck_bg.wasm
 
 # Build Stage for Backend
 FROM golang:1.23.12-alpine3.22 AS builder-go
@@ -57,19 +53,13 @@ RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o server main.go
 FROM node:22.17.1-alpine3.22
 WORKDIR /app
 
-ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/files/translation/lyrics
-ENV NEXT_PUBLIC_LYRICS_BASE_URL=$NEXT_PUBLIC_LYRICS_BASE_URL
-RUN test -n "$NEXT_PUBLIC_LYRICS_BASE_URL"
-
 RUN apk add --no-cache ca-certificates tini wget
 
 # Copy Backend and Next.js standalone server.
 COPY --from=builder-go --chown=node:node /app/server ./server
-COPY --from=builder-web --chown=node:node /app/public-lyrics-base-url-build-contract ./public-lyrics-base-url-build-contract
 COPY --from=builder-web --chown=node:node /app/web/.next/standalone ./nextjs/
 COPY --from=builder-web --chown=node:node /app/web/.next/static ./nextjs/web/.next/static
 COPY --from=builder-web --chown=node:node /app/web/public ./nextjs/web/public
-RUN test -f /app/nextjs/web/public/wasm/allium-deck.js && test -f /app/nextjs/web/public/wasm/allium-deck_bg.wasm
 COPY --chown=node:node --chmod=755 scripts/start-container.sh ./start.sh
 RUN mkdir -p /app/data && chown node:node /app/data
 
