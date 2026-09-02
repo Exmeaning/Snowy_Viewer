@@ -1,10 +1,12 @@
 /**
- * 引擎 score 字段的展示解码：引擎按 target 把主目标值打包进 u64
- * （`(主值 << 32) | live_score`；MySekai/战力/技能为普通整型）。
- * 页面展示前必须按目标解出对应单位，否则会把打包值直接显示出来。
+ * Display-side decoding of the engine score field: the engine packs the
+ * primary target value into the upper 32 bits of a u64
+ * (`(primary << 32) | live_score`; MySekai/power/skill are plain ints).
+ * The page must decode by target before display, otherwise the packed raw
+ * value would be shown directly.
  */
 
-/** 取打包值的高 32 位主值。 */
+/** Take the high 32 bits of a packed value. */
 export function decodeTargetHigh(targetValue: number): number {
     return Math.floor(targetValue / 2 ** 32);
 }
@@ -19,20 +21,20 @@ export type DeckDisplayMode =
 
 export interface DeckDisplayInput {
     mode: DeckDisplayMode;
-    /** 活动目标的搜索目标（score/power/bonus）。 */
+    /** Event search target (score/power/bonus). */
     target?: string;
-    /** 最强模式目标（power/skill）。 */
+    /** Strongest mode target (power/skill). */
     strongestTarget?: "power" | "skill";
-    /** 引擎返回的目标值（可能为打包值）。 */
+    /** Raw target value from the engine (possibly packed). */
     targetValue: number;
-    /** 活动点数（引擎单独给出时为 true）。 */
+    /** Event point (present when the engine gives it separately). */
     eventPoint?: number;
 }
 
-/** 按模式与目标把引擎返回的主值解码为页面展示单位。
- *  event score → PT；event power → 综合力；event bonus → 加成率整数；
- *  challenge → 挑战分数；custom → PT；strongest skill → 实效率；
- *  weakest → 综合力；mysekai → 烤森 Pt。 */
+/** Decode the engine's primary value into the display unit for the mode.
+ *  event score → PT; event power → total power; event bonus → bonus %;
+ *  challenge → challenge score; custom → PT; strongest skill → effective %;
+ *  weakest → total power; mysekai → MySekai PT. */
 export function resolveDeckScore(input: DeckDisplayInput): number {
     const { mode, target, strongestTarget, targetValue, eventPoint } = input;
     switch (mode) {

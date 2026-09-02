@@ -23,7 +23,7 @@ const SUITE = 'https://suite-api.haruki.seiunx.com/public';
 const UID = '21906891722772489'; // JP 实账号（排行榜公开数据）
 
 const PRELOAD_MASTER_KEYS = [
-    'areaItemLevels', 'cards', 'cardMysekaiCanvasBonuses', 'cardRarities',
+    'areaItems', 'areaItemLevels', 'cards', 'cardMysekaiCanvasBonuses', 'cardRarities',
     'characterRanks', 'cardEpisodes', 'events', 'eventCards',
     'eventRarityBonusRates', 'eventDeckBonuses', 'gameCharacters',
     'gameCharacterUnits', 'honors', 'masterLessons', 'mysekaiGates',
@@ -130,15 +130,15 @@ function buildMatrix(mod, decks, ctx) {
             expect: '技能顺序取最大，得分不降',
         },
         {
-            name: 'targetBonusList',
-            base: BASE_EVENT, patch: { target: 'bonus', target_bonus_list: [415] },
+            name: 'targetBonusList exact hit',
+            base: BASE_EVENT, patch: { target: 'bonus', target_bonus_list: [420] },
             assert: (r, detail) => {
                 const bonus = r.decks[0]?.event_bonus_total ?? -1;
                 detail.value = bonus;
-                // 引擎按“可达且不超过目标”的最大档命中；基线 415 上下取可达档即可证明过滤生效。
-                return r.decks.length > 0 && bonus >= 400 && bonus <= 420;
+                // 精确档位：只返回 total_bonus === 420 的卡组（不可达档为空数组）。
+                return r.decks.length > 0 && bonus === 420;
             },
-            expect: '目标加成档位过滤生效（命中可达档）',
+            expect: '精确命中目标加成档位（wasm search_targets 路径）',
         },
         {
             name: 'boost',
@@ -303,7 +303,7 @@ async function main() {
     });
     const baseWlBonus = baseWlRun.decks[0]?.event_bonus_total ?? 0;
     console.log(`   基线：pool=${basePoolSize}, topPT=${baseEvent.decks[0]?.event_point}, wlBonus=${baseWlBonus}`);
-    const bonusRun = run({ ...BASE_EVENT, target: 'bonus', target_bonus_list: [415] });
+    const bonusRun = run({ ...BASE_EVENT, target: 'bonus', target_bonus_list: [420] });
     const challengeRun = run({
         region: 'jp', live_type: 'challenge', challenge_live_character_id: 1,
         music_id: 74, music_diff: 'master', target: 'score', limit: 1, timeout_ms: 60_000,
@@ -362,8 +362,167 @@ console.log('3C) 展示解码逐模式校验…');
         const value = resolveDeckScore(item.input);
         const ok = item.expect(value);
         console.log(`   ${ok ? 'ok' : 'FAIL'} ${item.name} -> ${value}`);
-        ok ? (pass += 1) : failures.push(`decode:${item.name}`);
+        if (ok) { pass += 1; } else { failures.push(`decode:${item.name}`); }
     }
+
+    console.log('3D) 进阶数据覆盖：纯函数改写校验…');
+    const { applyUserDataOverrides } = await import("../src/lib/deck-recommend/user-data-overrides.ts");
+    const ovMaster = {
+        areaItems: master.areaItems ?? [],
+        areaItemLevels: master.areaItemLevels ?? [],
+        gameCharacters: master.gameCharacters ?? [],
+        characterRanks: master.characterRanks ?? [],
+        mysekaiGates: master.mysekaiGates ?? [],
+        mysekaiGateLevels: master.mysekaiGateLevels ?? [],
+        cards: master.cards ?? [],
+    };
+    const snapshot = {
+        userAreas: [{ areaId: 5, areaItems: [{ areaItemId: 1, level: 3 }] }],
+        userCharacters: [{ characterId: 1, characterRank: 5 }],
+        userMysekaiGates: [{ mysekaiGateId: 1, mysekaiGateLevel: 2 }],
+        userMysekaiFixtureGameCharacterPerformanceBonuses: [{ gameCharacterId: 1, totalBonusRate: 100 }],
+    };
+    const maxBy = (rows, key, idKey, id) => Math.max(0, ...rows.filter((r) => r[idKey] === id).map((r) => r[key]));
+    const char1Max = maxBy(master.characterRanks, 'characterRank', 'characterId', 1);
+    const gate1Max = maxBy(master.mysekaiGateLevels, 'level', 'mysekaiGateId', 1);
+    const flatAreaItems = (applied) => (applied.userAreas ?? []).flatMap((area) => area.areaItems ?? []);
+
+    const overrideCases = [
+        {
+            name: 'area uniform clamp + insert',
+            expect: '所有区域道具统一为各自上限（含补插缺失项）',
+            run: () => {
+                const applied = applyUserDataOverrides(snapshot, { areaItemLevel: 9999 }, ovMaster);
+                const items = flatAreaItems(applied);
+                if (items.length !== (ovMaster.areaItems?.length ?? 0)) return false;
+                return items.every((item) => item.level === maxBy(master.areaItemLevels, 'level', 'areaItemId', item.areaItemId));
+            },
+        },
+        {
+            name: 'area override beats uniform',
+            expect: '单项覆盖优先于统一值',
+            run: () => {
+                const applied = applyUserDataOverrides(snapshot, {
+                    areaItemLevel: 9999,
+                    areaItemLevelOverrides: [{ areaItemId: 1, level: 1 }],
+                }, ovMaster);
+                const item1 = flatAreaItems(applied).find((item) => item.areaItemId === 1);
+                return item1?.level === 1;
+            },
+        },
+        {
+            name: 'character rank uniform clamp + insert',
+            expect: '全部角色 clamp 到上限（含未拥有角色补插）',
+            run: () => {
+                const applied = applyUserDataOverrides(snapshot, { characterRank: 9999 }, ovMaster);
+                return (applied.userCharacters ?? []).length === (ovMaster.gameCharacters?.length ?? 0)
+                    && applied.userCharacters.find((c) => c.characterId === 1)?.characterRank === char1Max;
+            },
+        },
+        {
+            name: 'character rank override',
+            expect: '单项角色连 1 生效',
+            run: () => {
+                const applied = applyUserDataOverrides(snapshot, { characterRankOverrides: [{ characterId: 1, rank: 1 }] }, ovMaster);
+                return applied.userCharacters.find((c) => c.characterId === 1)?.characterRank === 1;
+            },
+        },
+        {
+            name: 'mysekai gate uniform clamp + insert',
+            expect: '烤森门统一为上限（含补插）',
+            run: () => {
+                const applied = applyUserDataOverrides(snapshot, { mysekaiGateLevel: 9999 }, ovMaster);
+                return (applied.userMysekaiGates ?? []).length === (ovMaster.mysekaiGates?.length ?? 0)
+                    && applied.userMysekaiGates.find((g) => g.mysekaiGateId === 1)?.mysekaiGateLevel === gate1Max;
+            },
+        },
+        {
+            name: 'fixture rate 0 is a valid uniform',
+            expect: '玩偶加成统一 0（含全部角色补插）',
+            run: () => {
+                const applied = applyUserDataOverrides(snapshot, { mysekaiFixtureBonusRate: 0 }, ovMaster);
+                const rows = applied.userMysekaiFixtureGameCharacterPerformanceBonuses ?? [];
+                return rows.length === (ovMaster.gameCharacters?.length ?? 0) && rows.every((r) => r.totalBonusRate === 0);
+            },
+        },
+        {
+            name: 'fixture override beats uniform',
+            expect: '单项玩偶覆盖优先于统一值',
+            run: () => {
+                const applied = applyUserDataOverrides(snapshot, {
+                    mysekaiFixtureBonusRate: 500,
+                    mysekaiFixtureBonusRateOverrides: [{ characterId: 1, totalBonusRate: 0 }],
+                }, ovMaster);
+                return applied.userMysekaiFixtureGameCharacterPerformanceBonuses?.find((r) => r.gameCharacterId === 1)?.totalBonusRate === 0;
+            },
+        },
+        {
+            name: 'no overrides keeps user data',
+            expect: '无覆盖时返回等价快照',
+            run: () => JSON.stringify(applyUserDataOverrides(user, undefined, ovMaster)) === JSON.stringify(user),
+        },
+        {
+            name: 'character filter restricts card pool',
+            expect: '卡池仅保留角色 1 的卡',
+            run: () => {
+                const applied = applyUserDataOverrides(user, undefined, ovMaster, [1]);
+                const allowed = new Set(master.cards.filter((c) => c.characterId === 1).map((c) => c.id));
+                const kept = (applied.userCards ?? []).map((c) => Number(c.cardId));
+                if (kept.length === 0) return false;
+                return kept.every((id) => allowed.has(id));
+            },
+        },
+    ];
+    for (const item of overrideCases) {
+        let ok = false;
+        try { ok = item.run(); } catch (err) { console.error(`   ✗ ${item.name} err=${err.message}`); }
+        if (ok) { pass += 1; console.log(`   ✓ ${item.name} — ${item.expect}`); }
+        else { failures.push(`override:${item.name}`); console.error(`   ✗ ${item.name} — ${item.expect}`); }
+    }
+
+    console.log('3E) 进阶数据覆盖：引擎端生效校验…');
+    const fixedCards = baseEvent.decks[0]?.cards?.map((c) => c.card_id);
+    const powerWith = (overrides) => {
+        const handleTmp = mod.create_user_data(JSON.stringify(applyUserDataOverrides(user, overrides, ovMaster)), 'jp');
+        try {
+            const opts = { region: 'jp', live_type: 'solo', target: 'power', limit: 1, timeout_ms: 60_000, fixedCards, ...ALL_RARITY_DEFAULTS };
+            return JSON.parse(mod.recommendWithUserData(JSON.stringify(opts), handleTmp)).decks[0]?.total_power ?? -1;
+        } finally {
+            handleTmp?.free?.();
+        }
+    };
+    const hasHigherRanks = Array.isArray(user.userCharacters) && user.userCharacters.some((c) => Number(c.characterRank) > 1);
+    const baseFixedPower = powerWith(undefined);
+    const rank1Power = powerWith({ characterRank: 1 });
+    const areaMaxPower = powerWith({ areaItemLevel: 9999 });
+    const fixture0Power = powerWith({ mysekaiFixtureBonusRate: 0 });
+    const fixture500Power = powerWith({ mysekaiFixtureBonusRate: 500 });
+    const poolRun = (overrides, characterFilterIds) => {
+        const handleTmp = mod.create_user_data(JSON.stringify(applyUserDataOverrides(user, overrides, ovMaster, characterFilterIds)), 'jp');
+        try {
+            const opts = { region: 'jp', live_type: 'solo', target: 'power', limit: 1, timeout_ms: 60_000, ...ALL_RARITY_DEFAULTS };
+            return JSON.parse(mod.recommendWithUserData(JSON.stringify(opts), handleTmp)).performance.pool_size ?? -1;
+        } finally {
+            handleTmp?.free?.();
+        }
+    };
+    const poolAll = poolRun(undefined, undefined);
+    const poolChar1 = poolRun(undefined, [1]);
+    const engineOverrideCases = [
+        { name: 'character rank 1 lowers power', expect: hasHigherRanks ? '低于基线' : '不超过基线', ok: hasHigherRanks ? rank1Power < baseFixedPower : rank1Power <= baseFixedPower },
+        { name: 'area items max raises power', expect: '不低于基线', ok: areaMaxPower >= baseFixedPower },
+        { name: 'fixture 500 beats fixture 0', expect: '加成越高力量越高', ok: fixture500Power > fixture0Power },
+    ];
+    engineOverrideCases.push({
+        name: 'character filter shrinks pool',
+        expect: '角色过滤后候选池缩小且可用',
+        ok: poolChar1 > 0 && poolChar1 < poolAll,
+    });
+    for (const item of engineOverrideCases) {
+        if (item.ok) { pass += 1; console.log(`   ✓ ${item.name} — ${item.expect} (${rank1Power}/${areaMaxPower}/${fixture0Power}/${fixture500Power})`); }
+        else { failures.push(`engine-override:${item.name}`); console.error(`   ✗ ${item.name} — ${item.expect} (${rank1Power}/${areaMaxPower}/${fixture0Power}/${fixture500Power})`); }
+    }
+    console.log(`   无覆盖基准综合力（固定卡组）: ${baseFixedPower}（rank1=${rank1Power}, areaMax=${areaMaxPower}, fixture0=${fixture0Power}, fixture500=${fixture500Power}）`);
 
     handle.free();
 
@@ -380,6 +539,7 @@ console.log('3C) 展示解码逐模式校验…');
         'custom_bonus_character_ids', 'custom_bonus_attr', 'custom_bonus_character_support_units',
         'target_bonus_list', 'rarity1Config', 'rarity4Config', 'forced_leader_character_id',
         'music_id', 'music_diff', 'live_type',
+        'userDataOverrides', 'applyUserDataOverrides', 'characterFilterIds',
     ];
     const missing = requiredKeys.filter((key) => !workerSource.includes(key));
     if (missing.length === 0) {
@@ -388,6 +548,23 @@ console.log('3C) 展示解码逐模式校验…');
     } else {
         failures.push(`worker missing keys: ${missing.join(', ')}`);
         console.error(`   ✗ worker 缺少键: ${missing.join(', ')}`);
+    }
+
+    console.log('B2) client → worker 覆盖传参静态对照…');
+    const clientSource = readFileSync(resolve(webRoot, 'src/app/deck-recommend/client.tsx'), 'utf8');
+    const clientKeys = [
+        'userDataOverrides', 'DataOverridePanel', 'areaItemLevel', 'areaItemLevelOverrides',
+        'characterRank', 'characterRankOverrides', 'mysekaiGateLevel', 'mysekaiGateOverrides',
+        'mysekaiFixtureBonusRate', 'mysekaiFixtureOverrides',
+        'characterFilterIds', 'useCurrentDeck', 'unitFilter', 'attrFilter', 'filterGroupTitle',
+    ];
+    const clientMissing = clientKeys.filter((key) => !clientSource.includes(key));
+    if (clientMissing.length === 0) {
+        pass += 1;
+        console.log(`   ✓ client 传参覆盖 ${clientKeys.length} 个键`);
+    } else {
+        failures.push(`client missing keys: ${clientMissing.join(', ')}`);
+        console.error(`   ✗ client 缺少键: ${clientMissing.join(', ')}`);
     }
 
     console.log(`\n参数全量验证：${pass} 项通过${failures.length ? `，${failures.length} 项失败：${failures.join('; ')}` : '，全部生效'}`);

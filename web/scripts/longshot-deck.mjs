@@ -2,7 +2,6 @@
  * 无头 Chromium 长截图：deck-recommend 快速/进阶两态。
  * 用法: node scripts/longshot-deck.mjs [outDir]
  */
-import fs from 'fs';
 import path from 'path';
 import { chromium } from 'playwright-core';
 

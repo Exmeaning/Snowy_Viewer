@@ -272,6 +272,15 @@ export default function ScoreControlClient() {
         }
     }, []);
 
+    // Pre-warm the deck builder worker as soon as it is enabled, so the first
+    // calculation skips both the worker chunk compile and the wasm boot.
+    useEffect(() => {
+        if (!deckBuilderEnabled || dbWorkerRef.current) return;
+        const w = new Worker(new URL("@/lib/deck-recommend/deck-builder-worker.ts", import.meta.url));
+        w.postMessage({ warmup: true });
+        dbWorkerRef.current = w;
+    }, [deckBuilderEnabled]);
+
     // ====== Infinite Song Search State ======
     const [infiniteSearchEnabled, setInfiniteSearchEnabled] = useState(false);
     const [infiniteSearchRunning, setInfiniteSearchRunning] = useState(false);
@@ -318,15 +327,15 @@ export default function ScoreControlClient() {
         if (account?.toolStates.scoreControl) {
             setDbUserId(account.toolStates.scoreControl.userId);
             setDbServer(account.toolStates.scoreControl.server);
-            setDbAllowSave(true);
+            setDbAllowSave(true); setDeckBuilderEnabled(true);
         } else if (account?.toolStates.deckRecommend) {
             setDbUserId(account.toolStates.deckRecommend.userId);
             setDbServer(account.toolStates.deckRecommend.server);
-            setDbAllowSave(true);
+            setDbAllowSave(true); setDeckBuilderEnabled(true);
         } else {
             const savedUserId = localStorage.getItem("deck_recommend_userid");
             const savedServer = localStorage.getItem("deck_recommend_server");
-            if (savedUserId) { setDbUserId(savedUserId); setDbAllowSave(true); }
+            if (savedUserId) { setDbUserId(savedUserId); setDbAllowSave(true); setDeckBuilderEnabled(true); }
             if (isValidServer(savedServer)) {
                 setDbServer(savedServer);
             }
@@ -438,37 +447,38 @@ export default function ScoreControlClient() {
             const bonusMin = Math.max(0, minBonus);
             const bonusMax = Math.min(415, maxBonus);
 
-            // Terminate any existing worker
-            if (dbWorkerRef.current) {
-                dbWorkerRef.current.terminate();
-                dbWorkerRef.current = null;
+            // Target-driven build: plan routes first, then build decks only for
+            // the bonus tiers these routes actually need.
+            const prelimRoutes = planSmartRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 2840000, 10, 20);
+            let bonusTiers = [...new Set(
+                prelimRoutes.flatMap((route) => route.steps.map((step) => step.eventBonus)),
+            )].filter((tier) => tier > 0).sort((a, b) => a - b);
+            if (bonusTiers.length === 0) {
+                // No planned route in range: fall back to the plain wide-table calculation,
+                // and still build decks for the tiers the wide table found.
+                computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 3000000);
+                bonusTiers = [...new Set(
+                    getValidScores(targetPT, selectedEventRate!, 415, 3000000)
+                        .filter((r) => r.eventBonus >= bonusMin && r.eventBonus <= bonusMax)
+                        .map((r) => r.eventBonus),
+                )].sort((a, b) => a - b).slice(0, 32);
+            }
+            if (bonusTiers.length === 0) {
+                setIsCalculating(false);
+                return;
             }
 
-            // Split bonus range into N chunks for parallel workers
-            // Mobile devices default to single thread for stability
-            const isMobile = typeof window !== 'undefined' && /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const concurrency = isMobile ? 1 : Math.min(navigator.hardwareConcurrency || 4, 4);
-            const range = bonusMax - bonusMin;
-            const chunkSize = Math.max(1, Math.ceil(range / concurrency));
-            const chunks: { min: number; max: number }[] = [];
-            for (let i = 0; i < concurrency; i++) {
-                const cMin = bonusMin + i * chunkSize;
-                const cMax = Math.min(bonusMax, bonusMin + (i + 1) * chunkSize - 1);
-                if (cMin <= bonusMax) chunks.push({ min: cMin, max: cMax });
+            // Reuse the persistent worker (wasm and data stay warm inside it);
+            // create it on demand if the warmup effect has not run yet.
+            if (!dbWorkerRef.current) {
+                dbWorkerRef.current = new Worker(
+                    new URL("@/lib/deck-recommend/deck-builder-worker.ts", import.meta.url)
+                );
             }
 
-            const startTime = performance.now();
-            let completedCount = 0;
-            let hasError = false;
-            const allResults: DeckResultInfo[] = [];
-            let firstUserCards: UserCardInfo[] | null = null;
-            let firstUploadTime: number | undefined;
-            const workers: Worker[] = [];
-
-            const onAllDone = () => {
-                const duration = performance.now() - startTime;
-                stopFakeProgress(setDbFakeProgress, dbFakeProgressTimerRef, true);
-
+            // Single worker: only the tiers from the route planning are searched
+            // (a handful), so a single round trip is enough.
+            const mergeResultRows = (allResults: DeckResultInfo[]): DeckResultInfo[] => {
                 // Merge results, deduplicate by eventBonus
                 const seen = new Set<number>();
                 const merged: DeckResultInfo[] = [];
@@ -480,96 +490,76 @@ export default function ScoreControlClient() {
                         merged.push(r);
                     }
                 }
-
-                setDbResults(merged);
-                if (firstUserCards) setDbUserCards(firstUserCards);
-                setDbDuration(duration);
-                if (firstUploadTime) setDbUploadTime(firstUploadTime);
-
-                // Re-plan smart routes
-                if (merged.length > 0) {
-                    const foundBonuses = Array.from(new Set<number>(merged.map((r) => {
-                        const bonus = r.eventBonus ?? (r.score || 0);
-                        return Math.round((typeof bonus === 'number' ? bonus : 0) * 10) / 10;
-                    })));
-                    computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 100000, foundBonuses);
-                } else {
-                    setSmartRoutes([]);
-                }
-
-                setIsCalculating(false);
-                setDbIsCalculating(false);
-                workers.forEach(w => w.terminate());
+                return merged;
             };
 
-            for (const chunk of chunks) {
-                const w = new Worker(
-                    new URL("@/lib/deck-recommend/deck-builder-worker.ts", import.meta.url)
-                );
-                workers.push(w);
+            const startTime = performance.now();
+            const w = new Worker(
+                new URL("@/lib/deck-recommend/deck-builder-worker.ts", import.meta.url)
+            );
+            dbWorkerRef.current = w;
 
-                w.onmessage = (event) => {
-                    const data = event.data;
-                    completedCount++;
+            w.onmessage = (event) => {
+                const data = event.data;
+                if (data.error) {
+                    setDbError(getErrorMessage(data.error, t));
+                    // Fallback routes
+                    try {
+                        computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 3000000);
+                    } catch (_) { /* ignore */ }
+                    stopFakeProgress(setDbFakeProgress, dbFakeProgressTimerRef, false);
+                    setIsCalculating(false);
+                    setDbIsCalculating(false);
+                } else {
+                    const duration = performance.now() - startTime;
+                    stopFakeProgress(setDbFakeProgress, dbFakeProgressTimerRef, true);
 
-                    if (data.error) {
-                        if (!hasError) {
-                            hasError = true;
-                            setDbError(getErrorMessage(data.error, t));
-                            // Fallback routes
-                            try {
-                                computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 3000000);
-                            } catch (_) { /* ignore */ }
-                        }
+                    const merged = mergeResultRows(data.result || []);
+                    setDbResults(merged);
+                    if (data.userCards) setDbUserCards(data.userCards);
+                    setDbDuration(duration);
+                    if (data.upload_time) setDbUploadTime(data.upload_time);
+
+                    // Re-plan smart routes
+                    if (merged.length > 0) {
+                        const foundBonuses = Array.from(new Set<number>(merged.map((r) => {
+                            const bonus = r.eventBonus ?? (r.score || 0);
+                            return Math.round((typeof bonus === 'number' ? bonus : 0) * 10) / 10;
+                        })));
+                        computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 100000, foundBonuses);
                     } else {
-                        const results = data.result || [];
-                        allResults.push(...results);
-                        if (!firstUserCards && data.userCards) firstUserCards = data.userCards;
-                        if (!firstUploadTime && data.upload_time) firstUploadTime = data.upload_time;
+                        setSmartRoutes([]);
                     }
 
-                    if (completedCount >= chunks.length) {
-                        if (!hasError) onAllDone();
-                        else {
-                            stopFakeProgress(setDbFakeProgress, dbFakeProgressTimerRef, false);
-                            setIsCalculating(false);
-                            setDbIsCalculating(false);
-                            workers.forEach(wk => wk.terminate());
-                        }
-                    }
-                };
+                    setIsCalculating(false);
+                    setDbIsCalculating(false);
+                }
+            };
 
-                w.onerror = (err) => {
-                    completedCount++;
-                    if (!hasError) {
-                        hasError = true;
-                        setDbError(t("page.scoreControl.errors.workerError", { message: err.message }));
-                    }
-                    if (completedCount >= chunks.length) {
-                        stopFakeProgress(setDbFakeProgress, dbFakeProgressTimerRef, false);
-                        setIsCalculating(false);
-                        setDbIsCalculating(false);
-                        workers.forEach(wk => wk.terminate());
-                    }
-                };
+            w.onerror = (err) => {
+                setDbError(t("page.scoreControl.errors.workerError", { message: err.message }));
+                stopFakeProgress(setDbFakeProgress, dbFakeProgressTimerRef, false);
+                setIsCalculating(false);
+                setDbIsCalculating(false);
+            };
 
-                const oauthAccessToken = getOAuthAccessTokenForGameUser(dbServer, dbUserId.trim());
-                w.postMessage({
-                    args: {
-                        userId: dbUserId.trim(),
-                        server: dbServer,
-                        oauthAccessToken,
-                        eventId: parseInt(dbEventId),
-                        minBonus: chunk.min,
-                        maxBonus: chunk.max,
-                        liveType: dbLiveType,
-                        musicId: parseInt(musicId),
-                        difficulty,
-                        supportCharacterId: dbSupportCharacterId || undefined,
-                        cardConfig: configForCalc,
-                    },
-                });
-            }
+            const oauthAccessToken = getOAuthAccessTokenForGameUser(dbServer, dbUserId.trim());
+            w.postMessage({
+                args: {
+                    userId: dbUserId.trim(),
+                    server: dbServer,
+                    oauthAccessToken,
+                    eventId: parseInt(dbEventId),
+                    bonusTiers,
+                    minBonus: bonusMin,
+                    maxBonus: bonusMax,
+                    liveType: dbLiveType,
+                    musicId: parseInt(musicId),
+                    difficulty,
+                    supportCharacterId: dbSupportCharacterId || undefined,
+                    cardConfig: configForCalc,
+                },
+            });
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedEventRate, targetPT, minBonus, maxBonus, deckBuilderEnabled, dbUserId, dbServer, dbEventId, dbLiveType, dbSupportCharacterId, musicId, difficulty, dbCardConfig, smartRoutes, infiniteSearchEnabled, t]);
@@ -1485,6 +1475,28 @@ export default function ScoreControlClient() {
                                         {renderResultsTable(group.results)}
                                     </div>
                                 ))}
+                                {dbResults !== null && dbResults.length > 0 && (
+                                    <div className="glass-card p-4 sm:p-5 rounded-2xl mb-4">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <span className="w-1.5 h-6 bg-gradient-to-b from-emerald-400 to-miku rounded-full"></span>
+                                            <h3 className="text-sm font-bold text-primary-text">{t("page.scoreControl.recommendedDecks")}</h3>
+                                        </div>
+                                        {Object.entries(dbResultsByBonus).sort(([a], [b]) => Number(a) - Number(b)).map(([bonus, decks]) => (
+                                            <div key={bonus} className="mb-3 last:mb-0">
+                                                <div className="text-[10px] font-bold text-miku mb-1.5">{t("page.scoreControl.recommendedDeckWithBonus", { bonus })}</div>
+                                                <div className="space-y-2">
+                                                    {decks.map((deck, deckIdx: number) => (
+                                                        <div key={deckIdx} className="bg-white/50 dark:bg-slate-800/50 rounded-lg p-2 border border-slate-100 dark:border-slate-700/50">
+                                                            <div className="flex gap-1 flex-wrap">
+                                                                {deck.cards?.slice(0, 5).map((card: DeckCardInfo, i: number) => renderDeckCard(card, i))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </>
                         )}
                     </div>
@@ -1510,7 +1522,7 @@ export default function ScoreControlClient() {
                                     </svg>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-primary-text">{t("page.scoreControl.searchingDecks")}</p>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("page.scoreControl.parallelWorkers", { count: Math.min(navigator.hardwareConcurrency || 4, 4) })}</p>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{t("page.scoreControl.deckBuilderProgressTask")}</p>
                                     </div>
                                     <span className="text-xs font-bold text-miku tabular-nums">{Math.round(dbFakeProgress)}%</span>
                                 </div>
@@ -1687,12 +1699,6 @@ export default function ScoreControlClient() {
 
                 {/* Footer */}
                 <div className="mt-12 text-center text-xs text-slate-400">
-                    <p className="mb-1">
-                        {t("page.scoreControl.sourceCreditPrefix")} <ExternalLink href="https://github.com/xfl03/sekai-calculator" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-calculator</ExternalLink>
-                    </p>
-                    <p className="mb-1">
-                        {t("page.scoreControl.algorithmCreditPrefix")} <ExternalLink href="https://github.com/NeuraXmy/sekai-deck-recommend-cpp" target="_blank" rel="noopener noreferrer" className="text-slate-500 hover:text-miku hover:underline">sekai-deck-recommend-cpp</ExternalLink>{t("page.scoreControl.algorithmCreditAuthor")}
-                    </p>
                     <p>{t("page.scoreControl.licenseNotice")}</p>
                 </div>
             </div>
