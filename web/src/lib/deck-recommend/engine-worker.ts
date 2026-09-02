@@ -17,6 +17,7 @@ import {
 import { getWl3SimulationGroupByEventId } from "@/lib/world-bloom-simulation";
 import {
     loadDeckEngine,
+    type DeckEngine,
     type DeckEngineUserHandle,
 } from "@/lib/deck-engine/wasm-loader";
 import { resolveDeckScore } from "./deck-score";
@@ -62,33 +63,42 @@ interface MusicRequest {
     };
 }
 
-/** worker 常驻缓存：master data 按区服缓存一次，用户句柄按账号缓存一次。
- *  二次计算跳过全部网络与 wasm 数据加载，只有引擎搜索本身的开销。 */
-let masterCache: {
+interface MasterCacheEntry {
     server: string;
     tables: Record<string, unknown[]>;
     musicMetas: unknown[];
-} | null = null;
-let masterInFlight: {
-    server: string;
-    promise: Promise<{ engine: DeckEngine; master: NonNullable<typeof masterCache> }>;
-} | null = null;
+}
 
-let userCache: {
+interface UserCacheEntry {
     key: string;
     userData: Record<string, unknown>;
+}
+
+interface HandleCacheEntry {
+    key: string;
+    handle: DeckEngineUserHandle;
+}
+
+/** worker 常驻缓存：master data 按区服缓存一次，用户句柄按账号缓存一次。
+ *  二次计算跳过全部网络与 wasm 数据加载，只有引擎搜索本身的开销。 */
+let masterCache: MasterCacheEntry | null = null;
+let masterInFlight: {
+    server: string;
+    promise: Promise<{ engine: DeckEngine; master: MasterCacheEntry }>;
 } | null = null;
+
+let userCache: UserCacheEntry | null = null;
 let userInFlight: {
     key: string;
     promise: Promise<{
         engine: DeckEngine;
-        master: NonNullable<typeof masterCache>;
-        userCache: NonNullable<typeof userCache>;
-        handleCache: NonNullable<typeof handleCache>;
+        master: MasterCacheEntry;
+        userCache: UserCacheEntry;
+        handleCache: HandleCacheEntry;
     }>;
 } | null = null;
 
-let handleCache: { key: string; handle: DeckEngineUserHandle } | null = null;
+let handleCache: HandleCacheEntry | null = null;
 
 function hasEffectiveUserDataOverrides(input: DeckWorkerInput): boolean {
     if (input.characterFilterIds && input.characterFilterIds.length > 0) {

@@ -10,6 +10,13 @@ import type { IMusicInfo } from "@/types/music";
 import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import CardSelectorModal from "@/components/cards/CardSelectorModal";
+import CustomRulesModal, {
+    UNIT_BONUS_OPTIONS,
+    ATTR_OPTIONS,
+    CUSTOM_CHARACTER_IDS,
+    type CustomRulesState,
+} from "@/components/deck-recommend/CustomRulesModal";
+import ActiveRulesSummary from "@/components/deck-recommend/ActiveRulesSummary";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { getCharacterIconUrl } from "@/lib/assets";
 import {
@@ -28,7 +35,7 @@ import AccountSelector from "@/components/AccountSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import { preloadDeckEngine } from "@/lib/deck-engine/wasm-loader";
-import DataOverridePanel, { type OverrideCatalogItem } from "@/components/deck-recommend/DataOverridePanel";
+import { type OverrideCatalogItem } from "@/components/deck-recommend/DataOverridePanel";
 import { SnowyDataProvider } from "@/lib/deck-recommend/data-provider";
 import type {
     DeckRecommendMode,
@@ -88,6 +95,9 @@ function buildOverrideCatalogs(
     fixtureCharacters: OverrideCatalogItem[];
 } {
     // 区域道具：每个道具的目标（角色/团/属性）与上限。
+    const VALID_ATTRS = new Set(["cool", "cute", "happy", "mysterious", "pure"]);
+    const VALID_UNITS = new Set(["light_sound", "idol", "street", "theme_park", "school_refusal", "piapro"]);
+
     const areaMax = new Map<number, number>();
     const areaTarget = new Map<number, { unit?: string; attr?: string; characterId?: number }>();
     for (const row of rowsOf(master.areaItemLevels)) {
@@ -96,11 +106,23 @@ function buildOverrideCatalogs(
         if (id > 0 && level > 0) {
             areaMax.set(id, Math.max(areaMax.get(id) ?? 0, level));
             if (!areaTarget.has(id)) {
-                areaTarget.set(id, {
-                    unit: typeof row.targetUnit === "string" ? row.targetUnit : undefined,
-                    attr: typeof row.targetCardAttr === "string" ? row.targetCardAttr : undefined,
-                    characterId: numOf(row.targetGameCharacterId) || undefined,
-                });
+                const charId = numOf(row.targetGameCharacterId);
+                const rawUnit = typeof row.targetUnit === "string" ? row.targetUnit : "";
+                const rawAttr = typeof row.targetCardAttr === "string" ? row.targetCardAttr.toLowerCase() : "";
+
+                let characterId: number | undefined;
+                let unit: string | undefined;
+                let attr: string | undefined;
+
+                if (charId >= 1 && charId <= 26) {
+                    characterId = charId;
+                } else if (VALID_UNITS.has(rawUnit)) {
+                    unit = rawUnit;
+                } else if (VALID_ATTRS.has(rawAttr)) {
+                    attr = rawAttr;
+                }
+
+                areaTarget.set(id, { characterId, unit, attr });
             }
         }
     }
@@ -131,6 +153,9 @@ function buildOverrideCatalogs(
                 id,
                 name: typeof row.name === "string" && row.name ? row.name : `#${id}`,
                 sub,
+                characterId: target?.characterId,
+                unit: target?.unit,
+                attr: target?.attr,
                 max,
                 current: userAreaItems.get(id) ?? null,
             };
@@ -163,6 +188,8 @@ function buildOverrideCatalogs(
                 id,
                 name: getCharacterName(t, id, "full"),
                 sub: unit ? t(unit.labelKey) : "",
+                characterId: id,
+                unit: typeof unitRow?.unit === "string" ? unitRow.unit : undefined,
                 max: rankMax.get(id) ?? globalRankMax,
                 current: userRanks.get(id) ?? null,
             };
@@ -191,6 +218,7 @@ function buildOverrideCatalogs(
                 id,
                 name: typeof row.name === "string" && row.name ? row.name : `#${id}`,
                 sub: unit ? t(unit.labelKey) : "",
+                unit: typeof row.unit === "string" ? row.unit : undefined,
                 max,
                 current: userGateLevels.get(id) ?? null,
             };
@@ -214,6 +242,8 @@ function buildOverrideCatalogs(
                 id,
                 name: getCharacterName(t, id, "full"),
                 sub: unit ? t(unit.labelKey) : "",
+                characterId: id,
+                unit: typeof unitRow?.unit === "string" ? unitRow.unit : undefined,
                 max: 0,
                 current: userFixtureRates.get(id) ?? null,
             };
@@ -262,28 +292,8 @@ const DEFAULT_CARD_CONFIG: Record<string, DeckTrainingConfig> = {
     rarity_birthday: { disable: false, levelMax: true, episodeRead: true, masterMax: false, skillMax: false },
 };
 
-/** 引擎事件加成团编码（event_unit）。 */
-const UNIT_BONUS_OPTIONS = [
-    { value: "light_sound", labelKey: "common.units.ln", icon: "ln.webp" },
-    { value: "idol", labelKey: "common.units.mmj", icon: "mmj.webp" },
-    { value: "street", labelKey: "common.units.vbs", icon: "vbs.webp" },
-    { value: "theme_park", labelKey: "common.units.ws", icon: "wxs.webp" },
-    { value: "school_refusal", labelKey: "common.units.25ji", icon: "n25.webp" },
-    { value: "piapro", labelKey: "common.units.vs", icon: "vs.webp" },
-];
-
-const ATTR_OPTIONS = [
-    { value: "cool", label: "Cool", icon: "Cool.webp" },
-    { value: "cute", label: "Cute", icon: "cute.webp" },
-    { value: "happy", label: "Happy", icon: "Happy.webp" },
-    { value: "mysterious", label: "Mysterious", icon: "Mysterious.webp" },
-    { value: "pure", label: "Pure", icon: "Pure.webp" },
-];
-
 const SIM_EVENT_TYPE_OPTIONS = ["marathon", "cheerful_carnival", "world_bloom"] as const;
 
-/** 自定义加成可选角色（1-26）。 */
-const CUSTOM_CHARACTER_IDS = Array.from({ length: 26 }, (_, i) => i + 1);
 const VIRTUAL_SINGER_ID_MIN = 21;
 
 type CustomSubMode = "unit" | "character";
@@ -333,6 +343,7 @@ interface SavedConfig {
     filterOtherUnit: boolean;
     boost: string;
     otherScore: string;
+    leaderCharacterId: number | null;
     fixedCards: number[];
     fixedCharacters: number[];
     excludedCards: number[];
@@ -392,6 +403,7 @@ const DEFAULT_SAVED_CONFIG: SavedConfig = {
     filterOtherUnit: false,
     boost: "",
     otherScore: "",
+    leaderCharacterId: null,
     fixedCards: [],
     fixedCharacters: [],
     excludedCards: [],
@@ -482,24 +494,6 @@ function ProgressBar({ percent, stageLabel }: { percent: number; stageLabel: str
     );
 }
 
-function Field({
-    label,
-    hint,
-    children,
-}: {
-    label: string;
-    hint?: string;
-    children: React.ReactNode;
-}) {
-    return (
-        <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">{label}</label>
-            {children}
-            {hint && <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">{hint}</p>}
-        </div>
-    );
-}
-
 function SectionTitle({ text }: { text: string }) {
     return (
         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{text}</label>
@@ -525,7 +519,7 @@ function CharacterMultiGrid({
 }) {
     const { t } = useI18n();
     return (
-        <div className="ds-char-grid">
+        <div className="flex flex-wrap gap-2">
             {CUSTOM_CHARACTER_IDS.map((id) => {
                 const active = selected.includes(id);
                 const full = !active && selected.length >= maxCount;
@@ -535,11 +529,21 @@ function CharacterMultiGrid({
                         type="button"
                         disabled={full}
                         onClick={() => onToggle(id)}
-                        className={`ds-char-cell ${active ? "ds-char-cell-active" : ""} ${full ? "opacity-30 cursor-not-allowed" : ""}`}
+                        className={`w-10 h-10 rounded-full p-0.5 transition-all border relative ${
+                            active
+                                ? "ring-2 ring-miku shadow-md border-miku bg-miku/15"
+                                : full
+                                    ? "opacity-30 cursor-not-allowed border-slate-200 dark:border-slate-800"
+                                    : "border-slate-200 dark:border-slate-700 hover:border-miku/50 bg-white/50 dark:bg-slate-800/50"
+                        }`}
                         title={getCharacterName(t, id, "full")}
                     >
-                        <img src={getCharacterIconUrl(id)} alt={getCharacterName(t, id, "short")} className="w-9 h-9 rounded-full object-contain" loading="lazy" />
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{id}</span>
+                        <img src={getCharacterIconUrl(id)} alt="" className="w-full h-full rounded-full object-contain" loading="lazy" />
+                        {active && (
+                            <span className="absolute -top-0.5 -right-0.5 bg-miku text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center font-bold shadow-xs">
+                                ✓
+                            </span>
+                        )}
                     </button>
                 );
             })}
@@ -603,90 +607,6 @@ function SongRankingPanel({
     );
 }
 
-// ==================== Single card override row ====================
-function SingleCardRow({
-    entry,
-    cardsMaster,
-    onChange,
-    onRemove,
-}: {
-    entry: DeckSingleCardOverride;
-    cardsMaster: ICardInfo[];
-    onChange: (next: DeckSingleCardOverride) => void;
-    onRemove: () => void;
-}) {
-    const { t } = useI18n();
-    const master = cardsMaster.find((c) => c.id === entry.cardId);
-    const maxLevel = (master as { maxLevel?: number } | undefined)?.maxLevel ?? 60;
-    const levels = Array.from({ length: maxLevel }, (_, i) => i + 1);
-    const label = master?.prefix ?? `#${entry.cardId}`;
-    const selectCls = "ios-glass-input px-2 py-1 rounded-lg text-xs";
-    return (
-        <div className="flex items-center gap-2 flex-wrap py-1.5 border-t border-slate-100 dark:border-slate-800/60">
-            <div className="w-9 h-9 flex-shrink-0">
-                {master && <SekaiCardThumbnail card={master} trained={false} width={36} />}
-            </div>
-            <span className="text-xs text-slate-600 dark:text-slate-300 w-24 truncate" title={label}>{label}</span>
-            <select
-                value={entry.level ?? ""}
-                onChange={(e) => onChange({ ...entry, level: e.target.value ? Number(e.target.value) : undefined })}
-                className={selectCls}
-            >
-                <option value="">{t("page.deckRecommend.config.singleCardLevelAuto")}</option>
-                {levels.map((lv) => (
-                    <option key={lv} value={lv}>Lv.{lv}</option>
-                ))}
-            </select>
-            <select
-                value={entry.skillLevel ?? ""}
-                onChange={(e) => onChange({ ...entry, skillLevel: e.target.value ? Number(e.target.value) : undefined })}
-                className={selectCls}
-            >
-                <option value="">{t("page.deckRecommend.config.singleCardSkillAuto")}</option>
-                {[1, 2, 3, 4].map((lv) => (
-                    <option key={lv} value={lv}>{t("page.deckRecommend.config.singleCardSkill")} Lv.{lv}</option>
-                ))}
-            </select>
-            <select
-                value={entry.masterRank ?? ""}
-                onChange={(e) => onChange({ ...entry, masterRank: e.target.value === "" ? undefined : Number(e.target.value) })}
-                className={selectCls}
-            >
-                <option value="">{t("page.deckRecommend.config.singleCardMasterAuto")}</option>
-                {[0, 1, 2, 3, 4, 5].map((rank) => (
-                    <option key={rank} value={rank}>{t("page.deckRecommend.config.singleCardMaster")} {rank}</option>
-                ))}
-            </select>
-            <select
-                value={entry.episodeReadCount ?? ""}
-                onChange={(e) => onChange({ ...entry, episodeReadCount: e.target.value === "" ? undefined : Number(e.target.value) })}
-                className={selectCls}
-            >
-                <option value="">{t("page.deckRecommend.config.singleCardEpisodeAuto")}</option>
-                <option value={0}>{t("page.deckRecommend.config.episodeNone")}</option>
-                <option value={1}>{t("page.deckRecommend.config.episodeFirst")}</option>
-                <option value={2}>{t("page.deckRecommend.config.episodeBoth")}</option>
-            </select>
-            <label className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                <input
-                    type="checkbox"
-                    className="ds-checkbox"
-                    checked={entry.canvas ?? false}
-                    onChange={(e) => onChange({ ...entry, canvas: e.target.checked })}
-                />
-                {t("page.deckRecommend.config.singleCardCanvas")}
-            </label>
-            <button
-                type="button"
-                onClick={onRemove}
-                className="ml-auto text-xs text-red-400 hover:text-red-500"
-            >
-                {t("page.deckRecommend.config.singleCardRemove")}
-            </button>
-        </div>
-    );
-}
-
 // ==================== Result deck row ====================
 interface DeckRowProps {
     deck: DeckResultDeck;
@@ -734,29 +654,35 @@ function DeckRow({
             <button
                 type="button"
                 onClick={() => setExpanded((prev) => !prev)}
-                className="w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 text-left"
+                className="w-full flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4 p-3 sm:p-4 text-left"
             >
-                <div className="flex-shrink-0 w-9 text-center">
-                    <div className={`ds-rank text-xl font-black ${deck.rank === 1 ? "text-miku" : "text-slate-400 dark:text-slate-500"}`}>
-                        {deck.rank === 1 ? "👑" : `#${deck.rank}`}
+                <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto min-w-0">
+                    <div className="flex-shrink-0 w-8 sm:w-9 text-center">
+                        <div className={`ds-rank text-lg sm:text-xl font-black ${deck.rank === 1 ? "text-miku" : "text-slate-400 dark:text-slate-500"}`}>
+                            #{deck.rank}
+                        </div>
                     </div>
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                            <span className="text-xl sm:text-2xl font-black text-primary-text dark:text-slate-100 font-mono">
+                                {formatScoreValue(deck.score)}
+                            </span>
+                            <span className="text-xs text-slate-400">{scoreLabel}</span>
+                        </div>
+                        <div className="flex items-center gap-2 sm:gap-3 mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+                            {showBonus && (
+                                <span className="font-bold text-amber-500">{formatBonusValue(eventBonus)}%</span>
+                            )}
+                            <span>{t("page.deckRecommend.result.power")}: {formatNumber(totalPower)}</span>
+                            <span>{t("page.deckRecommend.result.effectiveSkill")}: {formatBonusValue(deck.effectiveSkill)}%</span>
+                        </div>
+                    </div>
+                    <svg className={`w-4 h-4 text-slate-400 transition-transform flex-shrink-0 sm:hidden ml-auto ${expanded ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                 </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline gap-2 flex-wrap">
-                        <span className="text-xl sm:text-2xl font-black text-primary-text dark:text-slate-100 font-mono">
-                            {formatScoreValue(deck.score)}
-                        </span>
-                        <span className="text-xs text-slate-400">{scoreLabel}</span>
-                    </div>
-                    <div className="flex items-center gap-3 mt-0.5 text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 flex-wrap">
-                        {showBonus && (
-                            <span className="font-bold text-amber-500">{formatBonusValue(eventBonus)}%</span>
-                        )}
-                        <span>{t("page.deckRecommend.result.power")}: {formatNumber(totalPower)}</span>
-                        <span>{t("page.deckRecommend.result.effectiveSkill")}: {formatBonusValue(deck.effectiveSkill)}%</span>
-                    </div>
-                </div>
-                <div className="flex gap-1 flex-1 overflow-x-auto no-scrollbar mask-gradient-right sm:overflow-visible sm:mask-none justify-start sm:justify-end">
+
+                <div className="flex gap-1.5 overflow-x-auto no-scrollbar justify-between sm:justify-end sm:ml-auto w-full sm:w-auto pt-1 sm:pt-0">
                     {deck.cards.slice(0, 5).map((card, i) => {
                         const masterCard = masterById.get(card.cardId);
                         const userCard = userCardById.get(card.cardId);
@@ -766,13 +692,13 @@ function DeckRow({
                         const showTrained = (card.rarity === "rarity_3" || card.rarity === "rarity_4") && !isBirthday;
                         if (!masterCard) {
                             return (
-                                <div key={i} className="ds-card-thumb w-10 h-10 sm:w-12 sm:h-12 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-xs flex-shrink-0">?</div>
+                                <div key={i} className="ds-card-thumb w-11 h-11 sm:w-12 sm:h-12 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 text-xs flex-shrink-0">?</div>
                             );
                         }
                         return (
                             <div key={i} className="relative flex flex-col items-center gap-0.5 flex-shrink-0">
                                 <Link href={`/cards/${card.cardId}`} className="block relative" target="_blank">
-                                    <span className="block w-10 h-10 sm:w-12 sm:h-12">
+                                    <span className="block w-11 h-11 sm:w-12 sm:h-12">
                                         <SekaiCardThumbnail card={masterCard} trained={showTrained} mastery={masterRank} width={48} />
                                     </span>
                                     {i === 0 && (
@@ -890,15 +816,16 @@ export default function DeckRecommendClient() {
         customSubMode, customUnit, customCharacterIds, customCharacterUnits, customAttr,
         strongestTarget, multiTeammatePower, multiTeammateScoreUp, multiScoreUpLowerBound,
         skillOrder, specificSkillOrder, skillReference, keepAfterTrainingState,
-        bestSkillAsLeader, minimize, boost, otherScore, fixedCards, fixedCharacters,
+        bestSkillAsLeader, minimize, supportMasterMax, supportSkillMax, filterOtherUnit,
+        boost, otherScore, leaderCharacterId, fixedCards, fixedCharacters,
         excludedCards, singleCardOverrides, limit, timeoutSeconds,
         areaItemLevel, areaItemOverrides, characterRank, characterRankOverrides,
         mysekaiGateLevel, mysekaiGateOverrides, mysekaiFixtureBonusRate, mysekaiFixtureOverrides,
         unitFilter, attrFilter, characterFilterIds, useCurrentDeck,
     } = state;
 
-    // 页面布局模式：快速只显示基础配置；进阶把合并后的完整配置展开置顶。
-    const [layoutMode, setLayoutMode] = useState<"quick" | "advanced">("quick");
+    const [isCustomRulesOpen, setIsCustomRulesOpen] = useState(false);
+
     // Run state
     const [isCalculating, setIsCalculating] = useState(false);
     const [, setProgressStage] = useState("idle");
@@ -912,16 +839,14 @@ export default function DeckRecommendClient() {
     const [musicLoadingByDeck, setMusicLoadingByDeck] = useState<Record<number, boolean>>({});
     const [savedHint, setSavedHint] = useState(false);
     const workerRef = useRef<Worker | null>(null);
+    const calculateScrollYRef = useRef<number | null>(null);
 
     // Card master + music metas for result rendering
     const [cardsMaster, setCardsMaster] = useState<ICardInfo[]>([]);
     const [songTitles, setSongTitles] = useState<Map<number, string>>(new Map());
     const [cardModal, setCardModal] = useState<null | "fixed" | "excluded" | "single">(null);
-    const [showLeaderSelect, setShowLeaderSelect] = useState(false);
-    const [leaderCharacterId, setLeaderCharacterId] = useState<number | null>(null);
 
-    // 进阶数据覆盖的主数据目录（区域道具/角色等级/烤森门/玩偶加成）
-    // 获取与派生分离：目录派生依赖 i18n t（引用不稳定），只按 server/userId 拉取原始数据。
+    // 数据覆盖的主数据目录
     const [overrideRaw, setOverrideRaw] = useState<{
         master: {
             areaItems: unknown[];
@@ -968,7 +893,7 @@ export default function DeckRecommendClient() {
                         const userData = await provider.getUserDataAll();
                         snapshot = userData as OverrideUserSnapshot;
                     } catch {
-                        // 用户数据拉取失败时仍展示主数据目录；当前值显示「-」。
+                        // 用户数据拉取失败时仍展示主数据目录
                     }
                 }
                 if (cancelled) return;
@@ -978,7 +903,7 @@ export default function DeckRecommendClient() {
                     snapshot,
                 });
             } catch {
-                // 目录表拉取失败：面板显示为空项（用户仍可自行输入统一值）。
+                // 目录表拉取失败
             }
         })();
         return () => {
@@ -993,7 +918,7 @@ export default function DeckRecommendClient() {
         [overrideRaw, t, emptyOverrideCatalogs],
     );
 
-    // 卡名与缩略图必须与账号数据同区服：站点默认数据库区服不一定等于所选账号区服。
+    // 卡名与缩略图
     useEffect(() => {
         let cancelled = false;
         Promise.all([
@@ -1041,6 +966,16 @@ export default function DeckRecommendClient() {
                 setResults(data.result ?? []);
                 if (data.userCards) setUserCards(data.userCards);
                 setDuration(data.duration ?? null);
+                if (calculateScrollYRef.current !== null) {
+                    const savedY = calculateScrollYRef.current;
+                    requestAnimationFrame(() => {
+                        window.scrollTo({ top: savedY, behavior: "instant" });
+                        requestAnimationFrame(() => {
+                            window.scrollTo({ top: savedY, behavior: "instant" });
+                            calculateScrollYRef.current = null;
+                        });
+                    });
+                }
             }
             setIsCalculating(false);
             setProgressPercent(0);
@@ -1054,8 +989,7 @@ export default function DeckRecommendClient() {
         return worker;
     }, [t]);
 
-    // 页面加载及区服/账号切换时，在常驻 Worker 内后台预热 wasm 引擎、主数据与玩家数据，
-    // 使首次点击“开始推荐”也能秒出结果。
+    // 页面加载及区服/账号切换时后台预热
     useEffect(() => {
         preloadDeckEngine();
         const worker = getOrCreateWorker();
@@ -1150,158 +1084,224 @@ export default function DeckRecommendClient() {
     const updateCardConfig = useCallback((key: string, field: keyof DeckTrainingConfig, value: boolean) => {
         setState((prev) => ({
             ...prev,
-            cardConfig: { ...prev.cardConfig, [key]: { ...prev.cardConfig[key], [field]: value } },
+            cardConfig: {
+                ...prev.cardConfig,
+                [key]: {
+                    ...prev.cardConfig[key],
+                    [field]: value,
+                },
+            },
         }));
     }, []);
 
-    // EventSelector 回调保持引用稳定；bonus characters 用等值短路防止 effect 循环。
-    const handleEventSelect = useCallback((id: string, eventType?: string) => {
-        setState((prev) => ({
-            ...prev,
-            eventId: id,
-            selectedEventType: eventType !== undefined ? eventType : prev.selectedEventType,
-        }));
-    }, []);
+    const handleEventSelect = useCallback((id: string, evType?: string) => {
+        patch({ eventId: id, selectedEventType: evType ?? null });
+    }, [patch]);
 
-    const handleEventTypeChange = useCallback((eventType: string | null) => {
-        setState((prev) => ({
-            ...prev,
-            selectedEventType: eventType,
-            supportCharacterId: eventType !== "world_bloom" ? 0 : prev.supportCharacterId,
-        }));
-    }, []);
+    const handleEventTypeChange = useCallback((evType: string | null) => {
+        patch({ selectedEventType: evType });
+    }, [patch]);
 
-    const handleBonusCharacters = useCallback((ids: number[]) => {
-        setState((prev) =>
-            prev.eventBonusCharacterIds === ids ||
-            (prev.eventBonusCharacterIds.length === ids.length &&
-                prev.eventBonusCharacterIds.every((v, i) => v === ids[i]))
-                ? prev
-                : { ...prev, eventBonusCharacterIds: ids },
-        );
-    }, []);
+    const handleBonusCharacters = useCallback((charIds: number[]) => {
+        patch({ eventBonusCharacterIds: charIds });
+    }, [patch]);
 
-    const handleSaveConfig = useCallback(() => {
+    const handleSaveConfig = () => {
         localStorage.setItem(SAVED_CONFIG_KEY, JSON.stringify(state));
         setSavedHint(true);
-        setTimeout(() => setSavedHint(false), 1500);
-    }, [state]);
+        setTimeout(() => setSavedHint(false), 2000);
+    };
 
-    const handleClearConfig = useCallback(() => {
+    const handleClearConfig = () => {
         localStorage.removeItem(SAVED_CONFIG_KEY);
-        setState(DEFAULT_SAVED_CONFIG);
-    }, []);
+        setState({ ...DEFAULT_SAVED_CONFIG, cardConfig: DEFAULT_CARD_CONFIG });
+    };
 
-    const handleCalculate = () => {
-        if (!userId.trim()) { setError(t("page.deckRecommend.errors.userRequired")); return; }
-        if (needsMusic && !musicId) { setError(t("page.deckRecommend.errors.musicRequired")); return; }
-        if (needsEvent && mode === "event" && !simulateEnabled && !eventId.trim()) { setError(t("page.deckRecommend.errors.eventRequired")); return; }
-        if (mode === "mysekai" && !eventId.trim()) { setError(t("page.deckRecommend.errors.eventRequired")); return; }
-        if (mode === "challenge" && !challengeCharacterId) { setError(t("page.deckRecommend.errors.characterRequired")); return; }
+    const handleResetRules = useCallback(() => {
+        patch({
+            fixedCards: [],
+            fixedCharacters: [],
+            excludedCards: [],
+            useCurrentDeck: false,
+            leaderCharacterId: null,
+            bestSkillAsLeader: true,
+            unitFilter: "",
+            attrFilter: "",
+            characterFilterIds: [],
+            multiTeammatePower: "",
+            multiTeammateScoreUp: "",
+            multiScoreUpLowerBound: "",
+            skillOrder: "average",
+            specificSkillOrder: "",
+            skillReference: "average",
+            keepAfterTrainingState: false,
+            supportMasterMax: false,
+            supportSkillMax: false,
+            filterOtherUnit: false,
+            boost: "",
+            otherScore: "",
+            areaItemLevel: "",
+            areaItemOverrides: [],
+            characterRank: "",
+            characterRankOverrides: [],
+            mysekaiGateLevel: "",
+            mysekaiGateOverrides: [],
+            mysekaiFixtureBonusRate: "",
+            mysekaiFixtureOverrides: [],
+            singleCardOverrides: [],
+            limit: "10",
+            timeoutSeconds: "120",
+        });
+    }, [patch]);
+
+    const customRulesState: CustomRulesState = useMemo(() => ({
+        fixedCards,
+        fixedCharacters,
+        excludedCards,
+        useCurrentDeck,
+        leaderCharacterId,
+        bestSkillAsLeader,
+        unitFilter,
+        attrFilter,
+        characterFilterIds,
+        multiTeammatePower,
+        multiTeammateScoreUp,
+        multiScoreUpLowerBound,
+        skillOrder,
+        specificSkillOrder,
+        skillReference,
+        keepAfterTrainingState,
+        supportMasterMax,
+        supportSkillMax,
+        filterOtherUnit,
+        boost,
+        otherScore,
+        areaItemLevel,
+        areaItemOverrides,
+        characterRank,
+        characterRankOverrides,
+        mysekaiGateLevel,
+        mysekaiGateOverrides,
+        mysekaiFixtureBonusRate,
+        mysekaiFixtureOverrides,
+        singleCardOverrides,
+        limit,
+        timeoutSeconds,
+    }), [
+        fixedCards, fixedCharacters, excludedCards, useCurrentDeck, leaderCharacterId,
+        bestSkillAsLeader, unitFilter, attrFilter, characterFilterIds, multiTeammatePower,
+        multiTeammateScoreUp, multiScoreUpLowerBound, skillOrder, specificSkillOrder,
+        skillReference, keepAfterTrainingState, supportMasterMax, supportSkillMax,
+        filterOtherUnit, boost, otherScore, areaItemLevel, areaItemOverrides,
+        characterRank, characterRankOverrides, mysekaiGateLevel, mysekaiGateOverrides,
+        mysekaiFixtureBonusRate, mysekaiFixtureOverrides, singleCardOverrides, limit, timeoutSeconds,
+    ]);
+
+    const handleCalculate = async () => {
+        if (!userId.trim()) {
+            setError(t("page.deckRecommend.errors.userRequired"));
+            return;
+        }
+        if (needsMusic && !musicId) {
+            setError(t("page.deckRecommend.errors.musicRequired"));
+            return;
+        }
+        if (needsEvent && !simulateEnabled && !eventId) {
+            setError(t("page.deckRecommend.errors.eventRequired"));
+            return;
+        }
+        if (mode === "event" && !simulateEnabled && selectedEventType === "world_bloom" && !supportCharacterId) {
+            setError(t("page.deckRecommend.errors.supportCharacterRequired"));
+            return;
+        }
+        if (mode === "challenge" && !challengeCharacterId) {
+            setError(t("page.deckRecommend.errors.characterRequired"));
+            return;
+        }
         if (mode === "custom" && customSubMode === "character" && customCharacterIds.length === 0) {
             setError(t("page.deckRecommend.errors.customCharactersRequired"));
-            return;
-        }
-        if (mode === "event" && !simulateEnabled && !selectedWl3Simulation && selectedEventType === "world_bloom" && (supportCharacterId === null || supportCharacterId <= 0)) {
-            setError(t("page.deckRecommend.errors.supportCharacterRequired"));
-            return;
-        }
-        if (mode === "event" && simulateEnabled && simType === "world_bloom" && simTurn === 3 && (simCharacterId === null || simCharacterId <= 0)) {
-            setError(t("page.deckRecommend.errors.supportCharacterRequired"));
             return;
         }
         if (mode === "event" && simulateEnabled && simType === "world_bloom" && simTurn !== 3 && !simUnit) {
             setError(t("page.deckRecommend.errors.simulateUnitRequired"));
             return;
         }
-        const parsedBonus = mode === "event" && target === "bonus" ? parseBonusTargets(bonusTargets) : null;
-        if (mode === "event" && target === "bonus") {
-            if (parsedBonus === null) {
-                setError(t("page.deckRecommend.errors.bonusTargetsInvalid"));
-                return;
-            }
+
+        calculateScrollYRef.current = typeof window !== "undefined" ? window.scrollY : null;
+        setError(null);
+        setIsCalculating(true);
+        setResults(null);
+        setProgressPercent(5);
+        setProgressLabel(t("page.deckRecommend.progress.fetchingUserData"));
+
+        const bonusTargetsParsed = target === "bonus" && bonusTargets.trim() ? parseBonusTargets(bonusTargets) : null;
+        if (target === "bonus" && bonusTargets.trim() && !bonusTargetsParsed) {
+            setError(t("page.deckRecommend.errors.bonusTargetsInvalid"));
+            setIsCalculating(false);
+            return;
         }
 
-        setError(null);
-        setResults(null);
-        setDuration(null);
-        setMusicByDeck({});
-        setMusicLoadingByDeck({});
-        setIsCalculating(true);
-        setProgressPercent(30);
-        setProgressStage("calculating");
-        setProgressLabel(t("page.deckRecommend.progress.calculating"));
+        const effectiveFixedCards = [...fixedCards];
 
         const workerArgs = {
-            mode,
-            userId: userId.trim(),
             server,
+            userId: userId.trim(),
+            mode,
             eventId: eventId ? parseInt(eventId) : undefined,
             eventType: selectedEventType ?? undefined,
-            simulatedEvent: mode === "event" && simulateEnabled
-                ? {
-                      eventType: simType,
-                      attr: simAttr || undefined,
-                      unit: simUnit || undefined,
-                      worldBloomTurn: simType === "world_bloom" ? simTurn : undefined,
-                      worldBloomCharacterId:
-                          simType === "world_bloom" && simTurn === 3 ? simCharacterId ?? undefined : undefined,
-                  }
-                : undefined,
             liveType,
-            supportCharacterId: supportCharacterId || undefined,
-            challengeCharacterId: challengeCharacterId || undefined,
-            musicId: musicId ? parseInt(musicId) : 0,
-            difficulty,
+            supportCharacterId: (mode === "event" && selectedEventType === "world_bloom") ? (supportCharacterId ?? undefined) : undefined,
+            challengeCharacterId: challengeCharacterId ?? undefined,
+            musicId: musicId ? parseInt(musicId) : undefined,
+            difficulty: needsMusic ? difficulty : undefined,
             cardConfig,
             target: mode === "event" ? target : undefined,
-            bonusTargets: parsedBonus ?? undefined,
-            customUnit: mode === "custom" && customSubMode === "unit" ? customUnit : undefined,
-            customCharacterIds: mode === "custom" && customSubMode === "character" ? customCharacterIds : undefined,
-            customCharacterUnits: mode === "custom" && customSubMode === "character" ? customCharacterUnits : undefined,
-            customAttr: mode === "custom" && customAttr ? customAttr : undefined,
-            strongestTarget: mode === "strongest" || mode === "weakest" ? "power" : undefined,
-
+            bonusTargets: bonusTargetsParsed ?? undefined,
+            simulateEnabled,
+            simType,
+            simAttr: simAttr || undefined,
+            simUnit: simUnit || undefined,
+            simTurn: simType === "world_bloom" ? simTurn : undefined,
+            simCharacterId: simCharacterId ?? undefined,
+            customSubMode,
+            customUnit: customSubMode === "unit" ? customUnit : undefined,
+            customCharacterIds: customSubMode === "character" ? customCharacterIds : undefined,
+            customCharacterUnits: customSubMode === "character" ? customCharacterUnits : undefined,
+            customAttr: customAttr || undefined,
+            strongestTarget: mode === "strongest" ? strongestTarget : undefined,
             multiTeammatePower: multiTeammatePower ? parseInt(multiTeammatePower) : undefined,
             multiTeammateScoreUp: multiTeammateScoreUp ? parseInt(multiTeammateScoreUp) : undefined,
-            multiScoreUpLowerBound: multiScoreUpLowerBound ? parseFloat(multiScoreUpLowerBound) : undefined,
+            multiScoreUpLowerBound: multiScoreUpLowerBound ? parseInt(multiScoreUpLowerBound) : undefined,
             skillOrder,
             specificSkillOrder: skillOrder === "specific" ? specificSkillOrder : undefined,
             skillReference,
-            keepAfterTrainingState: keepAfterTrainingState || undefined,
+            keepAfterTrainingState,
             bestSkillAsLeader,
-            supportMasterMax: state.supportMasterMax || undefined,
-            supportSkillMax: state.supportSkillMax || undefined,
-            filterOtherUnit: state.filterOtherUnit || undefined,
-            minimize: (minimize || mode === "weakest") || undefined,
-            boost: boost !== "" ? parseInt(boost) : undefined,
+            minimize: mode === "weakest" ? true : minimize,
+            supportMasterMax,
+            supportSkillMax,
+            filterOtherUnit,
+            boost: boost ? parseInt(boost) : undefined,
             otherScore: otherScore ? parseInt(otherScore) : undefined,
-            fixedCards: fixedCards.length ? fixedCards : undefined,
-            fixedCharacters: fixedCharacters.length ? fixedCharacters : undefined,
-            excludedCards: excludedCards.length ? excludedCards : undefined,
-            singleCardOverrides: singleCardOverrides.length ? singleCardOverrides : undefined,
-            // 进阶数据覆盖：仅进阶模式发送；最弱组卡（仅快速模式）始终用账号真实数据。
-            userDataOverrides: layoutMode === "advanced"
-                ? {
-                      areaItemLevel: areaItemLevel ? parseInt(areaItemLevel) : null,
-                      areaItemLevelOverrides: areaItemOverrides.length ? areaItemOverrides : undefined,
-                      characterRank: characterRank ? parseInt(characterRank) : null,
-                      characterRankOverrides: characterRankOverrides.length ? characterRankOverrides : undefined,
-                      mysekaiGateLevel: mysekaiGateLevel ? parseInt(mysekaiGateLevel) : null,
-                      mysekaiGateLevelOverrides: mysekaiGateOverrides.length ? mysekaiGateOverrides : undefined,
-                      mysekaiFixtureBonusRate: mysekaiFixtureBonusRate !== "" ? parseInt(mysekaiFixtureBonusRate) : null,
-                      mysekaiFixtureBonusRateOverrides: mysekaiFixtureOverrides.length ? mysekaiFixtureOverrides : undefined,
-                  }
-                : undefined,
+            fixedCards: effectiveFixedCards.length > 0 ? effectiveFixedCards : undefined,
+            fixedCharacters: fixedCharacters.length > 0 ? fixedCharacters : undefined,
+            excludedCards: excludedCards.length > 0 ? excludedCards : undefined,
+            singleCardOverrides: singleCardOverrides.length > 0 ? singleCardOverrides : undefined,
+            areaItemLevel: areaItemLevel ? parseInt(areaItemLevel) : undefined,
+            areaItemOverrides: areaItemOverrides.length > 0 ? areaItemOverrides : undefined,
+            characterRank: characterRank ? parseInt(characterRank) : undefined,
+            characterRankOverrides: characterRankOverrides.length > 0 ? characterRankOverrides : undefined,
+            mysekaiGateLevel: mysekaiGateLevel ? parseInt(mysekaiGateLevel) : undefined,
+            mysekaiGateOverrides: mysekaiGateOverrides.length > 0 ? mysekaiGateOverrides : undefined,
+            mysekaiFixtureBonusRate: mysekaiFixtureBonusRate ? parseFloat(mysekaiFixtureBonusRate) : undefined,
+            mysekaiFixtureOverrides: mysekaiFixtureOverrides.length > 0 ? mysekaiFixtureOverrides : undefined,
             unitFilter: unitFilter || undefined,
             attrFilter: attrFilter || undefined,
-            characterFilterIds: characterFilterIds.length ? characterFilterIds : undefined,
-            leaderCharacterId: showLeaderSelect && leaderCharacterId ? leaderCharacterId : undefined,
+            characterFilterIds: characterFilterIds.length > 0 ? characterFilterIds : undefined,
             limit: Math.min(30, Math.max(1, parseInt(limit) || 10)),
             timeoutMs: Math.min(300, Math.max(5, parseInt(timeoutSeconds) || 120)) * 1000,
         };
 
-        // 复用常驻 worker（wasm 与数据已在后台预热或在 worker 内热着）；不存在则新建。
         const worker = getOrCreateWorker();
         const oauthAccessToken = getOAuthAccessTokenForGameUser(server, userId.trim());
         worker.postMessage({ args: { ...workerArgs, oauthAccessToken } });
@@ -1320,7 +1320,6 @@ export default function DeckRecommendClient() {
         const worker = getOrCreateWorker();
         if (musicLoadingByDeck[deck.rank]) return;
         setMusicLoadingByDeck((prev) => ({ ...prev, [deck.rank]: true }));
-        // 音乐推荐不需要用户数据，但 UI 用 rank 关联面板；requestId 即 rank。
         worker.postMessage({
             music: {
                 requestId: deck.rank,
@@ -1356,21 +1355,7 @@ export default function DeckRecommendClient() {
                     </p>
                 </div>
 
-                {/* 布局模式切换 */}
-                <div className="flex justify-center gap-2 mb-6">
-                    {(["quick", "advanced"] as const).map((option) => (
-                        <button
-                            key={option}
-                            type="button"
-                            onClick={() => setLayoutMode(option)}
-                            className={`${pill(layoutMode === option)} min-w-32`}
-                        >
-                            {t(`page.deckRecommend.layout.${option}`)}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Account */}
+                {/* Account Card */}
                 <div className="ios-glass-card p-5 sm:p-6 rounded-2xl mb-6">
                     <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                         <h2 className="text-lg font-bold text-primary-text dark:text-slate-100 flex items-center gap-2">
@@ -1432,386 +1417,14 @@ export default function DeckRecommendClient() {
                     </div>
                 </div>
 
-                {/* 进阶模式：合并后的完整配置（全部展开、置顶） */}
-                {layoutMode === "advanced" && (
-                    <div className="ios-glass-card p-5 sm:p-6 rounded-2xl mb-6">
-                        <h2 className="text-lg font-bold text-primary-text dark:text-slate-100 mb-4 flex items-center gap-2">
-                            <span className="w-1.5 h-6 bg-miku rounded-full" />
-                            {t("page.deckRecommend.config.layers.advanced")}
-                        </h2>
-                    <div className="pt-1 dr-group-card">
-                        {/* 协力参数 */}
-                        <div className="mb-5">
-                            <SectionTitle text={t("page.deckRecommend.config.multiLiveTitle")} />
-                            <p className="text-xs text-slate-400 mb-3">{t("page.deckRecommend.config.multiLiveDesc")}</p>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <Field label={t("page.deckRecommend.config.teammatePower")} hint={t("page.deckRecommend.config.followSelfPlaceholder")}>
-                                    <input type="number" min={0} value={multiTeammatePower} onChange={(e) => patch({ multiTeammatePower: e.target.value })} className="ds-field-input" />
-                                </Field>
-                                <Field label={t("page.deckRecommend.config.teammateScoreUp")} hint={t("page.deckRecommend.config.followSelfPlaceholder")}>
-                                    <input type="number" min={0} value={multiTeammateScoreUp} onChange={(e) => patch({ multiTeammateScoreUp: e.target.value })} className="ds-field-input" />
-                                </Field>
-                                <Field label={t("page.deckRecommend.config.scoreUpLowerBound")} hint={t("page.deckRecommend.config.noLimit")}>
-                                    <input type="number" min={0} value={multiScoreUpLowerBound} onChange={(e) => patch({ multiScoreUpLowerBound: e.target.value })} className="ds-field-input" />
-                                </Field>
-                            </div>
-                        </div>
-
-                        {/* 体力消耗 / 协力对手分数 */}
-                        <div className="mb-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <Field label={t("page.deckRecommend.config.boost")} hint={t("page.deckRecommend.config.boostHint")}>
-                                <input type="number" min={0} max={10} value={boost} onChange={(e) => patch({ boost: e.target.value })} className="ds-field-input" />
-                            </Field>
-                            <Field label={t("page.deckRecommend.config.otherScore")} hint={t("page.deckRecommend.config.otherScoreHint")}>
-                                <input type="number" min={0} value={otherScore} onChange={(e) => patch({ otherScore: e.target.value })} className="ds-field-input" />
-                            </Field>
-                        </div>
-
-                        {/* 引擎参数 */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <Field label={t("page.deckRecommend.config.advanced.limit")}>
-                                <input type="number" min={1} max={30} value={limit} onChange={(e) => patch({ limit: e.target.value })} className="ds-field-input" />
-                            </Field>
-                            <Field label={t("page.deckRecommend.config.advanced.timeout")}>
-                                <input type="number" min={5} max={300} value={timeoutSeconds} onChange={(e) => patch({ timeoutSeconds: e.target.value })} className="ds-field-input" />
-                            </Field>
-                        </div>
-                    </div>
-
-
-                        <div className="mt-5 pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
-                        {/* 技能与支援 */}
-                        <div className="dr-group-card mb-5">
-                            <SectionTitle text={t("page.deckRecommend.config.skillsTitle")} />
-                            <label className="block text-xs text-slate-400 mb-1.5">{t("page.deckRecommend.config.skillOrder")}</label>
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                {(["average", "max", "min", "specific"] as const).map((option) => (
-                                    <button key={option} type="button" onClick={() => patch({ skillOrder: option })} className={`${pill(skillOrder === option)} !px-3 !py-1.5 text-xs`}>
-                                        {t(`page.deckRecommend.config.skillOrders.${option}`)}
-                                    </button>
-                                ))}
-                            </div>
-                            {skillOrder === "specific" && (
-                                <div className="mb-3 max-w-xs">
-                                    <input
-                                        type="text"
-                                        value={specificSkillOrder}
-                                        onChange={(e) => patch({ specificSkillOrder: e.target.value })}
-                                        placeholder={t("page.deckRecommend.config.specificSkillOrderPlaceholder")}
-                                        className="ios-glass-input w-full px-3 py-2 rounded-lg text-sm"
-                                    />
-                                    <p className="text-xs text-slate-400 mt-1">{t("page.deckRecommend.config.specificSkillOrderHint")}</p>
-                                </div>
-                            )}
-                            <label className="block text-xs text-slate-400 mb-1.5">{t("page.deckRecommend.config.skillReference")}</label>
-                            <div className="flex flex-wrap gap-2 mb-3">
-                                {(["average", "max", "min"] as const).map((option) => (
-                                    <button key={option} type="button" onClick={() => patch({ skillReference: option })} className={`${pill(skillReference === option)} !px-3 !py-1.5 text-xs`}>
-                                        {t(`page.deckRecommend.config.skillReferences.${option}`)}
-                                    </button>
-                                ))}
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {(["keepAfterTrainingState", "bestSkillAsLeader"] as const).map((typedKey) => (
-                                    <label key={typedKey} className="flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer bg-white/40 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-3 py-2">
-                                        <span>{t(`page.deckRecommend.config.${typedKey}`)}</span>
-                                        <span className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${state[typedKey] ? "bg-miku" : "bg-slate-200 dark:bg-slate-700"}`}>
-                                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state[typedKey] ? "translate-x-4" : ""}`} />
-                                        </span>
-                                        <input
-                                            type="checkbox"
-                                            className="sr-only"
-                                            checked={state[typedKey]}
-                                            onChange={(e) => patch({ [typedKey]: e.target.checked })}
-                                        />
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* 连接世界支援 */}
-                        <div className="dr-group-card mb-5">
-                            <SectionTitle text={t("page.deckRecommend.config.supportGroupTitle")} />
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                {(["supportMasterMax", "supportSkillMax", "filterOtherUnit"] as const).map((typedKey) => (
-                                    <label key={typedKey} className="flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer bg-white/40 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-3 py-2">
-                                        <span>{t(`page.deckRecommend.config.${typedKey}`)}</span>
-                                        <span className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${state[typedKey] ? "bg-miku" : "bg-slate-200 dark:bg-slate-700"}`}>
-                                            <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${state[typedKey] ? "translate-x-4" : ""}`} />
-                                        </span>
-                                        <input
-                                            type="checkbox"
-                                            className="sr-only"
-                                            checked={state[typedKey]}
-                                            onChange={(e) => patch({ [typedKey]: e.target.checked })}
-                                        />
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* 卡池过滤（团/属性/角色） */}
-                        <div className="dr-group-card mb-5">
-                            <SectionTitle text={t("page.deckRecommend.config.filterGroupTitle")} />
-                            <div className="grid gap-3">
-                                <div>
-                                    <label className="text-xs text-slate-400 mb-1.5 block">{t("page.deckRecommend.config.filterUnit")}</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        <button type="button" onClick={() => patch({ unitFilter: "" })} className={pill(unitFilter === "")}>{t("page.deckRecommend.config.filterAny")}</button>
-                                        {UNIT_BONUS_OPTIONS.map((option) => (
-                                            <button key={option.value} type="button" onClick={() => patch({ unitFilter: unitFilter === option.value ? "" : option.value })} className={pill(unitFilter === option.value)}>
-                                                {t(option.labelKey)}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="text-xs text-slate-400 mb-1.5 block">{t("page.deckRecommend.config.filterAttr")}</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        <button type="button" onClick={() => patch({ attrFilter: "" })} className={pill(attrFilter === "")}>{t("page.deckRecommend.config.filterAny")}</button>
-                                        {ATTR_OPTIONS.map((option) => (
-                                            <button key={option.value} type="button" onClick={() => patch({ attrFilter: attrFilter === option.value ? "" : option.value })} className={pill(attrFilter === option.value)}>
-                                                {option.label}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex items-center justify-between mb-1.5">
-                                        <label className="text-xs text-slate-400">{t("page.deckRecommend.config.filterCharacter")}</label>
-                                        {characterFilterIds.length > 0 && (
-                                            <button type="button" onClick={() => patch({ characterFilterIds: [] })} className="text-xs text-red-400 hover:text-red-500">
-                                                {t("page.deckRecommend.config.filterClear")}
-                                            </button>
-                                        )}
-                                    </div>
-                                    {characterFilterIds.length === 0 ? (
-                                        <p className="text-xs text-slate-300 dark:text-slate-600 mb-2">{t("page.deckRecommend.config.filterCharacterEmpty")}</p>
-                                    ) : (
-                                        <div className="flex gap-1.5 flex-wrap mb-2">
-                                            {characterFilterIds.map((id) => (
-                                                <button
-                                                    key={id}
-                                                    type="button"
-                                                    onClick={() => patch({ characterFilterIds: characterFilterIds.filter((v) => v !== id) })}
-                                                    className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-full pl-1 pr-2 py-0.5 hover:opacity-70"
-                                                >
-                                                    <img src={getCharacterIconUrl(id)} alt="" className="w-6 h-6 rounded-full object-contain" loading="lazy" />
-                                                    <span className="text-xs text-slate-500 dark:text-slate-300">{getCharacterName(t, id, "short")}</span>
-                                                    <span className="text-red-400 text-xs">×</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
-                                    <CharacterMultiGrid
-                                        selected={characterFilterIds}
-                                        onToggle={(id) => patch({
-                                            characterFilterIds: characterFilterIds.includes(id)
-                                                ? characterFilterIds.filter((v) => v !== id)
-                                                : [...characterFilterIds, id].sort((a, b) => a - b),
-                                        })}
-                                        maxCount={5}
-                                    />
-                                    <p className="text-[11px] text-slate-400 mt-1">{t("page.deckRecommend.config.filterCharacterHint")}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 进阶数据覆盖（区域道具/角色等级/烤森门/玩偶加成） */}
-                        <div className="dr-group-card">
-                        <DataOverridePanel
-                            areaItems={overrideCatalogs.areaItems}
-                            characters={overrideCatalogs.characters}
-                            gates={overrideCatalogs.gates}
-                            fixtureCharacters={overrideCatalogs.fixtureCharacters}
-                            values={{
-                                areaItemLevel,
-                                areaItemOverrides,
-                                characterRank,
-                                characterRankOverrides,
-                                mysekaiGateLevel,
-                                mysekaiGateOverrides,
-                                mysekaiFixtureBonusRate,
-                                mysekaiFixtureOverrides,
-                            }}
-                            onChange={patch}
-                        />
-                        </div>
-
-                        {/* 卡组约束 */}
-                        <div className="dr-group-card mb-5">
-                            <SectionTitle text={t("page.deckRecommend.config.constraintsTitle")} />
-                            <p className="text-xs text-slate-400 mb-2">{t("page.deckRecommend.config.constraintsHint")}</p>
-                            {/* 使用当前编组 */}
-                            <div className="mb-3">
-                                <label className="flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer bg-white/40 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-3 py-2">
-                                    <span>{t("page.deckRecommend.config.useCurrentDeck")}</span>
-                                    <span className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${useCurrentDeck ? "bg-miku" : "bg-slate-200 dark:bg-slate-700"}`}>
-                                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${useCurrentDeck ? "translate-x-4" : ""}`} />
-                                    </span>
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only"
-                                        checked={useCurrentDeck}
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                const deck = overrideRaw?.snapshot?.userDecks?.[0];
-                                                const cards = [deck?.member1, deck?.member2, deck?.member3, deck?.member4, deck?.member5]
-                                                    .filter((v): v is number => typeof v === "number" && v > 0);
-                                                patch({ useCurrentDeck: true, ...(cards.length === 5 ? { fixedCards: cards } : {}) });
-                                            } else {
-                                                patch({ useCurrentDeck: false });
-                                            }
-                                        }}
-                                    />
-                                </label>
-                                <p className="text-[11px] text-slate-400 mt-1">{t("page.deckRecommend.config.useCurrentDeckHint")}</p>
-                            </div>
-                            {([["fixedCards", "fixedCards", "fixed"], ["excludedCards", "excludedCards", "excluded"]] as const).map(([key, label, modalKey]) => {
-                                const typedKey = key as "fixedCards" | "excludedCards";
-                                const list = state[typedKey];
-                                return (
-                                    <div key={key} className="mb-3">
-                                        <div className="flex items-center justify-between mb-1.5">
-                                            <label className="text-xs text-slate-400">{t(`page.deckRecommend.config.${label}`)}</label>
-                                            <button type="button" onClick={() => setCardModal(modalKey)} className="text-xs text-miku font-medium hover:underline">
-                                                + {t("page.deckRecommend.config.addCard")}
-                                            </button>
-                                        </div>
-                                        {list.length === 0 ? (
-                                            <p className="text-xs text-slate-300 dark:text-slate-600">{t("page.deckRecommend.config.noneSelected")}</p>
-                                        ) : (
-                                            <div className="flex gap-1.5 flex-wrap">
-                                                {list.map((cardId) => {
-                                                    const master = cardsMaster.find((c) => c.id === cardId);
-                                                    return (
-                                                        <button
-                                                            key={cardId}
-                                                            type="button"
-                                                            title={`${t("page.deckRecommend.config.singleCardRemove")}: ${master?.prefix ?? cardId}`}
-                                                            onClick={() => patch({ [typedKey]: list.filter((v) => v !== cardId) } as Partial<SavedConfig>)}
-                                                            className="relative rounded-lg overflow-hidden hover:opacity-70 transition-opacity"
-                                                        >
-                                                            {master ? <SekaiCardThumbnail card={master} trained={false} width={40} /> : <span className="text-xs">#{cardId}</span>}
-                                                            <span className="absolute top-0 right-0 bg-red-400 text-white text-[8px] w-3.5 h-3.5 rounded-bl flex items-center justify-center">×</span>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                            {/* 指定队长 */}
-                            <div className="mb-3">
-                                <label className="flex items-center justify-between gap-2 text-xs text-slate-600 dark:text-slate-300 cursor-pointer bg-white/40 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 rounded-lg px-3 py-2">
-                                    <span>{t("page.deckRecommend.config.leaderTitle")}</span>
-                                    <span className={`relative w-9 h-5 rounded-full transition-colors flex-shrink-0 ${showLeaderSelect ? "bg-miku" : "bg-slate-200 dark:bg-slate-700"}`}>
-                                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${showLeaderSelect ? "translate-x-4" : ""}`} />
-                                    </span>
-                                    <input
-                                        type="checkbox"
-                                        className="sr-only"
-                                        checked={showLeaderSelect}
-                                        onChange={(e) => {
-                                            setShowLeaderSelect(e.target.checked);
-                                            if (!e.target.checked) setLeaderCharacterId(null);
-                                        }}
-                                    />
-                                </label>
-                                {showLeaderSelect && (
-                                    <div className="mt-2">
-                                        <CharacterSelector selectedCharacterId={leaderCharacterId} onSelect={setLeaderCharacterId} />
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* 固定角色 */}
-                            <div>
-                                <label className="text-xs text-slate-400 mb-1.5 block">{t("page.deckRecommend.config.fixedCharacters")}</label>
-                                {fixedCharacters.length === 0 ? (
-                                    <p className="text-xs text-slate-300 dark:text-slate-600">{t("page.deckRecommend.config.noneSelected")}</p>
-                                ) : (
-                                    <div className="flex gap-1.5 flex-wrap mb-2">
-                                        {fixedCharacters.map((id) => (
-                                            <button
-                                                key={id}
-                                                type="button"
-                                                onClick={() => patch({ fixedCharacters: fixedCharacters.filter((v) => v !== id) })}
-                                                className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-full pl-1 pr-2 py-0.5 hover:opacity-70"
-                                            >
-                                                <img src={getCharacterIconUrl(id)} alt="" className="w-6 h-6 rounded-full object-contain" loading="lazy" />
-                                                <span className="text-xs text-slate-500 dark:text-slate-300">{getCharacterName(t, id, "short")}</span>
-                                                <span className="text-red-400 text-xs">×</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                                <CharacterMultiGrid
-                                    selected={fixedCharacters}
-                                    onToggle={(id) => {
-                                        setState((prev) => ({
-                                            ...prev,
-                                            fixedCharacters: prev.fixedCharacters.includes(id)
-                                                ? prev.fixedCharacters.filter((v) => v !== id)
-                                                : prev.fixedCharacters.length >= 5
-                                                    ? prev.fixedCharacters
-                                                    : [...prev.fixedCharacters, id].sort((a, b) => a - b),
-                                        }));
-                                    }}
-                                    maxCount={5}
-                                />
-                            </div>
-                        </div>
-
-                        {/* 单卡养成覆盖 */}
-                        <div className="dr-group-card">
-                            <div className="flex items-center justify-between mb-1.5">
-                                <SectionTitle text={t("page.deckRecommend.config.singleCardTitle")} />
-                                <button type="button" onClick={() => setCardModal("single")} className="text-xs text-miku font-medium hover:underline">
-                                    + {t("page.deckRecommend.config.singleCardAdd")}
-                                </button>
-                            </div>
-                            {singleCardOverrides.length === 0 ? (
-                                <p className="text-xs text-slate-300 dark:text-slate-600">{t("page.deckRecommend.config.singleCardEmpty")}</p>
-                            ) : (
-                                <div>
-                                    {singleCardOverrides.map((entry) => (
-                                        <SingleCardRow
-                                            key={entry.cardId}
-                                            entry={entry}
-                                            cardsMaster={cardsMaster}
-                                            onChange={(next) =>
-                                                setState((prev) => ({
-                                                    ...prev,
-                                                    singleCardOverrides: prev.singleCardOverrides.map((e) => (e.cardId === next.cardId ? next : e)),
-                                                }))
-                                            }
-                                            onRemove={() =>
-                                                setState((prev) => ({
-                                                    ...prev,
-                                                    singleCardOverrides: prev.singleCardOverrides.filter((e) => e.cardId !== entry.cardId),
-                                                }))
-                                            }
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    </div>
-                )}
-
                 {/* Mode tabs */}
-                <div className="flex flex-wrap gap-2 mb-6 justify-center">
-                    {MODE_OPTIONS
-                        .filter((option) => layoutMode === "quick" || option.value !== "weakest")
-                        .map((option) => (
+                <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 mb-6 justify-center">
+                    {MODE_OPTIONS.map((option) => (
                         <button
                             key={option.value}
                             type="button"
                             onClick={() => patch({ mode: option.value })}
-                            className={`${pill(mode === option.value)} min-w-24`}
+                            className={`${pill(mode === option.value)} text-center px-2 sm:px-4 py-2 sm:py-1.5 text-xs sm:text-sm font-semibold whitespace-nowrap`}
                         >
                             {t(`page.deckRecommend.modes.${option.value}`)}
                         </button>
@@ -1820,7 +1433,15 @@ export default function DeckRecommendClient() {
 
                 {/* Config card */}
                 <div className="ios-glass-card p-5 sm:p-6 rounded-2xl mb-6">
-                    {/* ============ 默认配置 ============ */}
+                    {/* Active Rules Summary Panel */}
+                    <ActiveRulesSummary
+                        state={customRulesState}
+                        onOpenModal={() => setIsCustomRulesOpen(true)}
+                        onChange={patch}
+                        onResetAll={handleResetRules}
+                        cardsMaster={cardsMaster}
+                    />
+
                     {/* 挑战组卡 */}
                     {mode === "challenge" && (
                         <div className="mb-5">
@@ -1846,15 +1467,20 @@ export default function DeckRecommendClient() {
                     {mode === "event" && (
                         <div className="mb-5">
                             <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
-                                <SectionTitle text={simulateEnabled ? t("page.deckRecommend.config.simulateTitle") : t("page.deckRecommend.config.eventTitle")} />
-                                <button
-                                    type="button"
-                                    onClick={() => patch({ simulateEnabled: !simulateEnabled })}
-                                    className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${simulateEnabled ? "bg-miku" : "bg-slate-200 dark:bg-slate-700"}`}
-                                    title={t("page.deckRecommend.config.simulateDesc")}
-                                >
-                                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${simulateEnabled ? "translate-x-5" : ""}`} />
-                                </button>
+                                <SectionTitle text={t("page.deckRecommend.config.eventTitle")} />
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                                        {t("page.deckRecommend.config.simulateTitle")}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => patch({ simulateEnabled: !simulateEnabled })}
+                                        className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ${simulateEnabled ? "bg-miku" : "bg-slate-200 dark:bg-slate-700"}`}
+                                        title={t("page.deckRecommend.config.simulateDesc")}
+                                    >
+                                        <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${simulateEnabled ? "translate-x-5" : ""}`} />
+                                    </button>
+                                </div>
                             </div>
                             {simulateEnabled ? (
                                 <div className="border border-miku/30 bg-miku/5 rounded-xl p-4">
@@ -1863,7 +1489,7 @@ export default function DeckRecommendClient() {
                                     <div className="flex flex-wrap gap-2 mb-3">
                                         {SIM_EVENT_TYPE_OPTIONS.map((option) => (
                                             <button key={option} type="button" onClick={() => patch({ simType: option })} className={pill(simType === option)}>
-                                                {t(`page.deckRecommend.config.eventTypes.${option === "cheerful_carnival" ? "cheerful" : option}`)}
+                                                {t(`common.eventTypes.${option}`)}
                                             </button>
                                         ))}
                                     </div>
@@ -1881,17 +1507,26 @@ export default function DeckRecommendClient() {
                                                 <div>
                                                     <SectionTitle text={t("page.deckRecommend.config.simulateUnit")} />
                                                     <div className="flex flex-wrap gap-2">
-                                                        {UNIT_BONUS_OPTIONS.map((unit) => (
-                                                            <button
-                                                                key={unit.value}
-                                                                type="button"
-                                                                onClick={() => patch({ simUnit: unit.value })}
-                                                                className={`flex items-center gap-1.5 ${pill(simUnit === unit.value)}`}
-                                                            >
-                                                                <Image src={`/data/icon/${unit.icon}`} alt={t(unit.labelKey)} width={16} height={16} className="object-contain" />
-                                                                {t(unit.labelKey)}
-                                                            </button>
-                                                        ))}
+                                                        {UNIT_BONUS_OPTIONS.map((unit) => {
+                                                            const isSelected = simUnit === unit.value;
+                                                            return (
+                                                                <button
+                                                                    key={unit.value}
+                                                                    type="button"
+                                                                    onClick={() => patch({ simUnit: unit.value })}
+                                                                    className={`p-2 rounded-xl transition-all border ${
+                                                                        isSelected
+                                                                            ? "ring-2 ring-miku shadow-md bg-white border-transparent dark:bg-miku/15 dark:border-miku/40"
+                                                                            : "bg-white/70 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 hover:bg-slate-100"
+                                                                    }`}
+                                                                    title={t(unit.labelKey)}
+                                                                >
+                                                                    <div className="w-7 h-7 relative">
+                                                                        <Image src={`/data/icon/${unit.icon}`} alt={t(unit.labelKey)} fill className="object-contain" unoptimized />
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             ) : (
@@ -1909,17 +1544,26 @@ export default function DeckRecommendClient() {
                                         <div>
                                             <SectionTitle text={t("page.deckRecommend.config.simulateAttr")} />
                                             <div className="flex flex-wrap gap-2">
-                                                {ATTR_OPTIONS.map((attr) => (
-                                                    <button
-                                                        key={attr.value}
-                                                        type="button"
-                                                        onClick={() => patch({ simAttr: simAttr === attr.value ? "" : attr.value })}
-                                                        className={`flex items-center gap-1.5 ${pill(simAttr === attr.value)}`}
-                                                    >
-                                                        <Image src={`/data/icon/${attr.icon}`} alt={attr.label} width={16} height={16} className="object-contain" />
-                                                        {attr.label}
-                                                    </button>
-                                                ))}
+                                                {ATTR_OPTIONS.map((attr) => {
+                                                    const isSelected = simAttr === attr.value;
+                                                    return (
+                                                        <button
+                                                            key={attr.value}
+                                                            type="button"
+                                                            onClick={() => patch({ simAttr: isSelected ? "" : attr.value })}
+                                                            className={`p-2 rounded-xl transition-all border ${
+                                                                isSelected
+                                                                    ? "ring-2 ring-miku shadow-md bg-white border-transparent dark:bg-miku/15 dark:border-miku/40"
+                                                                    : "bg-white/70 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 hover:bg-slate-100"
+                                                            }`}
+                                                            title={attr.label}
+                                                        >
+                                                            <div className="w-7 h-7 relative">
+                                                                <Image src={`/data/icon/${attr.icon}`} alt={attr.label} fill className="object-contain" unoptimized />
+                                                            </div>
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     )}
@@ -1974,7 +1618,7 @@ export default function DeckRecommendClient() {
                         </div>
                     )}
 
-                    {/* 最弱组卡：无参数直接组卡 */}
+                    {/* 最弱组卡 */}
                     {mode === "weakest" && (
                         <div className="mb-5">
                             <div className="border border-miku/30 bg-miku/5 rounded-xl p-4">
@@ -2001,17 +1645,26 @@ export default function DeckRecommendClient() {
                                 <div>
                                     <SectionTitle text={t("page.deckRecommend.config.customUnit")} />
                                     <div className="flex flex-wrap gap-2">
-                                        {UNIT_BONUS_OPTIONS.map((unit) => (
-                                            <button
-                                                key={unit.value}
-                                                type="button"
-                                                onClick={() => patch({ customUnit: unit.value })}
-                                                className={`flex items-center gap-1.5 ${pill(customUnit === unit.value)}`}
-                                            >
-                                                <Image src={`/data/icon/${unit.icon}`} alt={t(unit.labelKey)} width={16} height={16} className="object-contain" />
-                                                {t(unit.labelKey)}
-                                            </button>
-                                        ))}
+                                        {UNIT_BONUS_OPTIONS.map((unit) => {
+                                            const isSelected = customUnit === unit.value;
+                                            return (
+                                                <button
+                                                    key={unit.value}
+                                                    type="button"
+                                                    onClick={() => patch({ customUnit: unit.value })}
+                                                    className={`p-2 rounded-xl transition-all border ${
+                                                        isSelected
+                                                            ? "ring-2 ring-miku shadow-md bg-white border-transparent dark:bg-miku/15 dark:border-miku/40"
+                                                            : "bg-white/70 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 hover:bg-slate-100"
+                                                    }`}
+                                                    title={t(unit.labelKey)}
+                                                >
+                                                    <div className="w-7 h-7 relative">
+                                                        <Image src={`/data/icon/${unit.icon}`} alt={t(unit.labelKey)} fill className="object-contain" unoptimized />
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             ) : (
@@ -2039,29 +1692,37 @@ export default function DeckRecommendClient() {
                                             {customCharacterIds.filter((id) => id >= VIRTUAL_SINGER_ID_MIN).map((id) => (
                                                 <div key={id} className="flex items-center gap-2 flex-wrap">
                                                     <img src={getCharacterIconUrl(id)} alt="" className="w-7 h-7 rounded-full object-contain" loading="lazy" />
-                                                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium w-28">
+                                                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium w-24 truncate">
                                                         {getCharacterName(t, id, "short")}
                                                     </span>
                                                     <div className="flex flex-wrap gap-1.5">
-                                                        {UNIT_BONUS_OPTIONS.map((unit) => (
-                                                            <button
-                                                                key={unit.value}
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setState((prev) => {
-                                                                        const units = { ...prev.customCharacterUnits };
-                                                                        if (units[id] === unit.value) delete units[id];
-                                                                        else units[id] = unit.value;
-                                                                        return { ...prev, customCharacterUnits: units };
-                                                                    })
-                                                                }
-                                                                className={`px-2 py-1 rounded-lg text-xs transition-all ${customCharacterUnits[id] === unit.value
-                                                                    ? "bg-miku text-white shadow-md shadow-miku/20"
-                                                                    : "bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400"}`}
-                                                            >
-                                                                {t(unit.labelKey)}
-                                                            </button>
-                                                        ))}
+                                                        {UNIT_BONUS_OPTIONS.map((unit) => {
+                                                            const isSelected = customCharacterUnits[id] === unit.value;
+                                                            return (
+                                                                <button
+                                                                    key={unit.value}
+                                                                    type="button"
+                                                                    onClick={() =>
+                                                                        setState((prev) => {
+                                                                            const units = { ...prev.customCharacterUnits };
+                                                                            if (units[id] === unit.value) delete units[id];
+                                                                            else units[id] = unit.value;
+                                                                            return { ...prev, customCharacterUnits: units };
+                                                                        })
+                                                                    }
+                                                                    className={`p-1.5 rounded-lg transition-all border ${
+                                                                        isSelected
+                                                                            ? "ring-2 ring-miku shadow-xs bg-white border-transparent dark:bg-miku/20 dark:border-miku/40"
+                                                                            : "bg-slate-100 dark:bg-slate-800 border-transparent hover:bg-slate-200"
+                                                                    }`}
+                                                                    title={t(unit.labelKey)}
+                                                                >
+                                                                    <div className="w-5 h-5 relative">
+                                                                        <Image src={`/data/icon/${unit.icon}`} alt={t(unit.labelKey)} fill className="object-contain" unoptimized />
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             ))}
@@ -2072,17 +1733,26 @@ export default function DeckRecommendClient() {
                             <div className="mt-4">
                                 <SectionTitle text={t("page.deckRecommend.config.customAttr")} />
                                 <div className="flex flex-wrap gap-2">
-                                    {ATTR_OPTIONS.map((attr) => (
-                                        <button
-                                            key={attr.value}
-                                            type="button"
-                                            onClick={() => patch({ customAttr: customAttr === attr.value ? "" : attr.value })}
-                                            className={`flex items-center gap-1.5 ${pill(customAttr === attr.value)}`}
-                                        >
-                                            <Image src={`/data/icon/${attr.icon}`} alt={attr.label} width={16} height={16} className="object-contain" />
-                                            {attr.label}
-                                        </button>
-                                    ))}
+                                    {ATTR_OPTIONS.map((attr) => {
+                                        const isSelected = customAttr === attr.value;
+                                        return (
+                                            <button
+                                                key={attr.value}
+                                                type="button"
+                                                onClick={() => patch({ customAttr: isSelected ? "" : attr.value })}
+                                                className={`p-2 rounded-xl transition-all border ${
+                                                    isSelected
+                                                        ? "ring-2 ring-miku shadow-md bg-white border-transparent dark:bg-miku/15 dark:border-miku/40"
+                                                        : "bg-white/70 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 hover:bg-slate-100"
+                                                }`}
+                                                title={attr.label}
+                                            >
+                                                <div className="w-7 h-7 relative">
+                                                    <Image src={`/data/icon/${attr.icon}`} alt={attr.label} fill className="object-contain" unoptimized />
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
@@ -2174,54 +1844,51 @@ export default function DeckRecommendClient() {
                     )}
 
                     {mode !== "weakest" && (
-                    <>
-                    {/* 卡牌养成 */}
-                    <div className="mb-5">
-                        <SectionTitle text={t("page.deckRecommend.config.trainingTitle")} />
-                        <div className="overflow-x-auto">
-                            <table className="ds-config-table w-full text-sm">
-                                <thead>
-                                    <tr className="text-slate-400">
-                                        <th className="text-left py-2 px-2">{t("page.deckRecommend.config.training.rarity")}</th>
-                                        <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.disable")}</th>
-                                        <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.level")}</th>
-                                        <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.episodes")}</th>
-                                        <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.master")}</th>
-                                        <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.skill")}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {RARITY_CONFIG_KEYS.map(({ key, color }) => (
-                                        <tr key={key} className="border-t border-slate-100 dark:border-slate-800">
-                                            <td className="py-2 px-2">
-                                                <span className="font-bold" style={{ color }}>{t(`page.deckRecommend.config.training.rarities.${key}`)}</span>
-                                            </td>
-                                            <td className="py-2 px-2 text-center">
-                                                <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "disable", e.target.checked)} />
-                                            </td>
-                                            <td className="py-2 px-2 text-center">
-                                                <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].levelMax} disabled={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "levelMax", e.target.checked)} />
-                                            </td>
-                                            <td className="py-2 px-2 text-center">
-                                                <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].episodeRead} disabled={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "episodeRead", e.target.checked)} />
-                                            </td>
-                                            <td className="py-2 px-2 text-center">
-                                                <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].masterMax} disabled={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "masterMax", e.target.checked)} />
-                                            </td>
-                                            <td className="py-2 px-2 text-center">
-                                                <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].skillMax} disabled={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "skillMax", e.target.checked)} />
-                                            </td>
+                        <div className="mb-5">
+                            <SectionTitle text={t("page.deckRecommend.config.trainingTitle")} />
+                            <div className="overflow-x-auto">
+                                <table className="ds-config-table w-full text-sm">
+                                    <thead>
+                                        <tr className="text-slate-400">
+                                            <th className="text-left py-2 px-2">{t("page.deckRecommend.config.training.rarity")}</th>
+                                            <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.disable")}</th>
+                                            <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.level")}</th>
+                                            <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.episodes")}</th>
+                                            <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.master")}</th>
+                                            <th className="text-center py-2 px-2">{t("page.deckRecommend.config.training.skill")}</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {RARITY_CONFIG_KEYS.map(({ key, color }) => (
+                                            <tr key={key} className="border-t border-slate-100 dark:border-slate-800">
+                                                <td className="py-2 px-2">
+                                                    <span className="font-bold" style={{ color }}>{t(`page.deckRecommend.config.training.rarities.${key}`)}</span>
+                                                </td>
+                                                <td className="py-2 px-2 text-center">
+                                                    <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "disable", e.target.checked)} />
+                                                </td>
+                                                <td className="py-2 px-2 text-center">
+                                                    <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].levelMax} disabled={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "levelMax", e.target.checked)} />
+                                                </td>
+                                                <td className="py-2 px-2 text-center">
+                                                    <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].episodeRead} disabled={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "episodeRead", e.target.checked)} />
+                                                </td>
+                                                <td className="py-2 px-2 text-center">
+                                                    <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].masterMax} disabled={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "masterMax", e.target.checked)} />
+                                                </td>
+                                                <td className="py-2 px-2 text-center">
+                                                    <input type="checkbox" className="ds-checkbox" checked={cardConfig[key].skillMax} disabled={cardConfig[key].disable} onChange={(e) => updateCardConfig(key, "skillMax", e.target.checked)} />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                    </>
                     )}
                 </div>
 
-                {/* Calculate */}
+                {/* Calculate Button & Progress */}
                 <div className="mb-6">
                     {isCalculating ? (
                         <button
@@ -2257,7 +1924,7 @@ export default function DeckRecommendClient() {
 
                 {/* Results */}
                 {results && results.length > 0 && (
-                    <div className="ios-glass-panel p-5 sm:p-6 rounded-2xl mb-6">
+                    <div className="ios-glass-panel p-5 sm:p-6 rounded-2xl mb-6 [overflow-anchor:none]">
                         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                             <h2 className="text-lg font-bold text-primary-text dark:text-slate-100 flex items-center gap-2">
                                 <span className="w-1.5 h-6 bg-miku rounded-full" />
@@ -2293,6 +1960,25 @@ export default function DeckRecommendClient() {
                 )}
             </div>
 
+            {/* 自定义规则弹窗 */}
+            <CustomRulesModal
+                isOpen={isCustomRulesOpen}
+                onClose={() => setIsCustomRulesOpen(false)}
+                state={customRulesState}
+                onChange={patch}
+                onResetAll={handleResetRules}
+                cardsMaster={cardsMaster}
+                overrideCatalogs={overrideCatalogs}
+                onOpenCardModal={setCardModal}
+                userDeckCardIds={[
+                    overrideRaw?.snapshot?.userDecks?.[0]?.member1,
+                    overrideRaw?.snapshot?.userDecks?.[0]?.member2,
+                    overrideRaw?.snapshot?.userDecks?.[0]?.member3,
+                    overrideRaw?.snapshot?.userDecks?.[0]?.member4,
+                    overrideRaw?.snapshot?.userDecks?.[0]?.member5,
+                ].filter((v): v is number => typeof v === "number" && v > 0)}
+            />
+
             {/* 卡牌选择弹窗（固定/排除/单卡覆盖共用） */}
             <CardSelectorModal
                 isOpen={cardModal !== null}
@@ -2321,6 +2007,6 @@ export default function DeckRecommendClient() {
                     });
                 }}
             />
-</MainLayout>
+        </MainLayout>
     );
 }
