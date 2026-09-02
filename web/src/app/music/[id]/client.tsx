@@ -34,6 +34,7 @@ import { fetchSongConstants, buildSongConstantsMap } from "@/lib/songConstants";
 import { getPublishedLyricsIndexEntry, hasLyricsDetail } from "@/lib/lyrics";
 import { LYRICS_ENTRY_VISIBLE } from "@/lib/lyrics-visibility";
 import { fetchMusicBpmMap, getMusicBpm, formatBpmValue, formatBarValue, MusicBpmEntry } from "@/lib/musicBpm";
+import { fetchMusicAliases, getMusicAliases } from "@/lib/musicAliases";
 import ImagePreviewModal from "@/components/common/ImagePreviewModal";
 import { useI18n } from "@/contexts/I18nContext";
 
@@ -125,6 +126,10 @@ export default function MusicDetailPage() {
     // BPM states
     const [bpmEntry, setBpmEntry] = useState<MusicBpmEntry | null>(null);
     const [bpmListOpen, setBpmListOpen] = useState(false);
+
+    // Alias states
+    const [aliases, setAliases] = useState<string[]>([]);
+    const [aliasesOpen, setAliasesOpen] = useState(false);
 
     // View states
     const [selectedDifficulty, setSelectedDifficulty] = useState<MusicDifficultyType>("master");
@@ -300,6 +305,14 @@ export default function MusicDetailPage() {
                 } catch (err) {
                     console.warn("Failed to fetch music BPM:", err);
                 }
+
+                try {
+                    const aliasesMap = await fetchMusicAliases();
+                    setAliases(getMusicAliases(musicId, aliasesMap));
+                    setAliasesOpen(false);
+                } catch (err) {
+                    console.warn("Failed to load music aliases:", err);
+                }
             }
 
             fetchMetaData();
@@ -426,7 +439,7 @@ export default function MusicDetailPage() {
                         </div>
                     </div>
                     <div className="mb-2">
-                        <div className="inline-flex max-w-full items-start gap-2">
+                        <div className="inline-flex max-w-full flex-wrap items-start gap-2">
                             <h1 className="min-w-0 text-2xl font-black text-slate-800 sm:text-3xl">
                                 <TranslatedText
                                     original={music.title}
@@ -436,6 +449,23 @@ export default function MusicDetailPage() {
                                     translationClassName="block text-lg font-medium text-slate-400 mt-1"
                                 />
                             </h1>
+                            {aliases.length > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={() => setAliasesOpen(v => !v)}
+                                    className="-translate-y-1 inline-flex items-center gap-0.5 whitespace-nowrap rounded-md border border-slate-300/70 bg-slate-50 px-1.5 py-0.5 text-[10px] font-bold text-slate-500 transition-colors hover:border-miku/60 hover:bg-miku/10 hover:text-miku sm:text-xs"
+                                    aria-expanded={aliasesOpen}
+                                    title={t("page.music.aliasesToggle")}
+                                >
+                                    {t("page.music.aliasesLabel")}
+                                    <svg
+                                        className={`w-3 h-3 transition-transform duration-200 ${aliasesOpen ? "rotate-180" : ""}`}
+                                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                            )}
                             {LYRICS_ENTRY_VISIBLE && hasPublishedLyrics && (
                                 <Link
                                     href={`/lyrics/${music.id}`}
@@ -446,6 +476,18 @@ export default function MusicDetailPage() {
                                 </Link>
                             )}
                         </div>
+                        {aliasesOpen && aliases.length > 0 && (
+                            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                                {aliases.map((alias, i) => (
+                                    <span
+                                        key={`${alias}-${i}`}
+                                        className="max-w-full break-words rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600"
+                                    >
+                                        {alias}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
                     </div>
                     <div className="flex items-center gap-3 flex-wrap">
                         <span className="text-slate-600">{music.composer}</span>

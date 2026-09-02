@@ -1574,6 +1574,8 @@ export const jaJPMessages = {
       openChartImagePreview: 'Open {difficulty} chart image preview',
       open3dChartPreview: 'Online 3D Chart Preview',
       bpmListToggle: 'BPM リストの展開 / 折りたたみ',
+      aliasesLabel: '別名',
+      aliasesToggle: '別名の展開 / 折りたたみ',
       vocalVersions: 'Vocal versions (skipped {seconds}s intro silence)',
       downloadAudio: 'Download audio',
       relatedEvents: 'Related Events',

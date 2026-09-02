@@ -1575,6 +1575,8 @@ export const enUSMessages = {
             openChartImagePreview: "Open {difficulty} chart image preview",
             open3dChartPreview: "Online 3D Chart Preview",
             bpmListToggle: "Expand / collapse BPM list",
+            aliasesLabel: "Aliases",
+            aliasesToggle: "Expand / collapse aliases",
             vocalVersions: "Vocal versions (skipped {seconds}s intro silence)",
             downloadAudio: "Download audio",
             relatedEvents: "Related Events",

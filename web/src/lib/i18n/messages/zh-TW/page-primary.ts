@@ -704,6 +704,8 @@ export const zhTWPagePrimary = {
             openChartImagePreview: "打開 {difficulty} 譜面圖片預覽",
             open3dChartPreview: "在線 3D 譜面預覽",
             bpmListToggle: "展開/收起 BPM 列表",
+            aliasesLabel: "別名",
+            aliasesToggle: "展開/收起別名",
             vocalVersions: "演唱版本（已略過{seconds}秒空白）",
             downloadAudio: "下載音訊",
             relatedEvents: "相關活動",

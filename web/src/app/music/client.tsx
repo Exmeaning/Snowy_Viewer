@@ -48,6 +48,17 @@ const MUSIC_SEARCH_FIELDS: FieldRegistry = {
     bpm: makeNumericField("bpm-range", { decimal: false }),
 };
 
+// Collect plain text terms from a parsed query (used to annotate alias hits).
+function collectTextTerms(expr: SearchExpr, out: string[] = []): string[] {
+    if (expr.kind === "term") {
+        if (expr.term.kind === "text") out.push(expr.term.value);
+        return out;
+    }
+    collectTextTerms(expr.left, out);
+    collectTextTerms(expr.right, out);
+    return out;
+}
+
 // Level Separator Card Component
 function LevelSeparatorCard({ level, difficulty }: { level: number; difficulty: string }) {
     const difficultyColors: Record<string, string> = {
@@ -420,6 +431,35 @@ function MusicContent() {
         return result;
     }, [musics, musicTags, eventMusicIds, selectedTag, selectedCategories, hasEventOnly, sortBy, sortOrder, isShowSpoiler, musicDifficultiesMap, selectedDifficulty, songConstantsMap, musicBpmMap, parsedSearch, matchMusicTerm]);
 
+    // musicId -> aliases that explain the current search hit, one per text term
+    // that is not already explained by a visible field (title/translation/credits).
+    const matchedAliasesMap = useMemo(() => {
+        const map = new Map<number, string[]>();
+        if (!parsedSearch) return map;
+        const textTerms = collectTextTerms(parsedSearch)
+            .map(v => v.toLowerCase().trim())
+            .filter(v => v !== "");
+        if (textTerms.length === 0) return map;
+
+        for (const music of filteredMusics) {
+            const hits: string[] = [];
+            for (const q of textTerms) {
+                if (music.title.toLowerCase().includes(q)
+                    || music.composer.toLowerCase().includes(q)
+                    || music.lyricist.toLowerCase().includes(q)
+                    || music.arranger.toLowerCase().includes(q)) continue;
+                const cn = musicCnMap.get(music.id);
+                if (cn && cn.toLowerCase().includes(q)) continue;
+                const en = musicEnMap.get(music.id);
+                if (en && en.toLowerCase().includes(q)) continue;
+                const alias = musicAliasesMap.get(music.id)?.find(a => a.toLowerCase().includes(q));
+                if (alias && !hits.includes(alias)) hits.push(alias);
+            }
+            if (hits.length > 0) map.set(music.id, hits);
+        }
+        return map;
+    }, [filteredMusics, parsedSearch, musicAliasesMap, musicCnMap, musicEnMap]);
+
     // Displayed musics with level separators (only when sorting by level)
     const displayedMusicsWithSeparators = useMemo(() => {
         const musics = filteredMusics.slice(0, displayCount);
@@ -614,7 +654,7 @@ function MusicContent() {
                                 const now = Date.now();
                                 const isSpoiler = music.publishedAt > now;
                                 const musicConstant = showDifficulty ? undefined : songConstantsMap[music.id]?.[selectedDifficulty];
-                                return <MusicItem key={music.id} music={music} isSpoiler={isSpoiler} constant={musicConstant} difficulties={musicDifficultiesMap[music.id]} showDifficulty={showDifficulty} bpm={showBpm ? musicBpmMap.get(music.id)?.bpm : undefined} cnTitle={musicCnMap.get(music.id)} enTitle={musicEnMap.get(music.id)} />;
+                                return <MusicItem key={music.id} music={music} isSpoiler={isSpoiler} constant={musicConstant} difficulties={musicDifficultiesMap[music.id]} showDifficulty={showDifficulty} bpm={showBpm ? musicBpmMap.get(music.id)?.bpm : undefined} cnTitle={musicCnMap.get(music.id)} enTitle={musicEnMap.get(music.id)} matchedAliases={matchedAliasesMap.get(music.id)} />;
                             }
                         })}
                     </div>

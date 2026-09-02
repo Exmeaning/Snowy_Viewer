@@ -1572,6 +1572,8 @@ export const koKRMessages = {
             openChartImagePreview: "{difficulty} 차트 이미지 미리보기 열기",
             open3dChartPreview: "온라인 3D 비트맵 미리보기",
             bpmListToggle: "BPM 목록 펼치기/접기",
+            aliasesLabel: "별칭",
+            aliasesToggle: "별칭 펼치기/접기",
             vocalVersions: "노래하는 버전({seconds}초의 공백 생략)",
             downloadAudio: "오디오 다운로드",
             relatedEvents: "관련 활동",
