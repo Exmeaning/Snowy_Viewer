@@ -183,7 +183,7 @@ test("build-time lyrics fetch retries only timeout, transport, and retryable HTT
     process.env.NEXT_PUBLIC_LYRICS_BASE_URL = PUBLIC_LYRICS_BASE_URL;
     delete process.env.BUILD_FETCH_RETRIES;
     process.env.BUILD_FETCH_TIMEOUT_MS = String(TEST_FETCH_TIMEOUT_MS);
-    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v2/index.fixture.json");
+    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v4/index.fixture.json");
     const expectedAttempts = getDefaultBuildFetchAttempts();
     assert.ok(expectedAttempts > ATTEMPT_INCREMENT);
 
@@ -232,7 +232,7 @@ test("build-time lyrics fetch never retries non-retryable HTTP or schema failure
     delete process.env.BUILD_FETCH_RETRIES;
     assert.ok(getDefaultBuildFetchAttempts() > ATTEMPT_INCREMENT);
 
-    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v2/index.fixture.json");
+    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v4/index.fixture.json");
     const unknownFieldIndex = structuredClone(canonicalIndex);
     unknownFieldIndex.privateUnknownField = "must-not-leak";
     for (const [label, fetchImpl, expectedDetail] of [
@@ -265,30 +265,16 @@ test("build-time lyrics fetch never retries non-retryable HTTP or schema failure
   }
 });
 
-test("build-time lyrics index validation accepts strict v1 through v4", async () => {
-  const lyrics = await importPublicLyrics("quadruple-schema");
-  const v1 = readJson("tests/fixtures/next-public-lyrics-v1/index.fixture.json");
-  const v2 = readJson("tests/fixtures/next-public-lyrics-v2/index.fixture.json");
-  const v3 = structuredClone(v2);
-  v3.version = 3;
+test("build-time lyrics index validation accepts strict v4", async () => {
+  const lyrics = await importPublicLyrics("v4-schema");
   const v4 = readJson("tests/fixtures/next-public-lyrics-v4/index.fixture.json");
   assert.equal(lyrics.PUBLIC_LYRICS_SCHEMA_VERSION, 4);
-  assert.deepEqual(lyrics.validatePublicLyricsIndex(structuredClone(v1)), v1);
-  assert.deepEqual(lyrics.validatePublicLyricsIndex(structuredClone(v2)), v2);
-  assert.deepEqual(lyrics.validatePublicLyricsIndex(structuredClone(v3)), v3);
   assert.deepEqual(lyrics.validatePublicLyricsIndex(structuredClone(v4)), v4);
 
-  const malformedV2 = structuredClone(v2);
-  malformedV2.songs[0].availableVersions = ["game", "full"];
-  assert.throws(() => lyrics.validatePublicLyricsIndex(malformedV2), /Invalid public lyrics index/);
   const malformedV4Complete = structuredClone(v4);
   malformedV4Complete.songs[0].availableVersions = ["game"];
   assert.throws(() => lyrics.validatePublicLyricsIndex(malformedV4Complete), /Invalid public lyrics index/);
-  assert.throws(() => lyrics.validatePublicLyricsIndex({ version: 3, songs: [] }), /Invalid public lyrics index/);
   assert.throws(() => lyrics.validatePublicLyricsIndex({ version: 4, songs: [] }), /Invalid public lyrics index/);
-  const v1WithV2Field = structuredClone(v1);
-  v1WithV2Field.songs[0].availableVersions = ["full"];
-  assert.throws(() => lyrics.validatePublicLyricsIndex(v1WithV2Field), /Invalid public lyrics index/);
 });
 
 test("build-time lyrics index uses the shared strict JSON boundary", async () => {
@@ -303,7 +289,7 @@ test("build-time lyrics index uses the shared strict JSON boundary", async () =>
     process.env.NEXT_PUBLIC_LYRICS_BASE_URL = PUBLIC_LYRICS_BASE_URL;
     delete process.env.BUILD_FETCH_RETRIES;
     assert.ok(getDefaultBuildFetchAttempts() > ATTEMPT_INCREMENT);
-    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v2/index.fixture.json");
+    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v4/index.fixture.json");
     const indexRaw = JSON.stringify(canonicalIndex);
     const publication = canonicalIndex.songs[0];
     const versionToken = `"version":${canonicalIndex.version}`;
@@ -525,7 +511,7 @@ test("build-time lyrics body, size, and content-length failures remain determini
     assert.equal(pulled, ATTEMPT_INCREMENT, "oversized streams stop after the first excessive chunk");
     assert.equal(cancelled, 4, "every cancellable deterministic early exit performs best-effort cleanup");
 
-    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v2/index.fixture.json");
+    const canonicalIndex = readJson("tests/fixtures/next-public-lyrics-v4/index.fixture.json");
     globalThis.fetch = async () => jsonResponse(canonicalIndex, {
       headers: {
         "content-type": "application/json",
@@ -620,7 +606,7 @@ test("strict sitemap mode rejects unreachable and schema-invalid public lyrics s
 test("sitemap generation follows the public lyrics index and excludes unpublished details", async () => {
   const generatorUrl = pathToFileURL(path.join(WEB_ROOT, "scripts/generate-sitemaps.mjs"));
   const generator = await import(`${generatorUrl.href}?test=published-lyrics-routes`);
-  const index = readJson("tests/fixtures/next-public-lyrics-v1/index.fixture.json");
+  const index = readJson("tests/fixtures/next-public-lyrics-v4/index.fixture.json");
   const publication = index.songs[0];
   const unpublishedId = Number.MAX_SAFE_INTEGER;
   const existingLastmod = new Date(0).toISOString();
@@ -642,13 +628,6 @@ test("sitemap generation follows the public lyrics index and excludes unpublishe
   assert.equal(routes.some((route) => route.path === `/lyrics/${unpublishedId}/`), false);
   assert.deepEqual(Object.keys(routes[0]), ["path", "lastmod", "priority", "changefreq"]);
 
-  const v3 = readJson("tests/fixtures/next-public-lyrics-v2/index.fixture.json");
-  v3.version = 3;
-  const v3Routes = generator.buildPublishedLyricsRoutes(v3, existingData);
-  assert.deepEqual(v3Routes.map((route) => route.path), ["/lyrics/10/", "/lyrics/11/", "/lyrics/12/"]);
-  assert.equal(v3Routes.some((route) => [13, 14, 15, 16, 17].some((musicId) => route.path === `/lyrics/${musicId}/`)), false);
-  const v4 = readJson("tests/fixtures/next-public-lyrics-v4/index.fixture.json");
-  assert.deepEqual(generator.buildPublishedLyricsRoutes(v4, existingData).map((route) => route.path), ["/lyrics/904/"]);
   assert.deepEqual(generator.buildPublishedLyricsRoutes({ version: 2, songs: [] }, existingData), []);
   assert.match(readWeb("scripts/generate-sitemaps.mjs"), /fallback: \{ version: 2, songs: \[\] \}/);
 

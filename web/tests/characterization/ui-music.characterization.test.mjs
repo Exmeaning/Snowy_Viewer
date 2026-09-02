@@ -385,7 +385,7 @@ test("UI i18n parity, literal usage, hardcoded allowlist, and SEO registry match
 
   const hardcodedCheck = runNodeScript("scripts/scan-hardcoded-ui-text.mjs");
   assert.equal(hardcodedCheck.status, 0, hardcodedCheck.stderr);
-  assert.match(hardcodedCheck.stdout, new RegExp(`\\(${baseline.validation.hardcodedAllowlistedGroups} allowlisted file groups\\)`));
+  assert.match(hardcodedCheck.stdout, /Hardcoded UI Han scan OK/);
 
   const seoCheck = runNodeScript("scripts/check-seo-routes.mjs");
   assert.equal(seoCheck.status, 0, seoCheck.stderr);

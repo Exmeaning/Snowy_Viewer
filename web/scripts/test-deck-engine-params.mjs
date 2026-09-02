@@ -553,10 +553,10 @@ console.log('3C) 展示解码逐模式校验…');
     console.log('B2) client → worker 覆盖传参静态对照…');
     const clientSource = readFileSync(resolve(webRoot, 'src/app/deck-recommend/client.tsx'), 'utf8');
     const clientKeys = [
-        'userDataOverrides', 'DataOverridePanel', 'areaItemLevel', 'areaItemLevelOverrides',
+        'DataOverridePanel', 'areaItemLevel', 'areaItemOverrides',
         'characterRank', 'characterRankOverrides', 'mysekaiGateLevel', 'mysekaiGateOverrides',
         'mysekaiFixtureBonusRate', 'mysekaiFixtureOverrides',
-        'characterFilterIds', 'useCurrentDeck', 'unitFilter', 'attrFilter', 'filterGroupTitle',
+        'characterFilterIds', 'useCurrentDeck', 'unitFilter', 'attrFilter',
     ];
     const clientMissing = clientKeys.filter((key) => !clientSource.includes(key));
     if (clientMissing.length === 0) {

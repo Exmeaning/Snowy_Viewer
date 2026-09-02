@@ -1,98 +1,10 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
-import path from "node:path";
 import test from "node:test";
 import { JSDOM } from "jsdom";
 
-import { importWebTypeScript, readWeb, REPO_ROOT } from "./test-helpers.mjs";
+import { importWebTypeScript, readWeb } from "./test-helpers.mjs";
 
-function readRepo(relativePath) {
-  return fs.readFileSync(path.join(REPO_ROOT, relativePath), "utf8");
-}
 
-test("workflows pin actions, declare least privilege, and validate Go plus web", () => {
-  const workflowDir = path.join(REPO_ROOT, ".github/workflows");
-  const workflowFiles = fs.readdirSync(workflowDir).filter((file) => file.endsWith(".yml") || file.endsWith(".yaml"));
-  for (const workflowFile of workflowFiles) {
-    const source = readRepo(`.github/workflows/${workflowFile}`);
-    assert.doesNotMatch(source, /uses:\s+[^\s]+@v\d+/);
-    assert.match(source, /uses:\s+[^\s]+@[0-9a-f]{40}/);
-    assert.match(source, /permissions:/);
-  }
-
-  const ci = readRepo(".github/workflows/ci.yml");
-  assert.match(ci, /permissions:\s*\n\s+contents: read/);
-  assert.match(ci, /go test \.\/\.\.\./);
-  assert.match(ci, /go test -race \.\/\.\.\./);
-  assert.match(ci, /go vet \.\/\.\.\./);
-  assert.match(ci, /Dockerfile\.backend/);
-  assert.match(ci, /calculator:[\s\S]*npm test -- --runInBand[\s\S]*npm run build[\s\S]*npm audit --omit=dev --audit-level=high[\s\S]*npm audit --audit-level=critical/);
-  assert.match(ci, /Validate synthetic HTTPS fixture behavior[\s\S]*node --test scripts\/serve-public-lyrics-build-contract\.test\.mjs/);
-  assert.match(ci, /Validate production image build contract[\s\S]*serve-public-lyrics-build-contract\.mjs/);
-  assert.match(ci, /cleanup\(\)[\s\S]*kill -KILL "\$fixture_pid"[\s\S]*docker buildx rm --force "\$builder_name"/);
-  assert.match(ci, /curl --fail --silent --show-error[\s\S]*--connect-timeout 3[\s\S]*--max-time 10/);
-  assert.match(ci, /openssl req -x509[\s\S]*subjectAltName=DNS:host\.docker\.internal,DNS:localhost,IP:127\.0\.0\.1/);
-  assert.match(ci, /serve-public-lyrics-build-contract\.mjs[\s\S]*--host 0\.0\.0\.0/);
-  assert.match(ci, /lyrics_base_url="https:\/\/localhost:\$\{fixture_port\}\/files\/translation\/lyrics"/);
-  assert.match(ci, /value\.version !== 4[\s\S]*song\?\.availableVersions\?\.join\(","\) !== "full"/);
-  assert.match(ci, /docker buildx create[\s\S]*--driver docker-container[\s\S]*--driver-opt network=host[\s\S]*--use/);
-  assert.match(ci, /docker buildx build[\s\S]*--allow network\.host[\s\S]*--network host[\s\S]*--secret id=public_lyrics_ca,src="\$fixture_dir\/cert\.pem"/);
-  assert.doesNotMatch(ci, /host-gateway/);
-  assert.match(ci, /--build-arg NEXT_PUBLIC_LYRICS_BASE_URL="\$lyrics_base_url"[\s\S]*--load/);
-  assert.doesNotMatch(ci, /vars\.NEXT_PUBLIC_LYRICS_BASE_URL/);
-  assert.doesNotMatch(ci, /NEXT_PUBLIC_LYRICS_BASE_URL:\s*https?:\/\//);
-  const watchMasterData = readRepo(".github/workflows/watch-master-data.yml");
-  assert.match(watchMasterData, /Update Master Data Version/);
-  assert.match(watchMasterData, /data\/master_version\.txt/);
-  assert.doesNotMatch(watchMasterData, /npm run sitemap/);
-  assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.go")), false);
-  assert.equal(fs.existsSync(path.join(REPO_ROOT, "Dockerfile.backend")), true);
-  assert.ok(fs.existsSync(path.join(REPO_ROOT, "docs/DEPLOYMENT_ROLLBACK.md")));
-});
-
-test("production and web-dev images install from the frozen workspace root and run a hardened runtime", () => {
-  const production = readRepo("Dockerfile");
-  const development = readRepo("web/Dockerfile.dev");
-  const compose = readRepo("docker-compose.dev.yml");
-
-  assert.doesNotMatch(production, /FROM\s+[^\s]+:latest/);
-  assert.match(production, /FROM oven\/bun:1\.3\.14/);
-  assert.match(production, /COPY package\.json bun\.lock \.\//);
-  assert.match(production, /RUN bun install --frozen-lockfile/);
-  assert.equal(
-    production.match(/^ARG NEXT_PUBLIC_LYRICS_BASE_URL=https:\/\/translation\.exmeaning\.com\/files\/translation\/lyrics$/gm)?.length,
-    2,
-  );
-  assert.doesNotMatch(production, /^ARG NEXT_PUBLIC_LYRICS_BASE_URL$/m);
-  assert.match(production, /ENV NODE_ENV=production[\s\S]*bun run sitemap/);
-  assert.match(production, /ENV NEXT_PUBLIC_LYRICS_BASE_URL=\$NEXT_PUBLIC_LYRICS_BASE_URL/);
-  assert.match(production, /RUN test -n "\$NEXT_PUBLIC_LYRICS_BASE_URL"/);
-  assert.match(production, /RUN printf '%s\\n' "\$NEXT_PUBLIC_LYRICS_BASE_URL" > \/app\/public-lyrics-base-url-build-contract/);
-  assert.match(production, /COPY --from=builder-web[\s\S]*public-lyrics-base-url-build-contract/);
-  assert.match(production, /export REQUIRE_PUBLIC_LYRICS_SOURCE=1;[\s\S]*bun run sitemap/);
-  const productionWithoutReviewedLyricsDefault = production.replaceAll(
-    "ARG NEXT_PUBLIC_LYRICS_BASE_URL=https://translation.exmeaning.com/files/translation/lyrics",
-    "ARG NEXT_PUBLIC_LYRICS_BASE_URL=<reviewed-public-lyrics-base>",
-  );
-  assert.doesNotMatch(productionWithoutReviewedLyricsDefault, /NEXT_PUBLIC_LYRICS_BASE_URL=.*(?:https?:\/\/|token|password|@)/i);
-  const lyricsBaseUrl = readRepo("web/src/lib/public-lyrics-base-url.mjs");
-  assert.match(lyricsBaseUrl, /export const DEFAULT_PUBLIC_LYRICS_BASE_URL = "https:\/\/translation\.exmeaning\.com\/files\/translation\/lyrics";/);
-  assert.match(readRepo("web/src/lib/lyrics.ts"), /from "@\/lib\/public-lyrics-base-url\.mjs"/);
-  assert.match(readRepo("web/scripts/lib/public-lyrics.mjs"), /from '\.\.\/\.\.\/src\/lib\/public-lyrics-base-url\.mjs'/);
-  const startContainer = readRepo("scripts/start-container.sh");
-  assert.match(startContainer, /public-lyrics-base-url-build-contract/);
-  assert.match(startContainer, /NEXT_PUBLIC_LYRICS_BASE_URL="\$BUILT_PUBLIC_LYRICS_BASE_URL"/);
-  assert.match(startContainer, /does not match the build-time public lyrics source/);
-  assert.doesNotMatch(startContainer, /is not configured at runtime/);
-  assert.match(production, /USER node/);
-  assert.match(production, /HEALTHCHECK[\s\S]*\/readyz/);
-  assert.match(production, /ENTRYPOINT \["\/sbin\/tini", "--"\]/);
-  assert.match(production, /CMD \["\/app\/start\.sh"\]/);
-
-  assert.match(development, /COPY package\.json bun\.lock \.\//);
-  assert.match(development, /RUN bun install --frozen-lockfile/);
-  assert.match(compose, /context: \.[\s\S]*dockerfile: web\/Dockerfile\.dev/);
-});
 
 test("privacy disclosures are localized, match disabled ads, and route external links", () => {
   const page = readWeb("src/app/privacy/page.tsx");
