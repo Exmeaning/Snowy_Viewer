@@ -21,7 +21,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import { useI18n } from "@/contexts/I18nContext";
 import { getCharacterName } from "@/lib/i18n";
-import { fetchMasterData } from "@/lib/fetch";
+import { fetchMasterDataForServer, type ServerSourceType } from "@/lib/fetch";
 import { getCardSkillTypes } from "@/lib/skill";
 import { loadTranslations, TranslationData } from "@/lib/translations";
 import { parseSearchQuery, matchExpr, type SearchTerm, type SearchExpr } from "@/lib/searchQuery";
@@ -37,6 +37,7 @@ export interface CardSelectorModalProps {
     maxSelectCount?: number;
     onToggleCardSelect?: (card: ICardInfo) => void;
     onSelectCard?: (card: ICardInfo) => void;
+    server?: ServerSourceType;
 }
 
 export default function CardSelectorModal({
@@ -50,6 +51,7 @@ export default function CardSelectorModal({
     maxSelectCount,
     onToggleCardSelect,
     onSelectCard,
+    server = "jp",
 }: CardSelectorModalProps) {
     const { t } = useI18n();
     const { useTrainedThumbnail, isShowSpoiler } = useTheme();
@@ -79,8 +81,8 @@ export default function CardSelectorModal({
         async function loadMasterData() {
             try {
                 const [skillsData, suppliesData, translationsData] = await Promise.all([
-                    fetchMasterData<ISkillInfo[]>("skills.json").catch(() => []),
-                    fetchMasterData<ICardSupply[]>("cardSupplies.json").catch(() => []),
+                    fetchMasterDataForServer<ISkillInfo[]>(server, "skills.json").catch(() => []),
+                    fetchMasterDataForServer<ICardSupply[]>(server, "cardSupplies.json").catch(() => []),
                     loadTranslations(),
                 ]);
                 if (isMounted) {
@@ -100,7 +102,7 @@ export default function CardSelectorModal({
         return () => {
             isMounted = false;
         };
-    }, [isOpen]);
+    }, [isOpen, server]);
 
     const pickupSet = useMemo(() => new Set(pickupCardIds), [pickupCardIds]);
 

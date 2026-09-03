@@ -10,7 +10,7 @@ import {
     IMusicMeta,
     normalizeMusicsData,
 } from "@/types/music";
-import { fetchMasterData, fetchMusicMetas } from "@/lib/fetch";
+import { fetchMasterDataForServer, fetchMusicMetas, type ServerSourceType } from "@/lib/fetch";
 import { getMusicJacketUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
@@ -28,6 +28,7 @@ interface MusicSelectorProps {
     showRecommendations?: boolean;
     recommendMode?: "event" | "challenge";
     liveType?: string;
+    server?: ServerSourceType;
 }
 
 interface RecommendationItem {
@@ -53,6 +54,7 @@ export default function MusicSelector({
     showRecommendations = true,
     recommendMode: _recommendMode = "event",
     liveType = "multi",
+    server = "jp",
 }: MusicSelectorProps) {
     const { assetSource, isShowSpoiler } = useTheme();
     const { t } = useI18n();
@@ -94,12 +96,13 @@ export default function MusicSelector({
         return "multi";
     }, [liveType]);
 
-    // Load musics, tags, and music metas on mount
+    // Load musics, tags, and music metas on mount or when server changes
     useEffect(() => {
+        let cancelled = false;
         const fetches: Promise<unknown>[] = [
-            fetchMasterData<IMusicInfo[]>("musics.json"),
-            fetchMasterData<IMusicCategoryInfo[]>("musicCategories.json").catch(() => [] as IMusicCategoryInfo[]),
-            fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
+            fetchMasterDataForServer<IMusicInfo[]>(server, "musics.json"),
+            fetchMasterDataForServer<IMusicCategoryInfo[]>(server, "musicCategories.json").catch(() => [] as IMusicCategoryInfo[]),
+            fetchMasterDataForServer<IMusicTagInfo[]>(server, "musicTags.json"),
             loadTranslations(),
         ];
         if (showRecommendations) {
@@ -112,6 +115,7 @@ export default function MusicSelector({
         }
         Promise.all(fetches)
             .then(([musicsData, categoriesData, tagsData, translationsData, metasData]) => {
+                if (cancelled) return;
                 const rawMusics = musicsData as IMusicInfo[];
                 const rawCats = categoriesData as IMusicCategoryInfo[];
                 const normalizedMusics = normalizeMusicsData(rawMusics, rawCats);
@@ -122,10 +126,14 @@ export default function MusicSelector({
                 setLoading(false);
             })
             .catch((err) => {
+                if (cancelled) return;
                 console.error("Failed to load musics", err);
                 setLoading(false);
             });
-    }, [showRecommendations]);
+        return () => {
+            cancelled = true;
+        };
+    }, [showRecommendations, server]);
 
     // Vertically arranged recommended categories: Efficiency, PT, Score
     const recommendationCategories = useMemo<RecommendationCategory[]>(() => {

@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { IEventInfo, IEventDeckBonus, EventType, EVENT_TYPE_COLORS, getEventStatus } from "@/types/events";
 import { ICharaUnitInfo, UNIT_DATA, UNIT_ICON_FILES, UNIT_ID_LABEL_KEYS, CardAttribute, ATTR_ICON_PATHS, ATTR_NAMES } from "@/types/types";
-import { fetchMasterData, fetchMasterDataForServer } from "@/lib/fetch";
+import { fetchMasterDataForServer, type ServerSourceType } from "@/lib/fetch";
 import { getCharacterIconUrl, getEventLogoUrl, getEventStoryBannerUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useI18n } from "@/contexts/I18nContext";
@@ -64,9 +64,16 @@ interface EventSelectorProps {
     onSelect: (eventId: string, eventType?: string) => void;
     onEventTypeChange?: (eventType: string | null) => void;
     onBonusCharactersChange?: (characterIds: number[]) => void;
+    server?: ServerSourceType;
 }
 
-export default function EventSelector({ selectedEventId, onSelect, onEventTypeChange, onBonusCharactersChange }: EventSelectorProps) {
+export default function EventSelector({
+    selectedEventId,
+    onSelect,
+    onEventTypeChange,
+    onBonusCharactersChange,
+    server = "jp",
+}: EventSelectorProps) {
     const { assetSource, isShowSpoiler } = useTheme();
     const { t, formatDate } = useI18n();
     const [now] = useState(() => Date.now());
@@ -91,17 +98,19 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
     const [sortBy, setSortBy] = useState<"id" | "startAt">("startAt");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
-    // Load all data on mount
+    // Load all data on mount or when server changes
     useEffect(() => {
+        let cancelled = false;
         Promise.all([
-            fetchMasterData<IEventInfo[]>("events.json"),
-            fetchMasterData<IEventDeckBonus[]>("eventDeckBonuses.json"),
-            fetchMasterData<ICharaUnitInfo[]>("gameCharacterUnits.json"),
-            fetchMasterDataForServer<IActionSet[]>("jp", "actionSets.json"),
-            fetchMasterData<IEventStory[]>("eventStories.json"),
+            fetchMasterDataForServer<IEventInfo[]>(server, "events.json"),
+            fetchMasterDataForServer<IEventDeckBonus[]>(server, "eventDeckBonuses.json"),
+            fetchMasterDataForServer<ICharaUnitInfo[]>(server, "gameCharacterUnits.json"),
+            fetchMasterDataForServer<IActionSet[]>(server, "actionSets.json"),
+            fetchMasterDataForServer<IEventStory[]>(server, "eventStories.json"),
             loadTranslations(),
         ])
             .then(([eventsData, bonusesData, charaUnitsData, actionSetsForUnitMapData, eventStoriesData, translationsData]) => {
+                if (cancelled) return;
                 setEvents(eventsData);
                 setDeckBonuses(bonusesData);
                 setCharaUnits(charaUnitsData);
@@ -111,10 +120,14 @@ export default function EventSelector({ selectedEventId, onSelect, onEventTypeCh
                 setLoading(false);
             })
             .catch(err => {
+                if (cancelled) return;
                 console.error("Failed to load events data", err);
                 setLoading(false);
             });
-    }, []);
+        return () => {
+            cancelled = true;
+        };
+    }, [server]);
 
     // Derived maps — same logic as useEventListData
     const eventBonusCharMap = useMemo(() => {

@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { IMusicInfo, IMusicMeta } from "@/types/music";
 import type { ICardInfo } from "@/types/types";
-import { fetchMasterData, fetchMusicMetas } from "@/lib/fetch";
+import { fetchMasterDataForServer, fetchMusicMetas } from "@/lib/fetch";
 import { saveToolState, getAccount, getOAuthAccessTokenForGameUser, isValidServer, SERVER_OPTIONS, type ServerType } from "@/lib/account";
 import AccountSelector from "@/components/AccountSelector";
 import MainLayout from "@/components/MainLayout";
@@ -312,7 +312,7 @@ export default function ScoreControlClient() {
     useEffect(() => {
         preloadDeckEngine();
 
-        fetchMasterData<IMusicInfo[]>("musics.json")
+        fetchMasterDataForServer<IMusicInfo[]>("jp", "musics.json")
             .then((data) => setMusics(data))
             .catch((err) => console.error("Failed to fetch musics", err));
 
@@ -320,7 +320,7 @@ export default function ScoreControlClient() {
             .then((data) => setMusicMetas(data))
             .catch((err) => console.error("Failed to fetch music meta", err));
 
-        fetchMasterData<CardMasterInfo[]>("cards.json").then(setCardsMaster).catch(console.error);
+        fetchMasterDataForServer<CardMasterInfo[]>("jp", "cards.json").then(setCardsMaster).catch(console.error);
 
         // Prefer values from the account system.
         const account = getAccount();

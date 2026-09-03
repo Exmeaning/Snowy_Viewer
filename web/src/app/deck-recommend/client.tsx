@@ -719,18 +719,17 @@ export default function DeckRecommendClient() {
     const [cardModal, setCardModal] = useState<null | "fixed" | "excluded" | "single">(null);
 
     // 数据覆盖的主数据目录
-    const [overrideRaw, setOverrideRaw] = useState<{
-        master: {
-            areaItems: unknown[];
-            areaItemLevels: unknown[];
-            characterRanks: unknown[];
-            gameCharacters: unknown[];
-            gameCharacterUnits: unknown[];
-            mysekaiGates: unknown[];
-            mysekaiGateLevels: unknown[];
-        };
-        snapshot: OverrideUserSnapshot | null;
+    const [overrideMaster, setOverrideMaster] = useState<{
+        areaItems: unknown[];
+        areaItemLevels: unknown[];
+        characterRanks: unknown[];
+        gameCharacters: unknown[];
+        gameCharacterUnits: unknown[];
+        mysekaiGates: unknown[];
+        mysekaiGateLevels: unknown[];
     } | null>(null);
+    const [userSnapshot, setUserSnapshot] = useState<OverrideUserSnapshot | null>(null);
+
     const emptyOverrideCatalogs = useMemo(() => ({
         areaItems: [] as OverrideCatalogItem[],
         characters: [] as OverrideCatalogItem[],
@@ -738,44 +737,54 @@ export default function DeckRecommendClient() {
         fixtureCharacters: [] as OverrideCatalogItem[],
     }), []);
 
+    // 默认使用日服数据作为数据覆盖目录主数据
     useEffect(() => {
         let cancelled = false;
+        Promise.all([
+            fetchMasterDataForServer<unknown[]>("jp", "areaItems.json"),
+            fetchMasterDataForServer<unknown[]>("jp", "areaItemLevels.json"),
+            fetchMasterDataForServer<unknown[]>("jp", "characterRanks.json"),
+            fetchMasterDataForServer<unknown[]>("jp", "gameCharacters.json"),
+            fetchMasterDataForServer<unknown[]>("jp", "gameCharacterUnits.json"),
+            fetchMasterDataForServer<unknown[]>("jp", "mysekaiGates.json"),
+            fetchMasterDataForServer<unknown[]>("jp", "mysekaiGateLevels.json"),
+        ])
+            .then(([areaItems, areaItemLevels, characterRanks, gameCharacters, gameCharacterUnits, mysekaiGates, mysekaiGateLevels]) => {
+                if (cancelled) return;
+                setOverrideMaster({
+                    areaItems,
+                    areaItemLevels,
+                    characterRanks,
+                    gameCharacters,
+                    gameCharacterUnits,
+                    mysekaiGates,
+                    mysekaiGateLevels,
+                });
+            })
+            .catch(console.error);
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    // 用户快照根据当前选择的账号区服与用户 ID 拉取
+    useEffect(() => {
+        let cancelled = false;
+        const trimmed = userId.trim();
+        if (!trimmed) return;
         (async () => {
             try {
-                const [areaItems, areaItemLevels, characterRanks, gameCharacters, gameCharacterUnits, mysekaiGates, mysekaiGateLevels] =
-                    await Promise.all([
-                        fetchMasterDataForServer<unknown[]>(server, "areaItems.json"),
-                        fetchMasterDataForServer<unknown[]>(server, "areaItemLevels.json"),
-                        fetchMasterDataForServer<unknown[]>(server, "characterRanks.json"),
-                        fetchMasterDataForServer<unknown[]>(server, "gameCharacters.json"),
-                        fetchMasterDataForServer<unknown[]>(server, "gameCharacterUnits.json"),
-                        fetchMasterDataForServer<unknown[]>(server, "mysekaiGates.json"),
-                        fetchMasterDataForServer<unknown[]>(server, "mysekaiGateLevels.json"),
-                    ]);
+                const provider = SnowyDataProvider.getCachedInstance(
+                    trimmed,
+                    server,
+                    getOAuthAccessTokenForGameUser(server, trimmed),
+                );
+                const userData = await provider.getUserDataAll();
                 if (cancelled) return;
-
-                let snapshot: OverrideUserSnapshot | null = null;
-                if (userId.trim()) {
-                    try {
-                        const provider = SnowyDataProvider.getCachedInstance(
-                            userId.trim(),
-                            server,
-                            getOAuthAccessTokenForGameUser(server, userId.trim()),
-                        );
-                        const userData = await provider.getUserDataAll();
-                        snapshot = userData as OverrideUserSnapshot;
-                    } catch {
-                        // 用户数据拉取失败时仍展示主数据目录
-                    }
-                }
-                if (cancelled) return;
-
-                setOverrideRaw({
-                    master: { areaItems, areaItemLevels, characterRanks, gameCharacters, gameCharacterUnits, mysekaiGates, mysekaiGateLevels },
-                    snapshot,
-                });
+                setUserSnapshot(userData as OverrideUserSnapshot);
             } catch {
-                // 目录表拉取失败
+                if (cancelled) return;
+                setUserSnapshot(null);
             }
         })();
         return () => {
@@ -783,19 +792,21 @@ export default function DeckRecommendClient() {
         };
     }, [server, userId]);
 
+    const effectiveUserSnapshot = userId.trim() ? userSnapshot : null;
+
     const overrideCatalogs = useMemo(
-        () => overrideRaw
-            ? buildOverrideCatalogs(overrideRaw.master, overrideRaw.snapshot, t)
+        () => overrideMaster
+            ? buildOverrideCatalogs(overrideMaster, effectiveUserSnapshot, t)
             : emptyOverrideCatalogs,
-        [overrideRaw, t, emptyOverrideCatalogs],
+        [overrideMaster, effectiveUserSnapshot, t, emptyOverrideCatalogs],
     );
 
-    // 卡名与缩略图
+    // 卡名与缩略图（默认使用日服全量数据）
     useEffect(() => {
         let cancelled = false;
         Promise.all([
-            fetchMasterDataForServer<ICardInfo[]>(server, "cards.json"),
-            fetchMasterDataForServer<IMusicInfo[]>(server, "musics.json"),
+            fetchMasterDataForServer<ICardInfo[]>("jp", "cards.json"),
+            fetchMasterDataForServer<IMusicInfo[]>("jp", "musics.json"),
         ])
             .then(([cards, musics]) => {
                 if (cancelled) return;
@@ -806,7 +817,7 @@ export default function DeckRecommendClient() {
         return () => {
             cancelled = true;
         };
-    }, [server]);
+    }, []);
 
     const getOrCreateWorker = useCallback(() => {
         if (workerRef.current) return workerRef.current;
@@ -1898,11 +1909,11 @@ export default function DeckRecommendClient() {
                 overrideCatalogs={overrideCatalogs}
                 onOpenCardModal={setCardModal}
                 userDeckCardIds={[
-                    overrideRaw?.snapshot?.userDecks?.[0]?.member1,
-                    overrideRaw?.snapshot?.userDecks?.[0]?.member2,
-                    overrideRaw?.snapshot?.userDecks?.[0]?.member3,
-                    overrideRaw?.snapshot?.userDecks?.[0]?.member4,
-                    overrideRaw?.snapshot?.userDecks?.[0]?.member5,
+                    effectiveUserSnapshot?.userDecks?.[0]?.member1,
+                    effectiveUserSnapshot?.userDecks?.[0]?.member2,
+                    effectiveUserSnapshot?.userDecks?.[0]?.member3,
+                    effectiveUserSnapshot?.userDecks?.[0]?.member4,
+                    effectiveUserSnapshot?.userDecks?.[0]?.member5,
                 ].filter((v): v is number => typeof v === "number" && v > 0)}
             />
 
