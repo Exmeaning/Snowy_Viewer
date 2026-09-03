@@ -54,6 +54,13 @@ const BASE_EVENT = {
     ...ALL_RARITY_DEFAULTS,
 };
 
+/** 模拟活动基线：与 BASE_EVENT 同口径，但刻意不带 event_id。 */
+const SIM_BASE = {
+    region: 'jp', live_type: 'multi', music_id: 74, music_diff: 'master',
+    target: 'score', limit: 3, timeout_ms: 60_000,
+    ...ALL_RARITY_DEFAULTS,
+};
+
 const BASE_MUSIC_DECK = (deck) => ({
     total_power: deck.total_power,
     event_bonus_rate: deck.event_bonus_total ?? 0,
@@ -66,6 +73,10 @@ function buildMatrix(mod, decks, ctx) {
     const deck0 = decks[0];
     const topCard = deck0.cards[0].card_id;
     const secondCard = deck0.cards[1].card_id;
+    // 固定住基线里本来占队长位的那张卡，再把队长指定给队尾角色。
+    // 这样「指定队长没生效」会直接暴露成队长位仍是固定卡。
+    const otherCharCard = deck0.cards[0].card_id;
+    const leaderChar = deck0.cards[deck0.cards.length - 1].character_id;
     const { basePoolSize, baseWlBonus } = ctx;
     return [
         {
@@ -212,6 +223,47 @@ function buildMatrix(mod, decks, ctx) {
             patch: { custom_bonus_attr: 'cool' },
             assert: (r) => r.decks.length > 0,
             expect: '自定义加成属性被接受',
+        },
+        {
+            name: 'forcedLeaderCharacterId',
+            base: BASE_EVENT, patch: { forced_leader_character_id: 1 },
+            assert: (r) => r.decks.length > 0 && r.decks.every((d) => d.cards[0].character_id === 1),
+            expect: '指定队长后每个卡组的队长位都是该角色',
+        },
+        {
+            name: 'forcedLeaderCharacterId + fixedCards',
+            base: { ...BASE_EVENT, fixedCards: [otherCharCard] },
+            patch: { forced_leader_character_id: leaderChar },
+            assert: (r) => r.decks.length > 0
+                && r.decks.every((d) => d.cards[0].character_id === leaderChar)
+                && r.decks.every((d) => d.cards.some((c) => c.card_id === otherCharCard)),
+            expect: `固定卡 ${otherCharCard} 留在队里，队长位仍是指定的角色 ${leaderChar}`,
+        },
+        {
+            name: 'simulated unit event',
+            base: SIM_BASE, patch: { event_type: 'marathon', event_unit: 'idol' },
+            assert: (r) => r.decks.length > 0 && (r.decks[0].event_bonus_total ?? 0) > 0,
+            expect: '模拟团活按团给出加成',
+        },
+        {
+            name: 'simulated mixed event',
+            base: SIM_BASE,
+            patch: { event_type: 'marathon', custom_bonus_character_ids: [1, 5, 10, 15, 21], custom_bonus_character_support_units: { 21: 'street' } },
+            assert: (r) => r.decks.length > 0 && (r.decks[0].event_bonus_total ?? 0) > 0,
+            expect: '模拟混活按角色集合给出加成',
+        },
+        {
+            name: 'simulated cheerful carnival',
+            base: { ...SIM_BASE, live_type: 'cheerful' },
+            patch: { event_type: 'cheerful_carnival', event_unit: 'idol', event_attr: 'happy' },
+            assert: (r) => r.decks.length > 0 && (r.decks[0].event_point ?? 0) > 0,
+            expect: '模拟 5v5 算出活动 PT',
+        },
+        {
+            name: 'simulated world bloom turn 1/2',
+            base: SIM_BASE, patch: { event_type: 'world_bloom', world_bloom_event_turn: 1, event_unit: 'street' },
+            assert: (r) => r.decks.length > 0 && (r.decks[0].event_bonus_total ?? 0) > 0,
+            expect: '模拟连接世界第 1 轮不再要求真实活动 ID',
         },
         {
             name: 'recommendMusic（单曲收益）',
@@ -527,7 +579,11 @@ console.log('3C) 展示解码逐模式校验…');
     handle.free();
 
     console.log('\nB) worker 选项键静态对照…');
-    const workerSource = readFileSync(resolve(webRoot, 'src/lib/deck-recommend/engine-worker.ts'), 'utf8');
+    // 引擎 options 的组装已抽到 engine-options.ts；worker 只剩数据加载与句柄复用。
+    const workerSource = [
+        readFileSync(resolve(webRoot, 'src/lib/deck-recommend/engine-options.ts'), 'utf8'),
+        readFileSync(resolve(webRoot, 'src/lib/deck-recommend/engine-worker.ts'), 'utf8'),
+    ].join('\n');
     const requiredKeys = [
         'event_id', 'event_type', 'event_attr', 'event_unit', 'world_bloom_event_turn',
         'world_bloom_character_id', 'challenge_live_character_id', 'target', 'limit', 'timeout_ms',
@@ -550,21 +606,28 @@ console.log('3C) 展示解码逐模式校验…');
         console.error(`   ✗ worker 缺少键: ${missing.join(', ')}`);
     }
 
-    console.log('B2) client → worker 覆盖传参静态对照…');
+    // 表单 → worker 入参那一层的逐字段断言在 scripts/test-deck-payload.mjs，
+    // 这里只做一次粗筛，保证页面还在走那个纯映射、没有绕回手写 payload。
+    console.log('B2) client → worker 传参入口静态对照…');
     const clientSource = readFileSync(resolve(webRoot, 'src/app/deck-recommend/client.tsx'), 'utf8');
-    const clientKeys = [
-        'DataOverridePanel', 'areaItemLevel', 'areaItemOverrides',
-        'characterRank', 'characterRankOverrides', 'mysekaiGateLevel', 'mysekaiGateOverrides',
-        'mysekaiFixtureBonusRate', 'mysekaiFixtureOverrides',
-        'characterFilterIds', 'useCurrentDeck', 'unitFilter', 'attrFilter',
+    const argsSource = readFileSync(resolve(webRoot, 'src/lib/deck-recommend/worker-args.ts'), 'utf8');
+    const clientKeys = ['buildDeckWorkerArgs', 'DataOverridePanel', 'useCurrentDeck'];
+    const argsKeys = [
+        'simulatedEvent', 'userDataOverrides', 'leaderCharacterId',
+        'areaItemLevel', 'areaItemLevelOverrides', 'characterRank', 'characterRankOverrides',
+        'mysekaiGateLevel', 'mysekaiGateLevelOverrides',
+        'mysekaiFixtureBonusRate', 'mysekaiFixtureBonusRateOverrides',
+        'characterFilterIds', 'unitFilter', 'attrFilter',
+        'simBonusMode', 'simCharacterIds', 'simCharacterUnits',
     ];
-    const clientMissing = clientKeys.filter((key) => !clientSource.includes(key));
+    const clientMissing = clientKeys.filter((key) => !clientSource.includes(key))
+        .concat(argsKeys.filter((key) => !argsSource.includes(key)));
     if (clientMissing.length === 0) {
         pass += 1;
-        console.log(`   ✓ client 传参覆盖 ${clientKeys.length} 个键`);
+        console.log(`   ✓ 页面走 buildDeckWorkerArgs，映射覆盖 ${argsKeys.length} 个契约字段`);
     } else {
         failures.push(`client missing keys: ${clientMissing.join(', ')}`);
-        console.error(`   ✗ client 缺少键: ${clientMissing.join(', ')}`);
+        console.error(`   ✗ 缺少键: ${clientMissing.join(', ')}`);
     }
 
     console.log(`\n参数全量验证：${pass} 项通过${failures.length ? `，${failures.length} 项失败：${failures.join('; ')}` : '，全部生效'}`);

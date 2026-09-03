@@ -40,6 +40,8 @@ const COMMENT_ONLY_ALLOWLIST = new Map([
     ["src/app/deck-recommend/client.tsx", "Comments describing deck recommendation page internals"],
     ["src/lib/deck-recommend/engine-worker.ts", "Comments describing deck engine worker internals"],
     ["src/lib/deck-recommend/engine-types.ts", "Comments describing deck engine worker contract"],
+    ["src/lib/deck-recommend/engine-options.ts", "Comments describing the engine option mapping"],
+    ["src/lib/deck-recommend/worker-args.ts", "Comments describing the deck worker argument mapping"],
     ["src/components/deck-recommend/CardPickerModal.tsx", "Comments describing the deck card picker internals"],
     ["src/lib/deck-engine/wasm-version.ts", "Generated file header comment"],
 ]);

@@ -8,6 +8,7 @@
     "build:next": "next build",
     "copy:wasm": "node scripts/copy-wasm-artifacts.mjs",
     "test:deck-params": "node --experimental-strip-types scripts/test-deck-engine-params.mjs",
+    "test:deck-payload": "node --experimental-strip-types scripts/test-deck-payload.mjs",
     "sitemap": "node scripts/generate-sitemaps.mjs",
     "generate:metadata": "node scripts/generate-metadata-map.mjs",
     "start": "next start",
