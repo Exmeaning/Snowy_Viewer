@@ -18,7 +18,7 @@
     "test:ssr-localized-links": "npm run build:next && node scripts/check-localized-link-ssr.mjs"
   },
   "dependencies": {
-    "@empty-sekai/allium-deck-wasm": "0.0.11",
+    "@empty-sekai/allium-deck-wasm": "0.0.12",
     "@supabase/supabase-js": "2.106.0",
     "@swc/helpers": "^0.5.15",
     "@types/qrcode": "^1.5.6",
