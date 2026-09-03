@@ -36,21 +36,19 @@ import EventSelector from "@/components/deck-recommend/EventSelector";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import { preloadDeckEngine } from "@/lib/deck-engine/wasm-loader";
 import { type OverrideCatalogItem } from "@/components/deck-recommend/DataOverridePanel";
+import {
+    buildDeckWorkerArgs,
+    DEFAULT_CARD_CONFIG,
+    DEFAULT_DECK_FORM_STATE as DEFAULT_SAVED_CONFIG,
+    type DeckFormState as SavedConfig,
+} from "@/lib/deck-recommend/worker-args";
 import { SnowyDataProvider } from "@/lib/deck-recommend/data-provider";
 import type {
     DeckRecommendMode,
     DeckResultDeck,
-    DeckSingleCardOverride,
     DeckTrainingConfig,
     DeckUserCard,
     DeckWorkerOutput,
-    DeckTarget,
-    DeckSkillOrder,
-    DeckSkillReference,
-    DeckAreaItemOverride,
-    DeckCharacterRankOverride,
-    DeckMysekaiFixtureOverride,
-    DeckMysekaiGateOverride,
 } from "@/lib/deck-recommend/engine-types";
 import "./deck-recommend.css";
 
@@ -284,145 +282,18 @@ const RARITY_CONFIG_KEYS = [
     { key: "rarity_birthday", color: "#FF6699" },
 ];
 
-const DEFAULT_CARD_CONFIG: Record<string, DeckTrainingConfig> = {
-    rarity_1: { disable: false, levelMax: true, episodeRead: true, masterMax: false, skillMax: false },
-    rarity_2: { disable: false, levelMax: true, episodeRead: true, masterMax: false, skillMax: false },
-    rarity_3: { disable: false, levelMax: true, episodeRead: true, masterMax: false, skillMax: false },
-    rarity_4: { disable: false, levelMax: true, episodeRead: true, masterMax: false, skillMax: false },
-    rarity_birthday: { disable: false, levelMax: true, episodeRead: true, masterMax: false, skillMax: false },
-};
 
 const SIM_EVENT_TYPE_OPTIONS = ["marathon", "cheerful_carnival", "world_bloom"] as const;
 
 const VIRTUAL_SINGER_ID_MIN = 21;
 
-type CustomSubMode = "unit" | "character";
 type TranslationFn = ReturnType<typeof useI18n>["t"];
 
 const USER_ID_STORAGE_KEY = "deck_recommend_userid";
 const SERVER_STORAGE_KEY = "deck_recommend_server";
 const SAVED_CONFIG_KEY = "deck_recommend_saved_config_v2";
 
-/** 保存到 localStorage 的可序列化表单状态。 */
-interface SavedConfig {
-    mode: DeckRecommendMode;
-    eventId: string;
-    selectedEventType: string | null;
-    eventBonusCharacterIds: number[];
-    liveType: string;
-    supportCharacterId: number | null;
-    challengeCharacterId: number | null;
-    musicId: string;
-    difficulty: string;
-    cardConfig: Record<string, DeckTrainingConfig>;
-    target: DeckTarget;
-    bonusTargets: string;
-    simulateEnabled: boolean;
-    simType: string;
-    simAttr: string;
-    simUnit: string;
-    simTurn: number;
-    simCharacterId: number | null;
-    customSubMode: CustomSubMode;
-    customUnit: string;
-    customCharacterIds: number[];
-    customCharacterUnits: Record<number, string>;
-    customAttr: string;
-    strongestTarget: "power" | "skill";
-    multiTeammatePower: string;
-    multiTeammateScoreUp: string;
-    multiScoreUpLowerBound: string;
-    skillOrder: DeckSkillOrder;
-    specificSkillOrder: string;
-    skillReference: DeckSkillReference;
-    keepAfterTrainingState: boolean;
-    bestSkillAsLeader: boolean;
-    minimize: boolean;
-    supportMasterMax: boolean;
-    supportSkillMax: boolean;
-    filterOtherUnit: boolean;
-    boost: string;
-    otherScore: string;
-    leaderCharacterId: number | null;
-    fixedCards: number[];
-    fixedCharacters: number[];
-    excludedCards: number[];
-    singleCardOverrides: DeckSingleCardOverride[];
-    areaItemLevel: string;
-    areaItemOverrides: DeckAreaItemOverride[];
-    characterRank: string;
-    characterRankOverrides: DeckCharacterRankOverride[];
-    mysekaiGateLevel: string;
-    mysekaiGateOverrides: DeckMysekaiGateOverride[];
-    mysekaiFixtureBonusRate: string;
-    mysekaiFixtureOverrides: DeckMysekaiFixtureOverride[];
-    unitFilter: string;
-    attrFilter: string;
-    characterFilterIds: number[];
-    useCurrentDeck: boolean;
-    limit: string;
-    timeoutSeconds: string;
-}
 
-const DEFAULT_SAVED_CONFIG: SavedConfig = {
-    mode: "event",
-    eventId: "",
-    selectedEventType: null,
-    eventBonusCharacterIds: [],
-    liveType: "multi",
-    supportCharacterId: null,
-    challengeCharacterId: null,
-    musicId: "",
-    difficulty: "master",
-    cardConfig: DEFAULT_CARD_CONFIG,
-    target: "score",
-    bonusTargets: "",
-    simulateEnabled: false,
-    simType: "marathon",
-    simAttr: "",
-    simUnit: "",
-    simTurn: 3,
-    simCharacterId: null,
-    customSubMode: "unit",
-    customUnit: "light_sound",
-    customCharacterIds: [],
-    customCharacterUnits: {},
-    customAttr: "",
-    strongestTarget: "power",
-    multiTeammatePower: "",
-    multiTeammateScoreUp: "",
-    multiScoreUpLowerBound: "",
-    skillOrder: "average",
-    specificSkillOrder: "",
-    skillReference: "average",
-    keepAfterTrainingState: false,
-    bestSkillAsLeader: true,
-    minimize: false,
-    supportMasterMax: false,
-    supportSkillMax: false,
-    filterOtherUnit: false,
-    boost: "",
-    otherScore: "",
-    leaderCharacterId: null,
-    fixedCards: [],
-    fixedCharacters: [],
-    excludedCards: [],
-    singleCardOverrides: [],
-    areaItemLevel: "",
-    areaItemOverrides: [],
-    characterRank: "",
-    characterRankOverrides: [],
-    mysekaiGateLevel: "",
-    mysekaiGateOverrides: [],
-    mysekaiFixtureBonusRate: "",
-    mysekaiFixtureOverrides: [],
-    unitFilter: "",
-    attrFilter: "",
-    characterFilterIds: [],
-    useCurrentDeck: false,
-    limit: "10",
-    timeoutSeconds: "120",
-};
 
 function getErrorMessage(error: string, t: TranslationFn): string {
     switch (error) {
@@ -812,7 +683,8 @@ export default function DeckRecommendClient() {
     const {
         mode, eventId, selectedEventType, eventBonusCharacterIds, liveType, supportCharacterId,
         challengeCharacterId, musicId, difficulty, cardConfig, target, bonusTargets,
-        simulateEnabled, simType, simAttr, simUnit, simTurn, simCharacterId,
+        simulateEnabled, simType, simAttr, simUnit, simBonusMode, simCharacterIds,
+        simCharacterUnits, simTurn, simCharacterId,
         customSubMode, customUnit, customCharacterIds, customCharacterUnits, customAttr,
         strongestTarget, multiTeammatePower, multiTeammateScoreUp, multiScoreUpLowerBound,
         skillOrder, specificSkillOrder, skillReference, keepAfterTrainingState,
@@ -1226,6 +1098,17 @@ export default function DeckRecommendClient() {
             setError(t("page.deckRecommend.errors.simulateUnitRequired"));
             return;
         }
+        if (mode === "event" && simulateEnabled && simType === "world_bloom" && simTurn === 3 && !simCharacterId) {
+            setError(t("page.deckRecommend.errors.supportCharacterRequired"));
+            return;
+        }
+        if (
+            mode === "event" && simulateEnabled && simType !== "world_bloom"
+            && simBonusMode === "character" && simCharacterIds.length === 0
+        ) {
+            setError(t("page.deckRecommend.errors.customCharactersRequired"));
+            return;
+        }
 
         calculateScrollYRef.current = typeof window !== "undefined" ? window.scrollY : null;
         setError(null);
@@ -1241,66 +1124,11 @@ export default function DeckRecommendClient() {
             return;
         }
 
-        const effectiveFixedCards = [...fixedCards];
-
-        const workerArgs = {
+        const workerArgs = buildDeckWorkerArgs(state, {
             server,
-            userId: userId.trim(),
-            mode,
-            eventId: eventId ? parseInt(eventId) : undefined,
-            eventType: selectedEventType ?? undefined,
-            liveType,
-            supportCharacterId: (mode === "event" && selectedEventType === "world_bloom") ? (supportCharacterId ?? undefined) : undefined,
-            challengeCharacterId: challengeCharacterId ?? undefined,
-            musicId: musicId ? parseInt(musicId) : undefined,
-            difficulty: needsMusic ? difficulty : undefined,
-            cardConfig,
-            target: mode === "event" ? target : undefined,
-            bonusTargets: bonusTargetsParsed ?? undefined,
-            simulateEnabled,
-            simType,
-            simAttr: simAttr || undefined,
-            simUnit: simUnit || undefined,
-            simTurn: simType === "world_bloom" ? simTurn : undefined,
-            simCharacterId: simCharacterId ?? undefined,
-            customSubMode,
-            customUnit: customSubMode === "unit" ? customUnit : undefined,
-            customCharacterIds: customSubMode === "character" ? customCharacterIds : undefined,
-            customCharacterUnits: customSubMode === "character" ? customCharacterUnits : undefined,
-            customAttr: customAttr || undefined,
-            strongestTarget: mode === "strongest" ? strongestTarget : undefined,
-            multiTeammatePower: multiTeammatePower ? parseInt(multiTeammatePower) : undefined,
-            multiTeammateScoreUp: multiTeammateScoreUp ? parseInt(multiTeammateScoreUp) : undefined,
-            multiScoreUpLowerBound: multiScoreUpLowerBound ? parseInt(multiScoreUpLowerBound) : undefined,
-            skillOrder,
-            specificSkillOrder: skillOrder === "specific" ? specificSkillOrder : undefined,
-            skillReference,
-            keepAfterTrainingState,
-            bestSkillAsLeader,
-            minimize: mode === "weakest" ? true : minimize,
-            supportMasterMax,
-            supportSkillMax,
-            filterOtherUnit,
-            boost: boost ? parseInt(boost) : undefined,
-            otherScore: otherScore ? parseInt(otherScore) : undefined,
-            fixedCards: effectiveFixedCards.length > 0 ? effectiveFixedCards : undefined,
-            fixedCharacters: fixedCharacters.length > 0 ? fixedCharacters : undefined,
-            excludedCards: excludedCards.length > 0 ? excludedCards : undefined,
-            singleCardOverrides: singleCardOverrides.length > 0 ? singleCardOverrides : undefined,
-            areaItemLevel: areaItemLevel ? parseInt(areaItemLevel) : undefined,
-            areaItemOverrides: areaItemOverrides.length > 0 ? areaItemOverrides : undefined,
-            characterRank: characterRank ? parseInt(characterRank) : undefined,
-            characterRankOverrides: characterRankOverrides.length > 0 ? characterRankOverrides : undefined,
-            mysekaiGateLevel: mysekaiGateLevel ? parseInt(mysekaiGateLevel) : undefined,
-            mysekaiGateOverrides: mysekaiGateOverrides.length > 0 ? mysekaiGateOverrides : undefined,
-            mysekaiFixtureBonusRate: mysekaiFixtureBonusRate ? parseFloat(mysekaiFixtureBonusRate) : undefined,
-            mysekaiFixtureOverrides: mysekaiFixtureOverrides.length > 0 ? mysekaiFixtureOverrides : undefined,
-            unitFilter: unitFilter || undefined,
-            attrFilter: attrFilter || undefined,
-            characterFilterIds: characterFilterIds.length > 0 ? characterFilterIds : undefined,
-            limit: Math.min(30, Math.max(1, parseInt(limit) || 10)),
-            timeoutMs: Math.min(300, Math.max(5, parseInt(timeoutSeconds) || 120)) * 1000,
-        };
+            userId,
+            bonusTargets: bonusTargetsParsed,
+        });
 
         const worker = getOrCreateWorker();
         const oauthAccessToken = getOAuthAccessTokenForGameUser(server, userId.trim());
@@ -1542,6 +1370,105 @@ export default function DeckRecommendClient() {
                                         </div>
                                     ) : (
                                         <div>
+                                            {/* 团活按团给加成，混活直接指定加成角色集合。 */}
+                                            <SectionTitle text={t("page.deckRecommend.config.customTitle")} />
+                                            <div className="flex gap-2 mb-3">
+                                                <button type="button" onClick={() => patch({ simBonusMode: "unit" })} className={pill(simBonusMode === "unit")}>
+                                                    {t("page.deckRecommend.config.customSubMode.unit")}
+                                                </button>
+                                                <button type="button" onClick={() => patch({ simBonusMode: "character" })} className={pill(simBonusMode === "character")}>
+                                                    {t("page.deckRecommend.config.customSubMode.character")}
+                                                </button>
+                                            </div>
+                                            {simBonusMode === "unit" ? (
+                                                <div className="mb-3">
+                                                    <SectionTitle text={t("page.deckRecommend.config.simulateUnit")} />
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {UNIT_BONUS_OPTIONS.map((unit) => {
+                                                            const isSelected = simUnit === unit.value;
+                                                            return (
+                                                                <button
+                                                                    key={unit.value}
+                                                                    type="button"
+                                                                    onClick={() => patch({ simUnit: isSelected ? "" : unit.value })}
+                                                                    className={`p-2 rounded-xl transition-all border ${
+                                                                        isSelected
+                                                                            ? "ring-2 ring-miku shadow-md bg-white border-transparent dark:bg-miku/15 dark:border-miku/40"
+                                                                            : "bg-white/70 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 hover:bg-slate-100"
+                                                                    }`}
+                                                                    title={t(unit.labelKey)}
+                                                                >
+                                                                    <div className="w-7 h-7 relative">
+                                                                        <Image src={`/data/icon/${unit.icon}`} alt={t(unit.labelKey)} fill className="object-contain" unoptimized />
+                                                                    </div>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="mb-3">
+                                                    <SectionTitle text={t("page.deckRecommend.config.simulateCharacter")} />
+                                                    <p className="text-xs text-slate-400 mb-2">{t("page.deckRecommend.config.customCharactersHint")}</p>
+                                                    <CharacterMultiGrid
+                                                        selected={simCharacterIds}
+                                                        onToggle={(id) => {
+                                                            setState((prev) => {
+                                                                const next = prev.simCharacterIds.includes(id)
+                                                                    ? prev.simCharacterIds.filter((v) => v !== id)
+                                                                    : prev.simCharacterIds.length >= 5
+                                                                        ? prev.simCharacterIds
+                                                                        : [...prev.simCharacterIds, id].sort((a, b) => a - b);
+                                                                const units = { ...prev.simCharacterUnits };
+                                                                if (!next.includes(id)) delete units[id];
+                                                                return { ...prev, simCharacterIds: next, simCharacterUnits: units };
+                                                            });
+                                                        }}
+                                                        maxCount={5}
+                                                    />
+                                                    {simCharacterIds.some((id) => id >= VIRTUAL_SINGER_ID_MIN) && (
+                                                        <div className="mt-4 space-y-2">
+                                                            {simCharacterIds.filter((id) => id >= VIRTUAL_SINGER_ID_MIN).map((id) => (
+                                                                <div key={id} className="flex items-center gap-2 flex-wrap">
+                                                                    <img src={getCharacterIconUrl(id)} alt="" className="w-7 h-7 rounded-full object-contain" loading="lazy" />
+                                                                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium w-24 truncate">
+                                                                        {getCharacterName(t, id, "short")}
+                                                                    </span>
+                                                                    <div className="flex flex-wrap gap-1.5">
+                                                                        {UNIT_BONUS_OPTIONS.map((unit) => {
+                                                                            const isSelected = simCharacterUnits[id] === unit.value;
+                                                                            return (
+                                                                                <button
+                                                                                    key={unit.value}
+                                                                                    type="button"
+                                                                                    onClick={() =>
+                                                                                        setState((prev) => {
+                                                                                            const units = { ...prev.simCharacterUnits };
+                                                                                            if (units[id] === unit.value) delete units[id];
+                                                                                            else units[id] = unit.value;
+                                                                                            return { ...prev, simCharacterUnits: units };
+                                                                                        })
+                                                                                    }
+                                                                                    className={`p-1.5 rounded-lg transition-all border ${
+                                                                                        isSelected
+                                                                                            ? "ring-2 ring-miku shadow-xs bg-white border-transparent dark:bg-miku/20 dark:border-miku/40"
+                                                                                            : "bg-slate-100 dark:bg-slate-800 border-transparent hover:bg-slate-200"
+                                                                                    }`}
+                                                                                    title={t(unit.labelKey)}
+                                                                                >
+                                                                                    <div className="w-5 h-5 relative">
+                                                                                        <Image src={`/data/icon/${unit.icon}`} alt={t(unit.labelKey)} fill className="object-contain" unoptimized />
+                                                                                    </div>
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                             <SectionTitle text={t("page.deckRecommend.config.simulateAttr")} />
                                             <div className="flex flex-wrap gap-2">
                                                 {ATTR_OPTIONS.map((attr) => {

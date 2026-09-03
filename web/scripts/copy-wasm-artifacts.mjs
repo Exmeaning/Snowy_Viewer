@@ -1,9 +1,13 @@
 /**
  * WASM Deck Engine Artifact Copier
  *
- * 把 npm 包 @empty-sekai/allium-deck-wasm 的产物拷贝到 public/wasm/，
+ * 把 @empty-sekai/allium-deck-wasm 的产物拷贝到 public/wasm/，
  * 让浏览器在运行时直接从 /wasm/ 加载，而不经过打包器。
- * 产物只来自已安装的 npm 包；先 `npm install` 再跑本脚本。
+ * 默认取已安装的 npm 包；先 `npm install` 再跑本脚本。
+ *
+ * ALLIUM_DECK_WASM_DIR 可指向本地 `wasm-pack build wasm --target web` 的产物目录
+ * （形如 <allium-deck>/wasm/pkg），用来联调尚未发版的引擎改动——否则每次
+ * `npm run dev` / `npm run build` 都会用 npm 包覆盖本地构建。
  *
  * 同时生成 src/lib/deck-engine/wasm-version.ts，供加载器做缓存击穿。
  *
@@ -32,6 +36,15 @@ const OUT_DIR = path.join(webRoot, 'public', 'wasm');
 const VERSION_FILE = path.join(webRoot, 'src', 'lib', 'deck-engine', 'wasm-version.ts');
 
 function resolvePackageDir() {
+    // 显式指定的本地构建目录优先：联调未发版引擎时用它。
+    const local = process.env.ALLIUM_DECK_WASM_DIR;
+    if (local) {
+        const dir = path.resolve(local);
+        if (!fs.existsSync(path.join(dir, 'allium_deck.js'))) {
+            throw new Error(`ALLIUM_DECK_WASM_DIR 里没有 allium_deck.js: ${dir}`);
+        }
+        return dir;
+    }
     // workspaces 会把依赖提升到仓库根 node_modules，所以用 require.resolve 而不是拼路径。
     const require = createRequire(import.meta.url);
     const entry = require.resolve(`${PACKAGE_NAME}/allium_deck.js`, {
@@ -44,9 +57,11 @@ function main() {
     let packageDir;
     try {
         packageDir = resolvePackageDir();
-    } catch {
+    } catch (err) {
         console.error(
-            `[copy-wasm] 找不到 ${PACKAGE_NAME}。先跑 npm install。`,
+            process.env.ALLIUM_DECK_WASM_DIR
+                ? `[copy-wasm] ${err.message}`
+                : `[copy-wasm] 找不到 ${PACKAGE_NAME}。先跑 npm install。`,
         );
         process.exit(1);
     }
@@ -75,8 +90,9 @@ function main() {
         'utf8',
     );
 
+    const source = process.env.ALLIUM_DECK_WASM_DIR ? `本地构建 ${packageDir}` : PACKAGE_NAME;
     console.log(
-        `[copy-wasm] ${PACKAGE_NAME}@${pkg.version} → public/wasm/ (${ARTIFACTS.map(([, out]) => out).join(', ')})`,
+        `[copy-wasm] ${source}@${pkg.version} → public/wasm/ (${ARTIFACTS.map(([, out]) => out).join(', ')})`,
     );
 }
 

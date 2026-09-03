@@ -4,7 +4,9 @@
 
 export type DeckRecommendMode = "event" | "challenge" | "custom" | "strongest" | "weakest" | "mysekai";
 
-export type DeckLiveType = "multi" | "solo" | "auto" | "cheerful";
+/** 页面可选的 live 类型；challenge 由挑战模式发出，worker 再拆成
+ *  challenge / challenge_auto。 */
+export type DeckLiveType = "multi" | "solo" | "auto" | "cheerful" | "challenge";
 
 export type DeckTarget = "score" | "power" | "bonus";
 
@@ -85,8 +87,12 @@ export interface DeckSimulatedEvent {
     /** marathon / cheerful_carnival / world_bloom。 */
     eventType: string;
     attr?: string;
-    /** 活动加成团（连接世界 1/2 轮必需）。 */
+    /** 活动加成团（团活模拟；连接世界 1/2 轮必需）。 */
     unit?: string;
+    /** 混活模拟：直接指定加成角色集合，优先于 unit 展开的整团。 */
+    characterIds?: number[];
+    /** 混活模拟：VS 角色对应的支援团约束（characterId → unit）。 */
+    characterUnits?: Record<number, string>;
     /** 连接世界章节轮次（1/2/3；3 为 WL3 模拟终章）。 */
     worldBloomTurn?: number;
     /** 连接世界第 3 轮的章节角色。 */
@@ -109,8 +115,10 @@ export interface DeckWorkerInput {
     supportCharacterId?: number;
     /** 挑战组卡的目标角色。 */
     challengeCharacterId?: number;
-    musicId: number;
-    difficulty: string;
+    /** 乐曲 ID；烤森 / 最弱组卡不需要乐曲，可缺省。 */
+    musicId?: number;
+    /** 难度；同上，无乐曲时可缺省。 */
+    difficulty?: string;
     cardConfig: DeckCardConfig;
     /** 组卡目标（活动/烤森模式）。 */
     target?: DeckTarget;
