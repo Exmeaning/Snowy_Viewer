@@ -12,7 +12,8 @@ import {
     ICardInfo,
     UNIT_FIELD_TO_ID,
     UNIT_ICON_FILES,
-    isTrainableCard
+    isTrainableCard,
+    getCardDefaultTrainedStatus
 } from "@/types/types";
 import {
     getCharacterTrimUrl,
@@ -382,9 +383,7 @@ export default function CharacterDetailClient() {
                         <div className="p-6">
                             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3">
                                 {cards.map((card) => {
-                                    const TRAINED_ONLY_CARDS = [1167];
-                                    const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(card.id);
-                                    const showTrained = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
+                                    const showTrained = getCardDefaultTrainedStatus(card) || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
                                     return (
                                         <Link
                                             key={card.id}

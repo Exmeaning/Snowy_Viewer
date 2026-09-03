@@ -20,6 +20,7 @@ import { type EventUnitFilterId } from "@/components/events/EventFilters";
 import { getEventLogoUrl, getCharacterIconUrl, getEventBannerUrl, getEventCharacterUrl, getEventStoryBannerUrl, getMusicJacketUrl, getVirtualLiveBannerUrl, getEventBgmUrl } from "@/lib/assets";
 import { UNIT_FIELD_LABEL_KEYS } from "@/types/types";
 import type { ICardInfo, ICharaUnitInfo, IGameChara } from "@/types/types";
+import { isTrainableCard, getCardDefaultTrainedStatus } from "@/types/types";
 import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
 import { getCharacterName } from "@/lib/i18n";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -827,10 +828,9 @@ export default function EventDetailPage() {
                                 <div className="p-4">
                                     <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-6 xl:grid-cols-8 gap-1.5">
                                         {eventCardsWithInfo.map(({ cardId, card }) => {
-                                            const TRAINED_ONLY_CARDS = [1167];
-                                            const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(cardId);
-                                            const showTrained = isTrainedOnlyCard || (useTrainedThumbnail &&
-                                                (card.cardRarityType === "rarity_3" || card.cardRarityType === "rarity_4"));
+                                            const cardInfo = card as unknown as ICardInfo;
+                                            const showTrained = getCardDefaultTrainedStatus(cardInfo) ||
+                                                (useTrainedThumbnail && isTrainableCard(cardInfo));
 
                                             return (
                                                 <Link

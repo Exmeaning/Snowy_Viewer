@@ -10,6 +10,7 @@ import {
     CardRarityType,
     CardAttribute,
     isTrainableCard,
+    getCardDefaultTrainedStatus,
     getRarityNumber,
     IGachaDetail,
     ISkillInfo,
@@ -385,10 +386,8 @@ export default function CardSelectorModal({
                 {/* Grid */}
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 sm:gap-3 max-h-[60vh] overflow-y-auto pr-1">
                     {filteredPool.map((item) => {
-                        const TRAINED_ONLY_CARDS = [1167];
-                        const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(item.card.id);
                         const showTrained =
-                            isTrainedOnlyCard ||
+                            getCardDefaultTrainedStatus(item.card) ||
                             (useTrainedThumbnail &&
                                 isTrainableCard(item.card) &&
                                 item.card.cardRarityType !== "rarity_birthday");

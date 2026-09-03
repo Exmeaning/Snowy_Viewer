@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "@/components/LocalizedLink";
-import { ICardInfo, isTrainableCard } from "@/types/types";
+import { ICardInfo, isTrainableCard, getCardDefaultTrainedStatus } from "@/types/types";
 import { useTheme } from "@/contexts/ThemeContext";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -19,12 +19,11 @@ export default function CardItem({ card, isSpoiler, hrefPrefix = "/cards" }: Car
     const { t } = useI18n();
     const characterName = getCharacterName(t, card.characterId);
 
-    // Cards that only have trained images (no normal version)
-    const TRAINED_ONLY_CARDS = [1167];
-    const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(card.id);
-
-    // Determine if we should show trained thumbnail (3★+ cards, not birthday, or forced for special cards)
-    const showTrainedThumbnail = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
+    // Show trained thumbnail if the card's default art is after_training
+    // (e.g. cards 1167 / 1458-1463 that have no normal art),
+    // or when the user setting is on and the card is trainable.
+    const showTrainedThumbnail = getCardDefaultTrainedStatus(card) ||
+        (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
 
     return (
         <Link href={`${hrefPrefix}/${card.id}`} className="group pressable block" data-shortcut-item="true">

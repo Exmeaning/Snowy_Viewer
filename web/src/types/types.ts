@@ -80,6 +80,7 @@ export interface ICardInfo {
     specialTrainingPower1BonusFixed: number;
     specialTrainingPower2BonusFixed: number;
     specialTrainingPower3BonusFixed: number;
+    initialSpecialTrainingStatus?: "not_doing" | "done";
     attr: CardAttribute;
     supportUnit: SupportUnit;
     skillId: number;
@@ -278,10 +279,19 @@ export const RARITY_DISPLAY: Record<number, { label: string; color: string }> = 
 };
 
 // Check if card can be trained (special training)
-export function isTrainableCard(card: ICardInfo): boolean {
-    return card.cardRarityType === "rarity_3" ||
-        card.cardRarityType === "rarity_4" ||
-        card.cardRarityType === "rarity_birthday";
+// A card is trainable iff at least one of the three training power bonus
+// fields is non-zero (i.e. it has both normal / after_training card art).
+export function isTrainableCard(card: Pick<ICardInfo, "specialTrainingPower1BonusFixed" | "specialTrainingPower2BonusFixed" | "specialTrainingPower3BonusFixed">): boolean {
+    return card.specialTrainingPower1BonusFixed !== 0 ||
+        card.specialTrainingPower2BonusFixed !== 0 ||
+        card.specialTrainingPower3BonusFixed !== 0;
+}
+
+// Check if a card's default (or only) card art is the after_training one.
+// Cards with `initialSpecialTrainingStatus === "done"` (e.g. ids 1167, 1458-1463)
+// ship with no normal art, so their thumbnail must always use after_training.
+export function getCardDefaultTrainedStatus(card: Pick<ICardInfo, "initialSpecialTrainingStatus">): boolean {
+    return card.initialSpecialTrainingStatus === "done";
 }
 
 // Get rarity number from type

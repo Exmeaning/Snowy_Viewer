@@ -6,7 +6,7 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import Image from "next/image";
 import MainLayout from "@/components/MainLayout";
 import DetailPageAdCard from "@/components/DetailPageAdCard";
-import { ICardInfo, IGachaInfo, IGachaDetail, GACHA_TYPE_LABEL_KEYS, isTrainableCard, IGachaBehavior, IGachaCardRarityRate, isWishGacha } from "@/types/types";
+import { ICardInfo, IGachaInfo, IGachaDetail, GACHA_TYPE_LABEL_KEYS, isTrainableCard, getCardDefaultTrainedStatus, IGachaBehavior, IGachaCardRarityRate, isWishGacha } from "@/types/types";
 import { getGachaLogoUrl, getGachaScreenUrl } from "@/lib/assets";
 import { useTheme } from "@/contexts/ThemeContext";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
@@ -1028,9 +1028,7 @@ export default function GachaDetailClient() {
                                             </div>
                                             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-6 gap-1.5">
                                                 {selectedWishCards.map(card => {
-                                                    const TRAINED_ONLY_CARDS = [1167];
-                                                    const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(card.id);
-                                                    const showTrained = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
+                                                    const showTrained = getCardDefaultTrainedStatus(card) || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
                                                     const pullCount = history4Stars.filter(h => h.cardId === card.id).length;
                                                     const isPulled = pullCount > 0;
 
@@ -1086,9 +1084,7 @@ export default function GachaDetailClient() {
                                     <div className="p-4">
                                         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-4 xl:grid-cols-6 gap-2">
                                             {(isWishPickGacha ? dreamPickNewPuCards : pickupCards).map(card => {
-                                                const TRAINED_ONLY_CARDS = [1167];
-                                                const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(card.id);
-                                                const showTrained = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
+                                                const showTrained = getCardDefaultTrainedStatus(card) || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
                                                 const pullCount = history4Stars.filter(h => h.cardId === card.id).length;
                                                 const isPulled = pullCount > 0;
 
@@ -1292,9 +1288,7 @@ export default function GachaDetailClient() {
                                             const card = cards.find(c => c.id === detail.cardId);
                                             if (!card) return null;
 
-                                            const TRAINED_ONLY_CARDS = [1167];
-                                            const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(card.id);
-                                            const showTrained = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
+                                            const showTrained = getCardDefaultTrainedStatus(card) || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
                                             const isPickup = activePickupCards.some(p => p.id === card.id);
                                             const is4Star = card.cardRarityType === "rarity_4" || card.cardRarityType === "rarity_birthday";
 
@@ -1342,9 +1336,7 @@ export default function GachaDetailClient() {
                                             const card = cards.find(c => c.id === detail.cardId);
                                             if (!card) return null;
 
-                                            const TRAINED_ONLY_CARDS = [1167];
-                                            const isTrainedOnlyCard = TRAINED_ONLY_CARDS.includes(card.id);
-                                            const showTrained = isTrainedOnlyCard || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
+                                            const showTrained = getCardDefaultTrainedStatus(card) || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
                                             const isPickup = activePickupCards.some(p => p.id === card.id);
                                             const is4Star = card.cardRarityType === "rarity_4" || card.cardRarityType === "rarity_birthday";
 

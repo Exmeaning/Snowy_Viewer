@@ -14,6 +14,7 @@ import {
     UNIT_FIELD_TO_ID,
     UNIT_ICON_FILES,
     isTrainableCard,
+    getCardDefaultTrainedStatus,
     getRarityNumber,
     CardAttribute,
     SUPPORT_UNIT_LABEL_KEYS,
@@ -192,9 +193,8 @@ export default function CardDetailPage() {
     const rarityNum = card ? getRarityNumber(card.cardRarityType) : 1;
     const characterName = card ? getCharacterName(t, card.characterId) : "";
 
-    // Cards that only have trained images (no normal version)
-    const TRAINED_ONLY_CARDS = [1167];
-    const isTrainedOnlyCard = card ? TRAINED_ONLY_CARDS.includes(card.id) : false;
+    // Card's default art is after_training (e.g. cards 1167 / 1458-1463 have no normal art)
+    const cardDefaultTrained = card ? getCardDefaultTrainedStatus(card) : false;
 
     // Find unit for character
     const characterUnit = useMemo(() => {
@@ -203,7 +203,7 @@ export default function CardDetailPage() {
     }, [card]);
 
     // Current main image URL - always use trained for trained-only cards
-    const effectiveShowTrained = isTrainedOnlyCard || (showTrained && trainable && !isBirthday);
+    const effectiveShowTrained = cardDefaultTrained || (showTrained && trainable && !isBirthday);
     const mainImageUrl = card ? getCardFullUrl(card.characterId, card.assetbundleName, effectiveShowTrained, assetSource) : "";
 
     // Get max level info
@@ -455,7 +455,7 @@ export default function CardDetailPage() {
                             /* Screenshot Mode: Show all images in flat layout */
                             <div className="space-y-4">
                                 {/* Normal Image */}
-                                {!isTrainedOnlyCard && (
+                                {!cardDefaultTrained && (
                                     <div className="ios-glass-card rounded-2xl overflow-hidden">
                                         <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
                                             <span className="text-sm font-bold text-slate-600">{t("page.cards.viewNormal")}</span>
@@ -473,7 +473,7 @@ export default function CardDetailPage() {
                                     </div>
                                 )}
                                 {/* Trained Image */}
-                                {(trainable && !isBirthday) && (
+                                {(cardDefaultTrained || (trainable && !isBirthday)) && (
                                     <div className="ios-glass-card rounded-2xl overflow-hidden">
                                         <div className="px-4 py-2 bg-slate-50 border-b border-slate-100">
                                             <span className="text-sm font-bold text-slate-600">{t("page.cards.viewTrained")}</span>
@@ -494,7 +494,7 @@ export default function CardDetailPage() {
                             /* Normal Mode: Tabs and switchable view */
                             <div className="ios-glass-card rounded-2xl overflow-hidden">
                                 {/* Image Toggle (only for trainable non-birthday cards that have both images) */}
-                                {trainable && !isBirthday && !isTrainedOnlyCard && (
+                                {trainable && !isBirthday && !cardDefaultTrained && (
                                     <div className="flex p-1 bg-slate-100/30 dark:bg-slate-900/30 backdrop-blur-sm border-b border-slate-200/50 dark:border-slate-800/80 gap-1">
                                         <button
                                             className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${!showTrained
@@ -547,7 +547,7 @@ export default function CardDetailPage() {
                                 {/* Thumbnails */}
                                 <div className="p-4 flex gap-3 justify-center bg-slate-50/50">
                                     {/* Only show normal thumbnail if card has both images */}
-                                    {!isTrainedOnlyCard && (
+                                    {!cardDefaultTrained && (
                                         <div
                                             className={`relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer ring-2 transition-all ${!effectiveShowTrained ? "ring-miku" : "ring-transparent hover:ring-slate-300"
                                                 }`}
@@ -562,12 +562,12 @@ export default function CardDetailPage() {
                                             />
                                         </div>
                                     )}
-                                    {/* Show trained thumbnail for trainable cards */}
-                                    {(trainable && !isBirthday) && (
+                                    {/* Show trained thumbnail for trainable cards or default-trained cards */}
+                                    {(cardDefaultTrained || (trainable && !isBirthday)) && (
                                         <div
                                             className={`relative w-16 h-16 rounded-lg overflow-hidden cursor-pointer ring-2 transition-all ${effectiveShowTrained ? "ring-miku" : "ring-transparent hover:ring-slate-300"
                                                 }`}
-                                            onClick={() => !isTrainedOnlyCard && setShowTrained(true)}
+                                            onClick={() => !cardDefaultTrained && setShowTrained(true)}
                                         >
                                             <Image
                                                 src={getCardThumbnailUrl(card.characterId, card.assetbundleName, true, assetSource)}

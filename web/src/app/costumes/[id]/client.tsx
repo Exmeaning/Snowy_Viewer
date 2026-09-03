@@ -10,7 +10,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useTranslation } from "@/contexts/TranslationContext";
 import { useI18n } from "@/contexts/I18nContext";
 import { getCostumeThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
-import { ICardInfo, isTrainableCard } from "@/types/types";
+import { ICardInfo, isTrainableCard, getCardDefaultTrainedStatus } from "@/types/types";
 import SekaiCardThumbnail from "@/components/cards/SekaiCardThumbnail";
 import { TranslatedText } from "@/components/common/TranslatedText";
 import {
@@ -544,7 +544,7 @@ export default function CostumeDetailClient() {
                                                 className="block"
                                                 title={`Card #${card.id} - ${card.prefix}`}
                                             >
-                                                <SekaiCardThumbnail card={card} trained={[1167].includes(card.id) || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday")} width={64} />
+                                                <SekaiCardThumbnail card={card} trained={getCardDefaultTrainedStatus(card) || (useTrainedThumbnail && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday")} width={64} />
                                             </Link>
                                         ))}
                                     </div>

@@ -16,6 +16,7 @@ import {
     SupportUnit,
     getRarityNumber,
     isTrainableCard,
+    getCardDefaultTrainedStatus,
 } from "@/types/types";
 import { fetchMasterDataForServer } from "@/lib/fetch";
 import { loadTranslations, TranslationData } from "@/lib/translations";
@@ -704,7 +705,8 @@ function MyCardItem({ card, userCard }: MyCardItemProps) {
     const { t } = useI18n();
     const isOwned = !!userCard;
     const isTrained = userCard?.specialTrainingStatus === "done";
-    const showTrained = isTrained && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday";
+    const showTrained = getCardDefaultTrainedStatus(card) ||
+        (isTrained && isTrainableCard(card) && card.cardRarityType !== "rarity_birthday");
 
     return (
         <Link href={`/cards/${card.id}`} className="group block" data-shortcut-item="true">
