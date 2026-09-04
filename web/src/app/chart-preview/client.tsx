@@ -339,9 +339,9 @@ function ChartPreviewInner() {
                                     />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <h1 className="text-base sm:text-xl font-black text-primary-text truncate">
+                                    <h2 className="text-base sm:text-xl font-black text-primary-text truncate">
                                         {selectedMusic.title}
-                                    </h1>
+                                    </h2>
                                     <div className="flex items-center gap-2 mt-0.5">
                                         {diffInfo && (
                                             <span
@@ -360,9 +360,9 @@ function ChartPreviewInner() {
                                 </div>
                             </>
                         ) : (
-                            <h1 className="text-xl sm:text-2xl font-black text-primary-text truncate min-w-0 flex-1">
+                            <h2 className="text-xl sm:text-2xl font-black text-primary-text truncate min-w-0 flex-1">
                                 {selectedMusicId ? t("page.chartPreview.previewTitleWithId", { id: selectedMusicId }) : t("page.chartPreview.metadataTitle")}
-                            </h1>
+                            </h2>
                         )}
                     </div>
                     {/* Vocal switcher in preview mode */}
@@ -626,9 +626,9 @@ function ChartPreviewFallback() {
                     <div className="inline-flex items-center gap-2 px-4 py-2 border border-miku/30 bg-miku/5 rounded-full mb-4">
                         <span className="text-miku text-xs font-bold tracking-widest uppercase">{t("page.chartPreview.badge")}</span>
                     </div>
-                    <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
+                    <div className="text-3xl sm:text-4xl font-black text-primary-text">
                         {t("page.chartPreview.title")} <span className="text-miku">{t("page.chartPreview.titleHighlight")}</span>
-                    </h1>
+                    </div>
                 </div>
                 <div className="text-sm text-slate-400 py-8 text-center">{t("page.chartPreview.loading")}</div>
             </div>

@@ -10,6 +10,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { getServerDataDir } from '@/lib/server-data-dir';
 
 import type {
     CardMeta,
@@ -180,7 +181,7 @@ function getMap(region: MetadataRegion = 'cn'): MetadataMap | null {
     const normalizedRegion = METADATA_REGIONS.includes(region) ? region : 'cn';
     if (cache.has(normalizedRegion)) return cache.get(normalizedRegion) ?? null;
     try {
-        const dataDir = path.join(process.cwd(), 'public', 'data');
+        const dataDir = getServerDataDir();
         const regionalPath = path.join(dataDir, `metadata-map.${normalizedRegion}.json`);
         const filePath = fs.existsSync(regionalPath)
             ? regionalPath

@@ -270,6 +270,7 @@ func (c *Cache) makeEntry(r *responseRecorder) *cachedResponse {
 		return nil
 	}
 	header := cacheableHeaders(r.header)
+	header.Set("Cache-Control", "public, max-age=60, s-maxage=3600")
 	now := c.now()
 	return &cachedResponse{status: r.status, header: header, size: int64(r.body.Len()), storedAt: now, freshUntil: now.Add(fresh), staleUntil: now.Add(fresh + swr)}
 }
@@ -475,6 +476,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, entry *cachedResponse, st
 	_, _ = io.Copy(w, file)
 }
 func serveRecorded(w http.ResponseWriter, req *http.Request, recorded *responseRecorder) {
+	isCacheable := recorded.header.Get(OriginCacheHeader) != ""
 	for k, values := range recorded.header {
 		if strings.EqualFold(k, OriginCacheHeader) {
 			continue
@@ -482,6 +484,9 @@ func serveRecorded(w http.ResponseWriter, req *http.Request, recorded *responseR
 		for _, value := range values {
 			w.Header().Add(k, value)
 		}
+	}
+	if isCacheable {
+		w.Header().Set("Cache-Control", "public, max-age=60, s-maxage=3600")
 	}
 	w.WriteHeader(recorded.status)
 	if req.Method != http.MethodHead {

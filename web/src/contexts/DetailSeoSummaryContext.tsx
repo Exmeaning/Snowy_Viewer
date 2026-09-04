@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
+import type { UiLocale } from "@/lib/i18n/locales";
 
 export interface DetailSeoSemanticPayload {
     kind: string;
@@ -10,6 +11,7 @@ export interface DetailSeoSemanticPayload {
 export interface DetailSeoSummaryValue {
     title: string;
     description: string;
+    locale?: UiLocale;
     semantic?: DetailSeoSemanticPayload;
 }
 

@@ -573,7 +573,14 @@ function GuessWhoContent() {
     const formatTime = (seconds: number) => Math.max(0, seconds).toFixed(1) + "s";
 
     if (isLoading) {
-        return <MainLayout><div className="flex h-screen items-center justify-center">{t("page.guessWho.common.loading")}</div></MainLayout>;
+        return (
+            <MainLayout>
+                <div className="flex h-screen items-center justify-center">
+                    <h1 className="sr-only">{t("page.guessWho.title")}</h1>
+                    {t("page.guessWho.common.loading")}
+                </div>
+            </MainLayout>
+        );
     }
 
     const currentTotalScore = currentResults.reduce((acc, r) => acc + r.score, 0);

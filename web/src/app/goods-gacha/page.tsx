@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { getServerDataDir } from '@/lib/server-data-dir';
 import GachaClient from './client';
 import { pageMetadata } from "@/lib/seo-metadata";
 
@@ -9,7 +10,7 @@ export const generateMetadata = pageMetadata("goods_gacha");
 export type GachaPools = Record<string, string[]>;
 
 async function getGachaPools(): Promise<GachaPools> {
-    const jsonPath = path.join(process.cwd(), 'public', 'data', 'goods_gacha_list.json');
+    const jsonPath = path.join(getServerDataDir(), 'goods_gacha_list.json');
     const baseDomain = "https://moe.exmeaning.com";
 
     try {

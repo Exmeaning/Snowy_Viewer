@@ -629,7 +629,10 @@ function GuessJacketContent() {
     if (isLoading) {
         return (
             <MainLayout>
-                <div className="flex min-h-screen items-center justify-center">{t("page.guessJacket.common.loading")}</div>
+                <div className="flex min-h-screen items-center justify-center">
+                    <h1 className="sr-only">{t("page.guessJacket.title")}</h1>
+                    {t("page.guessJacket.common.loading")}
+                </div>
             </MainLayout>
         );
     }

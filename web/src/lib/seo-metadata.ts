@@ -447,6 +447,7 @@ export function defineSeoDynamicPage<TData, TParams extends Record<string, strin
                         ? {
                             title: detailName,
                             description,
+                            locale,
                             semantic: {
                                 kind: metadataOptions.routePrefix,
                                 data,

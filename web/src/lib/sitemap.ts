@@ -7,6 +7,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import { getServerDataDir } from '@/lib/server-data-dir';
 import { INDEXABLE_SEO_ROUTES } from '@/lib/seo-routes';
 import { DEFAULT_ROUTE_LOCALE, getLocaleRouteConfig, SUPPORTED_ROUTE_LOCALES, type RouteLocale } from '@/lib/locale-routing';
 import { getCanonicalOrigin } from '@/lib/site-origin';
@@ -30,7 +31,7 @@ const cached = new Map<string, SitemapData | null>();
 function getData(region: string): SitemapData | null {
     if (cached.has(region)) return cached.get(region) ?? null;
     try {
-        const dataDir = path.join(process.cwd(), 'public', 'data');
+        const dataDir = getServerDataDir();
         const regionalPath = path.join(dataDir, `sitemap-data.${region}.json`);
         const jpPath = path.join(dataDir, 'sitemap-data.jp.json');
         const legacyPath = path.join(dataDir, 'sitemap-data.json');

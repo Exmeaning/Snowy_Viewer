@@ -204,3 +204,23 @@ func TestFrontendProxyPreservesHTTPSForwardedProto(t *testing.T) {
 		t.Fatalf("X-Forwarded-Host = %q, want pjsk.moe", request.Header.Get("X-Forwarded-Host"))
 	}
 }
+
+func TestInternalHealthzBlockedFromPublic(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/internal-healthz", func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	})
+	mux.HandleFunc("/internal-healthz/", func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	})
+
+	for _, path := range []string{"/internal-healthz", "/internal-healthz/"} {
+		req := httptest.NewRequest(http.MethodGet, path, nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		if rec.Code != http.StatusNotFound {
+			t.Fatalf("path %s returned status %d, want 404", path, rec.Code)
+		}
+	}
+}
+

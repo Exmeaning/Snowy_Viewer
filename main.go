@@ -17,6 +17,7 @@ import (
 	"snowy_viewer/internal/config"
 	"snowy_viewer/internal/handlers"
 	"snowy_viewer/internal/htmlcache"
+	"snowy_viewer/internal/markdown"
 	"snowy_viewer/internal/masterdata"
 	"snowy_viewer/internal/mcp"
 	"snowy_viewer/internal/middleware"
@@ -90,7 +91,14 @@ func main() {
 				w.Header().Set("Content-Type", "application/json")
 				_ = json.NewEncoder(w).Encode(cacheHandler.Stats())
 			})
-			mux.Handle("/", cacheHandler)
+			// Block internal-only Next.js health endpoint from public access
+			mux.HandleFunc("/internal-healthz", func(w http.ResponseWriter, r *http.Request) {
+				http.NotFound(w, r)
+			})
+			mux.HandleFunc("/internal-healthz/", func(w http.ResponseWriter, r *http.Request) {
+				http.NotFound(w, r)
+			})
+			mux.Handle("/", markdown.NewNegotiationMiddleware(cacheHandler))
 
 			if cfg.HTMLCacheWarmup {
 				go func() {

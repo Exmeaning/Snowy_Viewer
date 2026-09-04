@@ -268,27 +268,36 @@ function hasUsefulMetadata(map) {
 }
 
 function computeCardPower(c) {
-    if (!c?.cardParameters || !Array.isArray(c.cardParameters.param1)) return null;
-    const p1 = c.cardParameters.param1;
-    const p2 = c.cardParameters.param2;
-    const p3 = c.cardParameters.param3;
-    if (!p1.length || !p2.length || !p3.length) return null;
-    const normalPerf = p1[p1.length - 1];
-    const normalTech = p2[p2.length - 1];
-    const normalStam = p3[p3.length - 1];
-    const normalTotal = normalPerf + normalTech + normalStam;
+    if (!c?.cardParameters) return null;
+    let p1Max = 0, p2Max = 0, p3Max = 0;
+    if (Array.isArray(c.cardParameters)) {
+        for (const p of c.cardParameters) {
+            if (p.cardParameterType === 'param1' && p.power > p1Max) p1Max = p.power;
+            else if (p.cardParameterType === 'param2' && p.power > p2Max) p2Max = p.power;
+            else if (p.cardParameterType === 'param3' && p.power > p3Max) p3Max = p.power;
+        }
+    } else if (Array.isArray(c.cardParameters.param1)) {
+        const p1 = c.cardParameters.param1;
+        const p2 = c.cardParameters.param2;
+        const p3 = c.cardParameters.param3;
+        p1Max = p1[p1.length - 1] || 0;
+        p2Max = p2[p2.length - 1] || 0;
+        p3Max = p3[p3.length - 1] || 0;
+    }
+    if (!p1Max || !p2Max || !p3Max) return null;
+    const normalTotal = p1Max + p2Max + p3Max;
     const result = {
         normal: {
-            performance: normalPerf,
-            technique: normalTech,
-            stamina: normalStam,
+            performance: p1Max,
+            technique: p2Max,
+            stamina: p3Max,
             total: normalTotal,
         },
     };
     if (c.specialTrainingPower1BonusFixed || c.specialTrainingPower2BonusFixed || c.specialTrainingPower3BonusFixed) {
-        const trainedPerf = normalPerf + (c.specialTrainingPower1BonusFixed || 0);
-        const trainedTech = normalTech + (c.specialTrainingPower2BonusFixed || 0);
-        const trainedStam = normalStam + (c.specialTrainingPower3BonusFixed || 0);
+        const trainedPerf = p1Max + (c.specialTrainingPower1BonusFixed || 0);
+        const trainedTech = p2Max + (c.specialTrainingPower2BonusFixed || 0);
+        const trainedStam = p3Max + (c.specialTrainingPower3BonusFixed || 0);
         result.trained = {
             performance: trainedPerf,
             technique: trainedTech,

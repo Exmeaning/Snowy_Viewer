@@ -69,34 +69,6 @@ function CharacterListContent() {
         return grouped;
     }, [characters, unitProfiles]);
 
-    if (isLoading) {
-        return (
-            <div className="flex h-[50vh] w-full items-center justify-center">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-miku border-t-transparent rounded-full animate-spin" />
-                    <span className="text-slate-500">{t("page.character.loadingData")}</span>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="container mx-auto px-4 py-8">
-                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-                    <p className="font-bold">{t("page.character.loadFailed")}</p>
-                    <p>{error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="mt-2 text-red-500 underline hover:no-underline"
-                    >
-                        {t("common.action.retry")}
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="container mx-auto px-4 sm:px-6 py-8">
             {/* Page Header */}
@@ -107,21 +79,38 @@ function CharacterListContent() {
                 <h1 className="text-3xl sm:text-4xl font-black text-primary-text">
                     {t("page.character.title")} <span className="text-miku">{t("page.character.titleHighlight")}</span>
                 </h1>
-                    <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
+                <p className="text-slate-500 mt-2 max-w-2xl mx-auto">
                     {t("page.character.description")}
                 </p>
             </div>
+            {isLoading ? (
+                <div className="flex h-[40vh] w-full items-center justify-center">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-miku border-t-transparent rounded-full animate-spin" />
+                        <span className="text-slate-500">{t("page.character.loadingData")}</span>
+                    </div>
+                </div>
+            ) : error ? (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                    <p className="font-bold">{t("page.character.loadFailed")}</p>
+                    <p>{error}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="mt-2 text-red-500 underline hover:no-underline"
+                    >
+                        {t("common.action.retry")}
+                    </button>
+                </div>
+            ) : (
+                <div className="space-y-10">
+                    {Object.entries(charactersByUnit).map(([unitId, { unit, characters: unitCharacters }]) => {
+                        const iconName = UNIT_FIELD_ICONS[unitId] || "vs.webp";
 
-            {/* Characters grouped by unit */}
-            <div className="space-y-10">
-                {Object.entries(charactersByUnit).map(([unitId, { unit, characters: unitCharacters }]) => {
-                    const iconName = UNIT_FIELD_ICONS[unitId] || "vs.webp";
-
-                    return (
-                        <div key={unitId} className="ios-glass-card rounded-2xl overflow-hidden">
-                            {/* Unit Header */}
-                            <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center gap-4">
-                                <div className="w-12 h-12 relative shrink-0">
+                        return (
+                            <div key={unitId} className="ios-glass-card rounded-2xl overflow-hidden">
+                                {/* Unit Header */}
+                                <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-miku/5 to-transparent flex items-center gap-4">
+                                    <div className="w-12 h-12 relative shrink-0">
                                     <Image
                                         src={`/data/icon/${iconName}`}
                                         alt={unit.unitName}
@@ -193,7 +182,8 @@ function CharacterListContent() {
                         </div>
                     );
                 })}
-            </div>
+                </div>
+            )}
         </div>
     );
 }

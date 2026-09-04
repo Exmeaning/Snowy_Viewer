@@ -161,7 +161,7 @@ const exchangeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof ge
     kind: "exchange",
     routePrefix: "exchanges",
     getData: getExchangeMeta,
-    structuredData: { parentPageKey: "exchanges", summary: false },
+    structuredData: { parentPageKey: "exchanges" },
     fallbackTwitterCard: "summary",
     build: (exchange, { locale }) => ({
         title: exchange.summaryName && exchange.summaryName !== exchange.name
@@ -291,16 +291,19 @@ const mysekaiFixtureDetailPreset = defineDetailPreset<NonNullable<ReturnType<typ
     routePrefix: "mysekai",
     getData: getFixtureMeta,
     structuredData: { parentPageKey: "mysekai", entity: { type: "Thing" } },
-    build: (fixture, { locale }) => ({
-        title: fixture.name,
-        descriptionKind: "mysekai",
-        descriptionValues: {
-            name: fixture.name,
-            flavorSuffix: formatMysekaiFlavorSuffix(fixture.flavor, locale),
-        },
-        images: [getMysekaiFixtureThumbnailUrl(fixture.asset, getSeoAssetSource(locale))],
-        twitterCard: "summary",
-    }),
+    build: (fixture, { locale }) => {
+        const hasFlavor = Boolean(fixture.flavor && fixture.flavor.trim() !== "" && fixture.flavor.trim() !== fixture.name.trim());
+        return {
+            title: fixture.name,
+            descriptionKind: "mysekai",
+            descriptionValues: {
+                name: fixture.name,
+                flavorSuffix: formatMysekaiFlavorSuffix(hasFlavor ? fixture.flavor : undefined, locale),
+            },
+            images: [getMysekaiFixtureThumbnailUrl(fixture.asset, getSeoAssetSource(locale))],
+            twitterCard: "summary",
+        };
+    },
 });
 
 export const defineMysekaiFixtureDetailPage = detailPageFactory(mysekaiFixtureDetailPreset);

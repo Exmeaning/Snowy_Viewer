@@ -41,7 +41,7 @@ const LIST_ORIGIN_MAX_AGE_SECONDS = 3600;
 const DETAIL_ORIGIN_MAX_AGE_SECONDS = 15552000; // 180 days (masterdata detail pages are immutable)
 const STALE_WHILE_REVALIDATE_SECONDS = 604800;
 
-export const CLIENT_HTML_CACHE_CONTROL = "no-cache, max-age=0, must-revalidate";
+export const CLIENT_HTML_CACHE_CONTROL = "public, max-age=60, s-maxage=3600";
 export const ORIGIN_HTML_CACHE_HEADER = "X-Moesekai-Origin-Cache";
 
 export interface PublicPageCachePolicy {
