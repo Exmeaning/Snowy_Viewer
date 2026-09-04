@@ -9,7 +9,7 @@
  *
  * Where:
  *   score_bonus   = floor(score / 20000)
- *   scaled_score  = truncate( (100 + score_bonus) × (100 + event_bonus) / 100 )
+ *   base          = floor( (100 + score_bonus) × (100 + event_bonus) × rate / 10⁴ )
  *   val           = floor(scaled_score × event_rate / 100)
  *   Event PT      = val × BOOST_BONUS_DICT[boost]
  */
@@ -17,11 +17,6 @@
 import { getBoostRate, FIRE_OPTIONS } from "@/lib/deck-comparator/calculator";
 
 // ======================== Utility functions ========================
-
-/** Truncate to two decimals without rounding. */
-function truncate(x: number): number {
-    return Math.floor(x * 100) / 100;
-}
 
 // ======================== Forward calculation ========================
 
@@ -39,11 +34,11 @@ export function calc(
     boost: number,
 ): number {
     const scoreBonus = Math.floor(score / 20000);
-    const scaledScore = truncate(
-        (100 + scoreBonus) * (100 + eventBonus) / 100,
-    );
-    const val = Math.floor(scaledScore * eventRate / 100);
-    return val * getBoostRate(boost);
+    // 整数一步取整：floor((100+scoreBonus)×(100+eventBonus)×rate / 10⁴)。
+    // 此前的两步浮点链（先 truncate 再乘）在部分格子会因二进制浮点表示
+    // 少 1×boost 倍 PT，与整数真值不符。
+    const base = Math.floor((100 + scoreBonus) * (100 + eventBonus) * eventRate / 10000);
+    return base * getBoostRate(boost);
 }
 
 // ======================== Reverse search ========================
@@ -67,14 +62,14 @@ export interface ScoreControlResult {
  *
  * @param targetPoint   - Target event PT
  * @param eventRate     - Song PT rate
- * @param maxEventBonus - Maximum event bonus (default 415)
- * @param maxScore      - Maximum allowed score (default 3000000)
+ * @param maxEventBonus - Maximum event bonus (default 435)
+ * @param maxScore      - Maximum allowed score (default 2_840_000)
  */
 export function getValidScores(
     targetPoint: number,
     eventRate: number,
-    maxEventBonus: number = 415,
-    maxScore: number = 3000000,
+    maxEventBonus: number = 435,
+    maxScore: number = 2_840_000,
 ): ScoreControlResult[] {
     const results: ScoreControlResult[] = [];
 
@@ -193,7 +188,7 @@ function findScoreMaxForPT(
     eventRate: number,
     boost: number,
     targetPT: number,
-    maxScore: number = 3000000,
+    maxScore: number = 2_840_000,
 ): number {
     let lo = 0;
     let hi = maxScore;
@@ -220,7 +215,7 @@ function findScoreMaxForPT(
  * @param targetPoint   - Target total event PT
  * @param eventRate     - Song PT rate
  * @param minEventBonus - Minimum event bonus (default 0)
- * @param maxEventBonus - Maximum event bonus (default 415)
+ * @param maxEventBonus - Maximum event bonus (default 435)
  * @param maxScoreLimit - Maximum allowed score (default 3000000)
  * @param maxPlays      - Maximum play count per route (default 10)
  * @param maxRoutes     - Maximum number of routes to return (default 20)
@@ -229,8 +224,8 @@ export function planSmartRoutes(
     targetPoint: number,
     eventRate: number,
     minEventBonus: number = 0,
-    maxEventBonus: number = 415,
-    maxScoreLimit: number = 3000000,
+    maxEventBonus: number = 435,
+    maxScoreLimit: number = 2_840_000,
     maxPlays: number = 10,
     maxRoutes: number = 20,
     validBonuses?: number[],

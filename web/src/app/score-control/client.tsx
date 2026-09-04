@@ -231,7 +231,7 @@ export default function ScoreControlClient() {
         if (routes.length > 0) {
             setExpandedRoute(0);
         } else {
-            const raw = getValidScores(tp, rate, 415, 3000000);
+            const raw = getValidScores(tp, rate, 435, 2_840_000);
             const filtered = raw.filter(r => r.eventBonus >= bMin && r.eventBonus <= bMax);
             setFallbackResults(groupByBoost(filtered));
             setFallbackCount(filtered.length);
@@ -393,9 +393,9 @@ export default function ScoreControlClient() {
             setTimeout(() => {
                 try {
                     const bonusMin = Math.max(0, minBonus);
-                    const bonusMax = Math.min(415, maxBonus);
+                    const bonusMax = Math.min(435, maxBonus);
 
-                    computeAndSetRoutes(targetPT, selectedEventRate, bonusMin, bonusMax, 3000000);
+                    computeAndSetRoutes(targetPT, selectedEventRate, bonusMin, bonusMax, 2_840_000);
                 } catch (err: unknown) {
                     const message = err instanceof Error ? err.message : t("page.scoreControl.errors.calculationFailedUnknown");
                     setError(t("page.scoreControl.errors.calculationFailed", { message }));
@@ -445,7 +445,7 @@ export default function ScoreControlClient() {
             }
 
             const bonusMin = Math.max(0, minBonus);
-            const bonusMax = Math.min(415, maxBonus);
+            const bonusMax = Math.min(435, maxBonus);
 
             // Target-driven build: plan routes first, then build decks only for
             // the bonus tiers these routes actually need.
@@ -456,9 +456,9 @@ export default function ScoreControlClient() {
             if (bonusTiers.length === 0) {
                 // No planned route in range: fall back to the plain wide-table calculation,
                 // and still build decks for the tiers the wide table found.
-                computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 3000000);
+                computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 2_840_000);
                 bonusTiers = [...new Set(
-                    getValidScores(targetPT, selectedEventRate!, 415, 3000000)
+                    getValidScores(targetPT, selectedEventRate!, 435, 2_840_000)
                         .filter((r) => r.eventBonus >= bonusMin && r.eventBonus <= bonusMax)
                         .map((r) => r.eventBonus),
                 )].sort((a, b) => a - b).slice(0, 32);
@@ -505,7 +505,7 @@ export default function ScoreControlClient() {
                     setDbError(getErrorMessage(data.error, t));
                     // Fallback routes
                     try {
-                        computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 3000000);
+                        computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 2_840_000);
                     } catch (_) { /* ignore */ }
                     stopFakeProgress(setDbFakeProgress, dbFakeProgressTimerRef, false);
                     setIsCalculating(false);
@@ -594,7 +594,7 @@ export default function ScoreControlClient() {
         const infiniteStartTime = performance.now();
 
         const bonusMin = Math.max(0, minBonus);
-        const bonusMax = Math.min(415, maxBonus);
+        const bonusMax = Math.min(435, maxBonus);
 
         // Build card config once
         const configForCalc: Record<string, WorkerCardConfig> = {};
@@ -987,7 +987,7 @@ export default function ScoreControlClient() {
                                 onChange={(e) => setMinBonus(Number(e.target.value))}
                                 placeholder="5"
                                 min={0}
-                                max={415}
+                                max={435}
                                 className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                             />
                             <p className="mt-1 text-xs text-slate-400">
@@ -1004,7 +1004,7 @@ export default function ScoreControlClient() {
                                 onChange={(e) => setMaxBonus(Number(e.target.value))}
                                 placeholder="200"
                                 min={0}
-                                max={415}
+                                max={435}
                                 className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                             />
                             <p className="mt-1 text-xs text-slate-400">
