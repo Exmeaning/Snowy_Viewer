@@ -264,7 +264,7 @@ func (s *Server) getServerCard(r *http.Request) map[string]interface{} {
 			"version": "1.0.0",
 		},
 		"description": "MCP server for pjsk.moe (Project SEKAI: Colorful Stage! viewer and database). Provides card lookup, music query, event schedules, character profiles, difficulty charts, and gacha data.",
-		"url": origin,
+		"url":         origin,
 		"transport": map[string]interface{}{
 			"type": "http",
 			"url":  origin + "/api/mcp",
