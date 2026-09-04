@@ -102,3 +102,48 @@ type ResourceContent struct {
 type ResourceReadResult struct {
 	Contents []ResourceContent `json:"contents"`
 }
+
+// Upstream Ranking and Event types
+type RkEventItem struct {
+	EventID          int    `json:"event_id"`
+	Name             string `json:"name"`
+	EventType        string `json:"event_type"`
+	StartAt          int64  `json:"start_at"`
+	EndAt            int64  `json:"end_at"`
+	Status           string `json:"status"`
+	HasFinalizedData bool   `json:"has_finalized_data"`
+	HasRealtimeData  bool   `json:"has_realtime_data"`
+}
+
+type RkRankingItem struct {
+	Rank        int      `json:"rank"`
+	Score       int64    `json:"score"`
+	Prediction  *float64 `json:"prediction"`
+	CollectTime string   `json:"collect_time"`
+	IsFinal     bool     `json:"is_final"`
+}
+
+type RkLatestResponse struct {
+	EventID   int             `json:"event_id"`
+	Status    string          `json:"status"`
+	UpdatedAt string          `json:"updated_at"`
+	Items     []RkRankingItem `json:"items"`
+}
+
+type V2RankingEntry struct {
+	Rank        int    `json:"rank"`
+	Score       int64  `json:"score"`
+	Name        string `json:"name"`
+	UserProfile *struct {
+		Word string `json:"word"`
+	} `json:"userProfile"`
+}
+
+type V2LatestResponse struct {
+	EventID   int              `json:"event_id"`
+	Region    string           `json:"region"`
+	StartAt   int64            `json:"start_at"`
+	EndAt     int64            `json:"end_at"`
+	UpdatedAt int64            `json:"updated_at"`
+	Rankings  []V2RankingEntry `json:"rankings"`
+}

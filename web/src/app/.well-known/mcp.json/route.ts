@@ -45,6 +45,22 @@ export async function GET() {
                 name: "get_character_profile",
                 description: "Get character profile, unit affiliation, birthday, height, voice actor/actress (CV), and representative songs.",
             },
+            {
+                name: "get_realtime_ranking",
+                description: "Get real-time ranking leaderboards and tier cutoffs (T50 to T100000) for ongoing Project SEKAI events across JP, CN, EN, and TW servers.",
+            },
+            {
+                name: "get_event_prediction",
+                description: "Get event border cutoff predictions with Bayesian-Kalman model confidence intervals (P10/P50/P90) and current velocity.",
+            },
+            {
+                name: "plan_event_strategy",
+                description: "Calculate optimal event grinding strategy: required daily hours, plays, fire stamina, large energy drinks, crystals, and feasibility rating.",
+            },
+            {
+                name: "search_gachas",
+                description: "Search Project SEKAI gacha banners, pick-up 4-star cards, schedules, and gacha types (Fes, Limited, Birthday, Permanent).",
+            },
         ],
         authentication: {
             type: "none",

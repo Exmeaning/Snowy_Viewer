@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -104,5 +105,52 @@ func TestMCPServerHandshakeAndTools(t *testing.T) {
 	s.ServeHTTP(rrRes, reqRes)
 	if rrRes.Code != http.StatusOK {
 		t.Fatalf("POST resources/list returned %d, want 200", rrRes.Code)
+	}
+}
+
+func TestMCPExpandedTools(t *testing.T) {
+	s := New()
+
+	// 1. plan_event_strategy
+	res := s.executeTool("plan_event_strategy", map[string]interface{}{
+		"target_score":          float64(5000000),
+		"current_score":         float64(1000000),
+		"remaining_hours":       float64(48.0),
+		"bonus_percent":         float64(475.0),
+		"fire_multiplier":       float64(10),
+		"song_key":              "envy",
+		"daily_available_hours": float64(5.0),
+	})
+	if res.IsError {
+		t.Fatalf("plan_event_strategy returned error: %v", res.Content)
+	}
+	if len(res.Content) == 0 || !strings.Contains(res.Content[0].Text, "冲榜策略规划") {
+		t.Fatalf("Unexpected plan_event_strategy output: %v", res.Content)
+	}
+
+	// 2. search_gachas
+	gachaRes := s.executeTool("search_gachas", map[string]interface{}{
+		"limit": float64(5),
+	})
+	if gachaRes.IsError {
+		t.Fatalf("search_gachas returned error: %v", gachaRes.Content)
+	}
+
+	// 3. get_realtime_ranking
+	rankingRes := s.executeTool("get_realtime_ranking", map[string]interface{}{
+		"region":   "jp",
+		"event_id": float64(215),
+	})
+	if len(rankingRes.Content) == 0 {
+		t.Fatalf("get_realtime_ranking returned empty content")
+	}
+
+	// 4. get_event_prediction
+	predRes := s.executeTool("get_event_prediction", map[string]interface{}{
+		"region":   "jp",
+		"event_id": float64(215),
+	})
+	if len(predRes.Content) == 0 {
+		t.Fatalf("get_event_prediction returned empty content")
 	}
 }

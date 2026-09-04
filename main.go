@@ -51,7 +51,7 @@ func main() {
 	handler.RegisterRoutes(mux)
 
 	// Register Model Context Protocol (MCP) server
-	mcpServer := mcp.New()
+	mcpServer := mcp.New(store)
 	mcpServer.RegisterRoutes(mux)
 
 	// Prevent unknown /api/* paths from bouncing between Go and Next.js.

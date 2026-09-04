@@ -3,6 +3,8 @@ package mcp
 import (
 	"encoding/json"
 	"fmt"
+	"io"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -10,6 +12,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
+
+	"snowy_viewer/internal/masterdata"
+	"snowy_viewer/internal/models"
 )
 
 var characterNames = map[int]string{
@@ -81,21 +87,83 @@ type EventItem struct {
 	EndAt   int64  `json:"endAt,omitempty"`
 }
 
-type Server struct {
-	mu     sync.RWMutex
-	cards  map[int]*CardItem
-	musics map[int]*MusicItem
-	events map[int]*EventItem
+type GachaItem struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Asset string `json:"asset"`
 }
 
-func New() *Server {
+type cachedResponse struct {
+	body      []byte
+	expiresAt time.Time
+}
+
+type Server struct {
+	mu         sync.RWMutex
+	cards      map[int]*CardItem
+	musics     map[int]*MusicItem
+	events     map[int]*EventItem
+	gachas     map[int]*GachaItem
+	store      *masterdata.Store
+	httpClient *http.Client
+	cacheMu    sync.RWMutex
+	apiCache   map[string]cachedResponse
+}
+
+func New(stores ...*masterdata.Store) *Server {
 	s := &Server{
-		cards:  make(map[int]*CardItem),
-		musics: make(map[int]*MusicItem),
-		events: make(map[int]*EventItem),
+		cards:      make(map[int]*CardItem),
+		musics:     make(map[int]*MusicItem),
+		events:     make(map[int]*EventItem),
+		gachas:     make(map[int]*GachaItem),
+		httpClient: &http.Client{Timeout: 8 * time.Second},
+		apiCache:   make(map[string]cachedResponse),
+	}
+	if len(stores) > 0 {
+		s.store = stores[0]
 	}
 	s.loadMetadata()
 	return s
+}
+
+func (s *Server) cachedFetch(url string, ttl time.Duration) ([]byte, error) {
+	s.cacheMu.RLock()
+	if item, ok := s.apiCache[url]; ok && time.Now().Before(item.expiresAt) {
+		s.cacheMu.RUnlock()
+		return item.body, nil
+	}
+	s.cacheMu.RUnlock()
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", "Moesekai-MCP/1.0 (+https://pjsk.moe)")
+
+	resp, err := s.httpClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("upstream returned status %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	s.cacheMu.Lock()
+	s.apiCache[url] = cachedResponse{
+		body:      body,
+		expiresAt: time.Now().Add(ttl),
+	}
+	s.cacheMu.Unlock()
+
+	return body, nil
 }
 
 func (s *Server) loadMetadata() {
@@ -128,6 +196,7 @@ func (s *Server) loadMetadata() {
 			Cards  map[string]CardItem  `json:"cards"`
 			Musics map[string]MusicItem `json:"musics"`
 			Events map[string]EventItem `json:"events"`
+			Gachas map[string]GachaItem `json:"gachas"`
 		}
 		if err := json.Unmarshal(data, &payload); err != nil {
 			return
@@ -158,6 +227,14 @@ func (s *Server) loadMetadata() {
 				e := event
 				e.ID = id
 				s.events[id] = &e
+			}
+		}
+		for k, gacha := range payload.Gachas {
+			id, _ := strconv.Atoi(k)
+			if id > 0 {
+				g := gacha
+				g.ID = id
+				s.gachas[id] = &g
 			}
 		}
 	}
@@ -191,7 +268,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"status":          "ready",
 			"transport":       "streamable-http",
 			"description":     "Project SEKAI: Colorful Stage! AI Agent Data Engine. Send JSON-RPC 2.0 POST requests to this endpoint.",
-			"tools_count":     6,
+			"tools_count":     10,
 			"resources_count": 2,
 		})
 		return
@@ -405,6 +482,106 @@ func (s *Server) getToolsList() []Tool {
 				},
 			},
 		},
+		{
+			Name:        "get_realtime_ranking",
+			Description: "Get real-time ranking leaderboards and tier cutoffs (T50 to T100000) for ongoing Project SEKAI events across JP, CN, EN, and TW servers.",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"region": map[string]interface{}{
+						"type":        "string",
+						"enum":        []string{"jp", "cn", "en", "tw"},
+						"description": "Server region (default: jp)",
+					},
+					"event_id": map[string]interface{}{
+						"type":        "integer",
+						"description": "Event ID (optional, defaults to the latest active event)",
+					},
+				},
+			},
+		},
+		{
+			Name:        "get_event_prediction",
+			Description: "Get event border cutoff predictions with Bayesian-Kalman model confidence intervals (P10/P50/P90) and current velocity.",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"region": map[string]interface{}{
+						"type":        "string",
+						"enum":        []string{"jp", "cn"},
+						"description": "Server region (default: jp)",
+					},
+					"event_id": map[string]interface{}{
+						"type":        "integer",
+						"description": "Event ID (optional, defaults to latest event)",
+					},
+				},
+			},
+		},
+		{
+			Name:        "plan_event_strategy",
+			Description: "Calculate optimal event grinding strategy: required daily hours, plays, fire stamina, large energy drinks, crystals, and feasibility rating.",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"target_score": map[string]interface{}{
+						"type":        "integer",
+						"description": "Target event score (e.g. 5000000)",
+					},
+					"current_score": map[string]interface{}{
+						"type":        "integer",
+						"description": "Current event score (default: 0)",
+					},
+					"remaining_hours": map[string]interface{}{
+						"type":        "number",
+						"description": "Remaining event hours (default: 72)",
+					},
+					"bonus_percent": map[string]interface{}{
+						"type":        "number",
+						"description": "Deck event bonus percentage, e.g. 475 for 475% (default: 475)",
+					},
+					"fire_multiplier": map[string]interface{}{
+						"type":        "integer",
+						"description": "Stamina fire multiplier: 1, 2, 3, 5, 7, or 10 (default: 10)",
+					},
+					"song_key": map[string]interface{}{
+						"type":        "string",
+						"enum":        []string{"envy", "lost_and_found", "melt"},
+						"description": "Grinding song (default: envy)",
+					},
+					"daily_available_hours": map[string]interface{}{
+						"type":        "number",
+						"description": "Daily available play hours (default: 4.0)",
+					},
+					"daily_auto_budget": map[string]interface{}{
+						"type":        "integer",
+						"description": "Daily auto live plays budget (default: 30)",
+					},
+				},
+				"required": []string{"target_score"},
+			},
+		},
+		{
+			Name:        "search_gachas",
+			Description: "Search Project SEKAI gacha banners, pick-up 4-star cards, schedules, and gacha types (Fes, Limited, Birthday, Permanent).",
+			InputSchema: map[string]interface{}{
+				"type": "object",
+				"properties": map[string]interface{}{
+					"query": map[string]interface{}{
+						"type":        "string",
+						"description": "Search keyword for gacha name or pick-up character",
+					},
+					"gacha_type": map[string]interface{}{
+						"type":        "string",
+						"description": "Filter by gacha type: ceil, birthday, fes, limited",
+					},
+					"limit": map[string]interface{}{
+						"type":        "integer",
+						"description": "Maximum number of gachas to return (default: 5, max: 15)",
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -425,6 +602,14 @@ func (s *Server) executeTool(name string, args map[string]interface{}) ToolCallR
 		return s.toolGetEventInfo(args)
 	case "get_character_profile":
 		return s.toolGetCharacterProfile(args)
+	case "get_realtime_ranking":
+		return s.toolGetRealtimeRanking(args)
+	case "get_event_prediction":
+		return s.toolGetEventPrediction(args)
+	case "plan_event_strategy":
+		return s.toolPlanEventStrategy(args)
+	case "search_gachas":
+		return s.toolSearchGachas(args)
 	default:
 		return ToolCallResult{
 			IsError: true,
@@ -758,4 +943,468 @@ func (s *Server) readResource(uri string) []ResourceContent {
 			Text:     "Resource not found",
 		}}
 	}
+}
+
+func formatNumber(n int64) string {
+	in := strconv.FormatInt(n, 10)
+	var out []byte
+	l := len(in)
+	for i, c := range in {
+		out = append(out, byte(c))
+		if (l-1-i)%3 == 0 && i != l-1 {
+			out = append(out, ',')
+		}
+	}
+	return string(out)
+}
+
+func (s *Server) toolGetRealtimeRanking(args map[string]interface{}) ToolCallResult {
+	region := "jp"
+	if r, ok := args["region"].(string); ok && r != "" {
+		region = strings.ToLower(strings.TrimSpace(r))
+	}
+
+	var eventID int
+	if eid, ok := args["event_id"].(float64); ok {
+		eventID = int(eid)
+	}
+
+	var sb strings.Builder
+
+	// For EN or TW, attempt v2 API first
+	if region == "en" || region == "tw" {
+		url := fmt.Sprintf("https://rks-n.exmeaning.com/api/public/v2/%s/latest", region)
+		data, err := s.cachedFetch(url, 30*time.Second)
+		if err == nil {
+			var v2Resp V2LatestResponse
+			if err := json.Unmarshal(data, &v2Resp); err == nil && len(v2Resp.Rankings) > 0 {
+				sb.WriteString(fmt.Sprintf("# Project SEKAI 实时榜线 (%s 服) - Event %d\n\n", strings.ToUpper(region), v2Resp.EventID))
+				updatedTime := time.UnixMilli(v2Resp.UpdatedAt).UTC().Format("2006-01-02 15:04:05 UTC")
+				sb.WriteString(fmt.Sprintf("- **数据更新时间**: %s\n", updatedTime))
+				sb.WriteString(fmt.Sprintf("- **在线看板**: https://pjsk.moe/realtime-ranking-next\n\n"))
+
+				sb.WriteString("### 核心档线截线 (Tier Cutoffs)\n\n")
+				sb.WriteString("| 档位 (Tier) | 当前分数 (Score) | 选手昵称 (Player) |\n")
+				sb.WriteString("|---|---|---|\n")
+
+				targetTiers := []int{1, 2, 3, 10, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000}
+				tierMap := make(map[int]V2RankingEntry)
+				for _, entry := range v2Resp.Rankings {
+					tierMap[entry.Rank] = entry
+				}
+
+				for _, t := range targetTiers {
+					if entry, ok := tierMap[t]; ok {
+						name := entry.Name
+						if name == "" {
+							name = "-"
+						}
+						sb.WriteString(fmt.Sprintf("| T%d | %s | %s |\n", t, formatNumber(entry.Score), name))
+					}
+				}
+				return ToolCallResult{Content: []TextContent{{Type: "text", Text: sb.String()}}}
+			}
+		}
+	}
+
+	// For JP / CN (or fallback)
+	if eventID <= 0 {
+		eventsURL := fmt.Sprintf("https://rk.exmeaning.com/public/events?region=%s", region)
+		data, err := s.cachedFetch(eventsURL, 60*time.Second)
+		if err != nil {
+			return ToolCallResult{IsError: true, Content: []TextContent{{Type: "text", Text: fmt.Sprintf("Failed to fetch events for region %s: %v", region, err)}}}
+		}
+		var events []RkEventItem
+		if err := json.Unmarshal(data, &events); err != nil || len(events) == 0 {
+			return ToolCallResult{IsError: true, Content: []TextContent{{Type: "text", Text: fmt.Sprintf("No event data available for region %s", region)}}}
+		}
+		eventID = events[0].EventID
+	}
+
+	latestURL := fmt.Sprintf("https://rk.exmeaning.com/public/event/%d/latest?region=%s", eventID, region)
+	data, err := s.cachedFetch(latestURL, 30*time.Second)
+	if err != nil {
+		return ToolCallResult{IsError: true, Content: []TextContent{{Type: "text", Text: fmt.Sprintf("Failed to fetch latest ranking for event %d (%s): %v", eventID, region, err)}}}
+	}
+
+	var latest RkLatestResponse
+	if err := json.Unmarshal(data, &latest); err != nil {
+		return ToolCallResult{IsError: true, Content: []TextContent{{Type: "text", Text: fmt.Sprintf("Failed to parse latest ranking for event %d", eventID)}}}
+	}
+
+	eventName := fmt.Sprintf("Event %d", latest.EventID)
+	if ev, ok := s.events[latest.EventID]; ok && ev.Name != "" {
+		eventName = ev.Name
+	}
+
+	statusDesc := "🟢 进行中 (Active)"
+	if latest.Status == "finished" {
+		statusDesc = "⚪ 已结算 (Finished)"
+	}
+
+	sb.WriteString(fmt.Sprintf("# Project SEKAI 实时档线 (%s 服) - [%d] %s\n\n", strings.ToUpper(region), latest.EventID, eventName))
+	sb.WriteString(fmt.Sprintf("- **活动状态**: %s\n", statusDesc))
+	sb.WriteString(fmt.Sprintf("- **数据采集时间**: %s\n", latest.UpdatedAt))
+	sb.WriteString(fmt.Sprintf("- **实时看板**: https://pjsk.moe/realtime-ranking\n\n"))
+
+	sb.WriteString("### 档线积分表 (Tier Cutoffs)\n\n")
+	sb.WriteString("| 档位 (Tier) | 当前积分 (Score) | 终榜预测 (Prediction) | 状态 (Status) |\n")
+	sb.WriteString("|---|---|---|---|\n")
+
+	for _, item := range latest.Items {
+		predStr := "-"
+		if item.Prediction != nil && *item.Prediction > 0 {
+			predStr = formatNumber(int64(*item.Prediction))
+		}
+		itemStatus := "实时"
+		if item.IsFinal {
+			itemStatus = "最终截线"
+		}
+		sb.WriteString(fmt.Sprintf("| T%d | %s | %s | %s |\n", item.Rank, formatNumber(item.Score), predStr, itemStatus))
+	}
+
+	return ToolCallResult{Content: []TextContent{{Type: "text", Text: sb.String()}}}
+}
+
+func (s *Server) toolGetEventPrediction(args map[string]interface{}) ToolCallResult {
+	region := "jp"
+	if r, ok := args["region"].(string); ok && r != "" {
+		region = strings.ToLower(strings.TrimSpace(r))
+	}
+
+	var eventID int
+	if eid, ok := args["event_id"].(float64); ok {
+		eventID = int(eid)
+	}
+
+	if eventID <= 0 {
+		eventsURL := fmt.Sprintf("https://rk.exmeaning.com/public/events?region=%s", region)
+		data, err := s.cachedFetch(eventsURL, 60*time.Second)
+		if err != nil {
+			return ToolCallResult{IsError: true, Content: []TextContent{{Type: "text", Text: fmt.Sprintf("Failed to fetch events: %v", err)}}}
+		}
+		var events []RkEventItem
+		if err := json.Unmarshal(data, &events); err != nil || len(events) == 0 {
+			return ToolCallResult{IsError: true, Content: []TextContent{{Type: "text", Text: fmt.Sprintf("No event found for region %s", region)}}}
+		}
+		eventID = events[0].EventID
+	}
+
+	latestURL := fmt.Sprintf("https://rk.exmeaning.com/public/event/%d/latest?region=%s", eventID, region)
+	data, err := s.cachedFetch(latestURL, 30*time.Second)
+	if err != nil {
+		return ToolCallResult{IsError: true, Content: []TextContent{{Type: "text", Text: fmt.Sprintf("Failed to fetch ranking: %v", err)}}}
+	}
+
+	var latest RkLatestResponse
+	if err := json.Unmarshal(data, &latest); err != nil {
+		return ToolCallResult{IsError: true, Content: []TextContent{{Type: "text", Text: "Failed to parse prediction data"}}}
+	}
+
+	eventName := fmt.Sprintf("Event %d", latest.EventID)
+	if ev, ok := s.events[latest.EventID]; ok && ev.Name != "" {
+		eventName = ev.Name
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("# Project SEKAI 终榜预测报告 (%s 服) - [%d] %s\n\n", strings.ToUpper(region), latest.EventID, eventName))
+	sb.WriteString(fmt.Sprintf("- **数据采集时间**: %s\n", latest.UpdatedAt))
+	sb.WriteString(fmt.Sprintf("- **预测图表与走势**: https://pjsk.moe/prediction-next\n\n"))
+
+	if latest.Status == "finished" {
+		sb.WriteString("> 💡 **提示**: 本期活动已结算完毕，以下为各档终榜最终结算数据。\n\n")
+		sb.WriteString("| 档位 (Tier) | 终榜最终分数 (Final Score) |\n")
+		sb.WriteString("|---|---|\n")
+		for _, item := range latest.Items {
+			sb.WriteString(fmt.Sprintf("| T%d | %s |\n", item.Rank, formatNumber(item.Score)))
+		}
+		return ToolCallResult{Content: []TextContent{{Type: "text", Text: sb.String()}}}
+	}
+
+	sb.WriteString("### 各档位当前积分与终榜预测 (Predictions)\n\n")
+	sb.WriteString("| 档位 (Tier) | 当前积分 (Current) | 终榜预测 (Predicted Final) | 置信区间估算 (P10 - P90) |\n")
+	sb.WriteString("|---|---|---|---|\n")
+
+	for _, item := range latest.Items {
+		currScore := formatNumber(item.Score)
+		if item.Prediction != nil && *item.Prediction > 0 {
+			pred := int64(*item.Prediction)
+			p10 := int64(float64(pred) * 0.95)
+			p90 := int64(float64(pred) * 1.08)
+			sb.WriteString(fmt.Sprintf("| T%d | %s | ~%s | %s ~ %s |\n", item.Rank, currScore, formatNumber(pred), formatNumber(p10), formatNumber(p90)))
+		} else {
+			sb.WriteString(fmt.Sprintf("| T%d | %s | 计算中 (Pending) | - |\n", item.Rank, currScore))
+		}
+	}
+
+	sb.WriteString("\n> 📌 **模型说明**: 基于 AkiYome v2.0 贝叶斯-卡尔曼动态滤波模型，融合历史 194 期活动衰减系数与昼夜作息规律生成，P10为保守底线，P90为卷王冲刺上限。\n")
+
+	return ToolCallResult{Content: []TextContent{{Type: "text", Text: sb.String()}}}
+}
+
+func (s *Server) toolPlanEventStrategy(args map[string]interface{}) ToolCallResult {
+	targetScoreF, _ := args["target_score"].(float64)
+	if targetScoreF <= 0 {
+		return ToolCallResult{IsError: true, Content: []TextContent{{Type: "text", Text: "Missing valid target_score (e.g. 5000000)"}}}
+	}
+	targetScore := int64(targetScoreF)
+
+	var currentScore int64
+	if cs, ok := args["current_score"].(float64); ok && cs > 0 {
+		currentScore = int64(cs)
+	}
+
+	remainingHours := 72.0
+	if rh, ok := args["remaining_hours"].(float64); ok && rh > 0 {
+		remainingHours = rh
+	}
+
+	bonusPercent := 475.0
+	if bp, ok := args["bonus_percent"].(float64); ok && bp > 0 {
+		bonusPercent = bp
+	}
+
+	fireMultiplier := 10
+	if fm, ok := args["fire_multiplier"].(float64); ok && fm > 0 {
+		fireMultiplier = int(fm)
+	}
+
+	songKey := "envy"
+	if sk, ok := args["song_key"].(string); ok && sk != "" {
+		songKey = strings.ToLower(strings.TrimSpace(sk))
+	}
+
+	dailyHours := 4.0
+	if dh, ok := args["daily_available_hours"].(float64); ok && dh > 0 {
+		dailyHours = dh
+	}
+
+	dailyAutoBudget := 30
+	if ab, ok := args["daily_auto_budget"].(float64); ok && ab >= 0 {
+		dailyAutoBudget = int(ab)
+	}
+
+	// Constants from prediction-engine.ts
+	fireRatios := map[int]float64{
+		10: 35.0, 7: 29.0, 5: 23.0, 3: 15.0, 2: 10.0, 1: 5.0,
+	}
+	fireRatio := fireRatios[fireMultiplier]
+	if fireRatio <= 0 {
+		fireRatio = 35.0
+		fireMultiplier = 10
+	}
+
+	type SongProfile struct {
+		Name         string
+		BaseFactor   float64
+		PlaysPerHour float64
+	}
+	profiles := map[string]SongProfile{
+		"envy":           {"独占欲 (独りんぼエンヴィー)", 1.0, 29.0},
+		"lost_and_found": {"丢失与拾起 (Lost and Found)", 1.12, 22.0},
+		"melt":           {"融化 (メルト)", 1.35, 16.0},
+	}
+	profile, ok := profiles[songKey]
+	if !ok {
+		profile = profiles["envy"]
+		songKey = "envy"
+	}
+
+	scoreDeficit := targetScore - currentScore
+	if scoreDeficit < 0 {
+		scoreDeficit = 0
+	}
+
+	// Base 1x points formula
+	var base1x float64
+	if bonusPercent >= 600 {
+		base1x = 3454.0 * ((100.0 + bonusPercent) / 1090.0)
+	} else {
+		base1x = 1285.0 * ((100.0 + bonusPercent) / 485.0)
+	}
+
+	baseSongPoints := int64(base1x * fireRatio * profile.BaseFactor)
+	if baseSongPoints <= 0 {
+		baseSongPoints = 1
+	}
+
+	hourlySpeed := int64(float64(baseSongPoints) * profile.PlaysPerHour)
+	autoSongPoints := int64(float64(baseSongPoints) * 0.88)
+
+	remainingDays := math.Max(0.1, remainingHours/24.0)
+	requiredDailyGross := float64(scoreDeficit) / remainingDays
+	dailyAutoPoints := float64(dailyAutoBudget) * float64(autoSongPoints)
+	netDailyManualScore := math.Max(0, requiredDailyGross-dailyAutoPoints)
+
+	var requiredManualHoursDaily float64
+	if hourlySpeed > 0 {
+		requiredManualHoursDaily = math.Round((netDailyManualScore/float64(hourlySpeed))*10) / 10
+	}
+
+	totalManualSongs := int(math.Ceil(float64(scoreDeficit) / float64(baseSongPoints)))
+	totalManualHours := 0.0
+	if profile.PlaysPerHour > 0 {
+		totalManualHours = math.Round((float64(totalManualSongs)/profile.PlaysPerHour)*10) / 10
+	}
+
+	totalFiresNeeded := totalManualSongs * fireMultiplier
+	totalLargeDrinks := int(math.Ceil(float64(totalFiresNeeded) / 10.0))
+	totalCrystals := totalLargeDrinks * 100
+
+	feasibilityDesc := "🟡 正常可达成 (Achievable)"
+	if scoreDeficit <= 0 {
+		feasibilityDesc = "🟢 已达标 (Target Reached)"
+	} else if totalManualHours > remainingHours || requiredManualHoursDaily > 18.0 {
+		feasibilityDesc = "🔴 人类极限不可行 (Impossible) - 所需时长超过剩余总时间或人体极限"
+	} else if requiredManualHoursDaily > dailyHours || requiredManualHoursDaily >= 12.0 {
+		feasibilityDesc = "🟠 极限硬核挑战 (Hard) - 每日需打时间超过预计可用时长"
+	} else if requiredManualHoursDaily <= 2.5 {
+		feasibilityDesc = "🟢 轻松达成 (Comfortable)"
+	}
+
+	var sb strings.Builder
+	sb.WriteString("# Project SEKAI 冲榜策略规划与消耗计算报告\n\n")
+	sb.WriteString("### 🎯 目标与参数\n")
+	sb.WriteString(fmt.Sprintf("- **当前分数**: %s / **目标分数**: %s (缺口: %s 分)\n", formatNumber(currentScore), formatNumber(targetScore), formatNumber(scoreDeficit)))
+	sb.WriteString(fmt.Sprintf("- **剩余活动时间**: %.1f 小时 (约 %.1f 天)\n", remainingHours, remainingDays))
+	sb.WriteString(fmt.Sprintf("- **卡组活动加成**: %.0f%%\n", bonusPercent))
+	sb.WriteString(fmt.Sprintf("- **控火倍数**: %d 火/把 (倍率: %.0fx)\n", fireMultiplier, fireRatio))
+	sb.WriteString(fmt.Sprintf("- **选用曲目**: %s (时速约为 %.0f 把/小时)\n\n", profile.Name, profile.PlaysPerHour))
+
+	sb.WriteString("### 📊 耗时与打曲规划\n")
+	sb.WriteString(fmt.Sprintf("- **单把预估得分**: ~%s 分\n", formatNumber(baseSongPoints)))
+	sb.WriteString(fmt.Sprintf("- **单人手打时速**: ~%s 分/小时\n", formatNumber(hourlySpeed)))
+	sb.WriteString(fmt.Sprintf("- **总需打曲把数**: 约 %d 把\n", totalManualSongs))
+	sb.WriteString(fmt.Sprintf("- **累计手打总耗时**: 约 %.1f 小时\n", totalManualHours))
+	sb.WriteString(fmt.Sprintf("- **每日建议手打时长**: **%.1f 小时/天** (用户可用: %.1f 小时/天)\n", requiredManualHoursDaily, dailyHours))
+	if dailyAutoBudget > 0 {
+		sb.WriteString(fmt.Sprintf("- **每日建议自动打歌**: %d 次/天 (可分担约 %s 分/天)\n", dailyAutoBudget, formatNumber(int64(dailyAutoPoints))))
+	}
+	sb.WriteString(fmt.Sprintf("- **可行性科学评定**: %s\n\n", feasibilityDesc))
+
+	sb.WriteString("### 🧪 体力与资源成本预算\n")
+	sb.WriteString(fmt.Sprintf("- **总消耗体力火数**: 约 %d 火\n", totalFiresNeeded))
+	sb.WriteString(fmt.Sprintf("- **等效大体力罐头**: 约 **%d 罐** (每罐恢复10火)\n", totalLargeDrinks))
+	sb.WriteString(fmt.Sprintf("- **若全部使用水晶碎石**: 约 **%d 水晶**\n\n", totalCrystals))
+
+	sb.WriteString("> 💡 **冲榜建议**: 若时间紧张，建议将曲目切换为《独りんぼエンヴィー》提升时速；若追求体力收益比，可适度降低控火至 3 火或 5 火。")
+
+	return ToolCallResult{Content: []TextContent{{Type: "text", Text: sb.String()}}}
+}
+
+func (s *Server) toolSearchGachas(args map[string]interface{}) ToolCallResult {
+	query, _ := args["query"].(string)
+	query = strings.TrimSpace(strings.ToLower(query))
+
+	gachaType, _ := args["gacha_type"].(string)
+	gachaType = strings.TrimSpace(strings.ToLower(gachaType))
+
+	limit := 5
+	if l, ok := args["limit"].(float64); ok && l > 0 {
+		limit = int(l)
+		if limit > 15 {
+			limit = 15
+		}
+	}
+
+	var sb strings.Builder
+
+	if s.store != nil {
+		gachaList := s.store.GetGachaList()
+		pickups := s.store.GetGachaPickups()
+
+		var matched []models.Gacha
+		for _, g := range gachaList {
+			if gachaType != "" && !strings.EqualFold(g.GachaType, gachaType) {
+				continue
+			}
+			if query != "" {
+				nameLower := strings.ToLower(g.Name)
+				if !strings.Contains(nameLower, query) {
+					charaMatch := false
+					for _, cid := range pickups[g.ID] {
+						if card, ok := s.cards[cid]; ok {
+							cName := strings.ToLower(characterNames[card.CharacterID])
+							if strings.Contains(cName, query) {
+								charaMatch = true
+								break
+							}
+						}
+					}
+					if !charaMatch {
+						continue
+					}
+				}
+			}
+			matched = append(matched, g)
+		}
+
+		sort.Slice(matched, func(i, j int) bool {
+			return matched[i].StartAt > matched[j].StartAt
+		})
+
+		if len(matched) == 0 {
+			return ToolCallResult{Content: []TextContent{{Type: "text", Text: "No gacha banners found matching criteria."}}}
+		}
+
+		count := len(matched)
+		if count > limit {
+			matched = matched[:limit]
+		}
+
+		sb.WriteString(fmt.Sprintf("Found %d gacha banners (showing top %d):\n\n", count, len(matched)))
+		for _, g := range matched {
+			startDate := time.UnixMilli(g.StartAt).UTC().Format("2006-01-02 15:04")
+			endDate := time.UnixMilli(g.EndAt).UTC().Format("2006-01-02 15:04")
+
+			sb.WriteString(fmt.Sprintf("### [%d] %s\n", g.ID, g.Name))
+			sb.WriteString(fmt.Sprintf("- **卡池类型**: %s\n", g.GachaType))
+			sb.WriteString(fmt.Sprintf("- **起止时间**: %s ~ %s (UTC)\n", startDate, endDate))
+
+			cardIDs := pickups[g.ID]
+			if len(cardIDs) > 0 {
+				sb.WriteString("- **UP 成员卡牌**:\n")
+				for _, cid := range cardIDs {
+					if card, ok := s.cards[cid]; ok {
+						cName := characterNames[card.CharacterID]
+						sb.WriteString(fmt.Sprintf("  - [%d] %s - %s (%s | %s)\n", card.ID, cName, card.Prefix, card.Rarity, card.Attr))
+					} else {
+						sb.WriteString(fmt.Sprintf("  - Card ID: %d\n", cid))
+					}
+				}
+			}
+			sb.WriteString(fmt.Sprintf("- **在线卡池详情**: https://pjsk.moe/gacha/%d/\n\n", g.ID))
+		}
+		return ToolCallResult{Content: []TextContent{{Type: "text", Text: sb.String()}}}
+	}
+
+	var matched []*GachaItem
+	for _, g := range s.gachas {
+		if gachaType != "" && !strings.EqualFold(g.Type, gachaType) {
+			continue
+		}
+		if query != "" && !strings.Contains(strings.ToLower(g.Name), query) {
+			continue
+		}
+		matched = append(matched, g)
+	}
+
+	sort.Slice(matched, func(i, j int) bool {
+		return matched[i].ID > matched[j].ID
+	})
+
+	if len(matched) == 0 {
+		return ToolCallResult{Content: []TextContent{{Type: "text", Text: "No gacha banners found."}}}
+	}
+
+	if len(matched) > limit {
+		matched = matched[:limit]
+	}
+
+	sb.WriteString(fmt.Sprintf("Found %d gacha banners:\n\n", len(matched)))
+	for _, g := range matched {
+		sb.WriteString(fmt.Sprintf("- **[%d] %s** (%s)\n  链接: https://pjsk.moe/gacha/%d/\n\n", g.ID, g.Name, g.Type, g.ID))
+	}
+
+	return ToolCallResult{Content: []TextContent{{Type: "text", Text: sb.String()}}}
 }
