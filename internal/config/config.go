@@ -25,7 +25,7 @@ func Load() *Config {
 		Port:                getEnv("PORT", "8080"),
 		MasterDataPath:      getEnv("MASTER_DATA_PATH", "./data/master"),
 		FrontendProxyURL:    getEnv("FRONTEND_PROXY_URL", "http://127.0.0.1:3000"),
-		HTMLCacheDir:        getEnv("HTML_CACHE_DIR", ""),
+		HTMLCacheDir:        getEnv("HTML_CACHE_DIR", defaultHTMLCacheDir()),
 		HTMLCacheMaxGB:      getEnvInt("HTML_CACHE_MAX_GB", 20),
 		HTMLCacheEntries:    getEnvInt("HTML_CACHE_MAX_ENTRIES", 100_000),
 		HTMLCacheEntryMB:    getEnvInt("HTML_CACHE_MAX_ENTRY_MB", 4),
@@ -65,4 +65,11 @@ func getEnv(key, defaultValue string) string {
 		return v
 	}
 	return defaultValue
+}
+
+func defaultHTMLCacheDir() string {
+	if fi, err := os.Stat("/app/data"); err == nil && fi.IsDir() {
+		return "/app/data/html_cache"
+	}
+	return "./data/html_cache"
 }

@@ -47,13 +47,18 @@ trap cleanup EXIT
 trap 'exit 143' INT TERM
 
 ARCHIVE_DIR="${STATIC_ARCHIVE_DIR:-/app/data/static_archive}"
+CACHE_DIR="${HTML_CACHE_DIR:-/app/data/html_cache}"
 MAX_DAYS="${STATIC_CACHE_MAX_DAYS:-30}"
 case "$MAX_DAYS" in
     ''|*[!0-9]*) echo "STATIC_CACHE_MAX_DAYS must be a non-negative integer" >&2; exit 1 ;;
 esac
-mkdir -p "$ARCHIVE_DIR"
+mkdir -p "$ARCHIVE_DIR" "$CACHE_DIR"
 if [ ! -w "$ARCHIVE_DIR" ]; then
     echo "Static archive directory is not writable: $ARCHIVE_DIR" >&2
+    exit 1
+fi
+if [ ! -w "$CACHE_DIR" ]; then
+    echo "HTML cache directory is not writable: $CACHE_DIR" >&2
     exit 1
 fi
 if [ -d /app/nextjs/web/.next/static ]; then

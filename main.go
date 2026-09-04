@@ -91,10 +91,31 @@ func main() {
 					for _, loc := range locales {
 						warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/", loc))
 						warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/cards/", loc))
+						warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/music/", loc))
+						warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/events/", loc))
+						warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/gacha/", loc))
+						warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/costumes/", loc))
+						warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/character/", loc))
 					}
+					// Warm up detail routes (trailing slash is mandatory due to Next.js trailingSlash: true)
 					for id := 1; id <= 1450; id++ {
 						for _, loc := range locales {
-							warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/cards/%d", loc, id))
+							warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/cards/%d/", loc, id))
+						}
+					}
+					for id := 1; id <= 650; id++ {
+						for _, loc := range locales {
+							warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/music/%d/", loc, id))
+						}
+					}
+					for id := 1; id <= 250; id++ {
+						for _, loc := range locales {
+							warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/events/%d/", loc, id))
+						}
+					}
+					for id := 1; id <= 1300; id++ {
+						for _, loc := range locales {
+							warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/gacha/%d/", loc, id))
 						}
 					}
 					cacheHandler.StartWarmup(context.Background(), warmupRoutes, 300*time.Millisecond)

@@ -117,12 +117,15 @@ const costumeDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof get
     getData: getCostumeMeta,
     structuredData: { parentPageKey: "costumes", entity: { type: "Thing" } },
     fallbackTwitterCard: "summary",
-    build: (costume) => ({
-        title: costume.name,
-        descriptionKind: "costume",
-        descriptionValues: { name: costume.name },
-        twitterCard: "summary",
-    }),
+    build: (costume, { locale }) => {
+        const tag = costume.isJpFallback ? formatJpAdvancePrefix(locale) : "";
+        return {
+            title: `${tag}${costume.name}`,
+            descriptionKind: "costume",
+            descriptionValues: { name: costume.name },
+            twitterCard: "summary",
+        };
+    },
 });
 
 export const defineCostumeDetailPage = detailPageFactory(costumeDetailPreset);
@@ -140,12 +143,15 @@ const eventDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getEv
             getEndDate: (event) => event.endAt,
         },
     },
-    build: (event, { locale }) => ({
-        title: event.name,
-        descriptionKind: "event",
-        descriptionValues: { name: event.name },
-        images: [getEventBannerUrl(event.asset, getSeoAssetSource(locale))],
-    }),
+    build: (event, { locale }) => {
+        const tag = event.isJpFallback ? formatJpAdvancePrefix(locale) : "";
+        return {
+            title: `${tag}${event.name}`,
+            descriptionKind: "event",
+            descriptionValues: { name: event.name },
+            images: [getEventBannerUrl(event.asset, getSeoAssetSource(locale))],
+        };
+    },
 });
 
 export const defineEventDetailPage = detailPageFactory(eventDetailPreset);
@@ -183,13 +189,16 @@ const gachaDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getGa
     routePrefix: "gacha",
     getData: getGachaMeta,
     structuredData: { parentPageKey: "gacha", entity: { type: "CreativeWork" } },
-    build: (gacha, { locale }) => ({
-        title: gacha.name,
-        descriptionKind: "gacha",
-        descriptionValues: { name: gacha.name },
-        images: [getGachaLogoUrl(gacha.asset, getSeoAssetSource(locale))],
-        twitterCard: "summary",
-    }),
+    build: (gacha, { locale }) => {
+        const tag = gacha.isJpFallback ? formatJpAdvancePrefix(locale) : "";
+        return {
+            title: `${tag}${gacha.name}`,
+            descriptionKind: "gacha",
+            descriptionValues: { name: gacha.name },
+            images: [getGachaLogoUrl(gacha.asset, getSeoAssetSource(locale))],
+            twitterCard: "summary",
+        };
+    },
 });
 
 export const defineGachaDetailPage = detailPageFactory(gachaDetailPreset);
@@ -207,12 +216,15 @@ const liveDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getVir
             getEndDate: (live) => live.endAt,
         },
     },
-    build: (live, { locale }) => ({
-        title: live.name,
-        descriptionKind: "live",
-        descriptionValues: { name: live.name },
-        images: [getVirtualLiveBannerUrl(live.asset, getSeoAssetSource(locale))],
-    }),
+    build: (live, { locale }) => {
+        const tag = live.isJpFallback ? formatJpAdvancePrefix(locale) : "";
+        return {
+            title: `${tag}${live.name}`,
+            descriptionKind: "live",
+            descriptionValues: { name: live.name },
+            images: [getVirtualLiveBannerUrl(live.asset, getSeoAssetSource(locale))],
+        };
+    },
 });
 
 export const defineLiveDetailPage = detailPageFactory(liveDetailPreset);
@@ -239,13 +251,16 @@ const musicDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMu
     routePrefix: "music",
     getData: getMusicMeta,
     structuredData: { parentPageKey: "music", entity: { type: "MusicRecording" } },
-    build: (music, { locale }) => ({
-        title: music.title,
-        descriptionKind: "music",
-        descriptionValues: { title: music.title, lyricist: music.lyricist, composer: music.composer },
-        images: [getMusicJacketUrl(music.asset, getSeoAssetSource(locale))],
-        twitterCard: "summary",
-    }),
+    build: (music, { locale }) => {
+        const tag = music.isJpFallback ? formatJpAdvancePrefix(locale) : "";
+        return {
+            title: `${tag}${music.title}`,
+            descriptionKind: "music",
+            descriptionValues: { title: music.title, lyricist: music.lyricist, composer: music.composer },
+            images: [getMusicJacketUrl(music.asset, getSeoAssetSource(locale))],
+            twitterCard: "summary",
+        };
+    },
 });
 
 export const defineMusicDetailPage = detailPageFactory(musicDetailPreset);
@@ -256,13 +271,16 @@ const lyricsDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getM
     routePrefix: "lyrics",
     getData: getMusicMeta,
     structuredData: { parentPageKey: "lyrics", entity: { type: "MusicRecording" } },
-    build: (music, { locale }) => ({
-        title: music.title,
-        descriptionKind: "lyrics",
-        descriptionValues: { title: music.title },
-        images: [getMusicJacketUrl(music.asset, getSeoAssetSource(locale))],
-        twitterCard: "summary",
-    }),
+    build: (music, { locale }) => {
+        const tag = music.isJpFallback ? formatJpAdvancePrefix(locale) : "";
+        return {
+            title: `${tag}${music.title}`,
+            descriptionKind: "lyrics",
+            descriptionValues: { title: music.title },
+            images: [getMusicJacketUrl(music.asset, getSeoAssetSource(locale))],
+            twitterCard: "summary",
+        };
+    },
 });
 
 export const defineLyricsDetailPage = detailPageFactory(lyricsDetailPreset);

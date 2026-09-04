@@ -13,6 +13,7 @@ import type {
     FixtureMeta,
     MangaMeta,
     ExchangeMeta,
+    GuideMeta,
 } from "@/lib/metadata";
 import { CHARACTER_NAMES } from "@/types/types";
 
@@ -266,6 +267,43 @@ function renderExchangeSemantic(exchange: ExchangeMeta, title: string) {
     );
 }
 
+function renderGuideSemantic(guide: GuideMeta, title: string) {
+    return (
+        <>
+            <h1>{guide.title || title}</h1>
+            <dl>
+                <dt>攻略标题</dt>
+                <dd>{guide.title}</dd>
+                {guide.category && (
+                    <>
+                        <dt>分类</dt>
+                        <dd>{guide.category}</dd>
+                    </>
+                )}
+                {guide.authorGroup && (
+                    <>
+                        <dt>作者团队</dt>
+                        <dd>{guide.authorGroup}</dd>
+                    </>
+                )}
+                {guide.date && (
+                    <>
+                        <dt>发布日期</dt>
+                        <dd>{guide.date}</dd>
+                    </>
+                )}
+            </dl>
+            {guide.tags && guide.tags.length > 0 && (
+                <ul>
+                    {guide.tags.map((tag, i) => (
+                        <li key={i}>{tag}</li>
+                    ))}
+                </ul>
+            )}
+        </>
+    );
+}
+
 export default function DetailSemanticSeoShell({
     title,
     description,
@@ -305,6 +343,10 @@ export default function DetailSemanticSeoShell({
                 break;
             case "exchange":
                 content = renderExchangeSemantic(semantic.data as ExchangeMeta, title);
+                break;
+            case "guide":
+            case "guides":
+                content = renderGuideSemantic(semantic.data as GuideMeta, title);
                 break;
             default:
                 content = (

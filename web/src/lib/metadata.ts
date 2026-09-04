@@ -30,6 +30,7 @@ export interface MusicMeta {
     lyricist: string;
     composer: string;
     asset: string;
+    isJpFallback?: boolean;
 }
 
 export interface EventMeta {
@@ -38,16 +39,19 @@ export interface EventMeta {
     asset: string;
     startAt?: number | string;
     endAt?: number | string;
+    isJpFallback?: boolean;
 }
 
 export interface GachaMeta {
     name: string;
     type: string;
     asset: string;
+    isJpFallback?: boolean;
 }
 
 export interface CharacterMeta {
     name: string;
+    isJpFallback?: boolean;
 }
 
 export interface VirtualLiveMeta {
@@ -55,10 +59,12 @@ export interface VirtualLiveMeta {
     asset: string;
     startAt?: number | string;
     endAt?: number | string;
+    isJpFallback?: boolean;
 }
 
 export interface CostumeMeta {
     name: string;
+    isJpFallback?: boolean;
 }
 
 export interface FixtureMeta {
@@ -194,54 +200,78 @@ function getMap(region: MetadataRegion = 'cn'): MetadataMap | null {
 
 // ==================== Public Accessors ====================
 
-export function getCardMeta(id: number, region?: MetadataRegion): CardMeta | null {
-    const regional = getMap(region)?.cards[String(id)];
+function getRegionalWithFallback<T extends object>(
+    getter: (map: MetadataMap) => Record<string, T> | undefined,
+    id: string | number,
+    region?: MetadataRegion,
+): (T & { isJpFallback?: boolean }) | null {
+    const key = String(id);
+    const regional = getMap(region);
     if (regional) {
-        return { ...regional, isJpFallback: false };
+        const item = getter(regional)?.[key];
+        if (item) {
+            return { ...item, isJpFallback: false };
+        }
     }
     if (region && region !== 'jp') {
-        const jpCard = getMap('jp')?.cards[String(id)];
-        if (jpCard) {
-            return { ...jpCard, isJpFallback: true };
+        const jpMap = getMap('jp');
+        if (jpMap) {
+            const jpItem = getter(jpMap)?.[key];
+            if (jpItem) {
+                return { ...jpItem, isJpFallback: true };
+            }
+        }
+    }
+    for (const altRegion of METADATA_REGIONS) {
+        if (altRegion !== region && altRegion !== 'jp') {
+            const altMap = getMap(altRegion);
+            const altItem = altMap ? getter(altMap)?.[key] : undefined;
+            if (altItem) {
+                return { ...altItem, isJpFallback: false };
+            }
         }
     }
     return null;
 }
 
+export function getCardMeta(id: number, region?: MetadataRegion): CardMeta | null {
+    return getRegionalWithFallback(m => m.cards, id, region);
+}
+
 export function getMusicMeta(id: number, region?: MetadataRegion): MusicMeta | null {
-    return getMap(region)?.musics[String(id)] ?? null;
+    return getRegionalWithFallback(m => m.musics, id, region);
 }
 
 export function getEventMeta(id: number, region?: MetadataRegion): EventMeta | null {
-    return getMap(region)?.events[String(id)] ?? null;
+    return getRegionalWithFallback(m => m.events, id, region);
 }
 
 export function getGachaMeta(id: number, region?: MetadataRegion): GachaMeta | null {
-    return getMap(region)?.gachas[String(id)] ?? null;
+    return getRegionalWithFallback(m => m.gachas, id, region);
 }
 
 export function getCharacterMeta(id: number, region?: MetadataRegion): CharacterMeta | null {
-    return getMap(region)?.characters[String(id)] ?? null;
+    return getRegionalWithFallback(m => m.characters, id, region);
 }
 
 export function getVirtualLiveMeta(id: number, region?: MetadataRegion): VirtualLiveMeta | null {
-    return getMap(region)?.virtualLives[String(id)] ?? null;
+    return getRegionalWithFallback(m => m.virtualLives, id, region);
 }
 
 export function getCostumeMeta(id: number, region?: MetadataRegion): CostumeMeta | null {
-    return getMap(region)?.costumes[String(id)] ?? null;
+    return getRegionalWithFallback(m => m.costumes, id, region);
 }
 
 export function getFixtureMeta(id: number, region?: MetadataRegion): FixtureMeta | null {
-    return getMap(region)?.mysekaiFixtures[String(id)] ?? null;
+    return getRegionalWithFallback(m => m.mysekaiFixtures, id, region);
 }
 
 export function getMangaMeta(id: number, region?: MetadataRegion): MangaMeta | null {
-    return getMap(region)?.mangas[String(id)] ?? null;
+    return getRegionalWithFallback(m => m.mangas, id, region);
 }
 
 export function getExchangeMeta(id: number, region?: MetadataRegion): ExchangeMeta | null {
-    return getMap(region)?.exchanges[String(id)] ?? null;
+    return getRegionalWithFallback(m => m.exchanges, id, region);
 }
 
 export function getGuideMeta(id: string, region?: MetadataRegion): GuideMeta | null {
