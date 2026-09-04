@@ -142,12 +142,12 @@ function buildMatrix(mod, decks, ctx) {
         },
         {
             name: 'targetBonusList exact hit',
-            base: BASE_EVENT, patch: { target: 'bonus', target_bonus_list: [420] },
+            base: BASE_EVENT, patch: { target: 'bonus', target_bonus_list: [ctx.bonusTier] },
             assert: (r, detail) => {
                 const bonus = r.decks[0]?.event_bonus_total ?? -1;
                 detail.value = bonus;
-                // 精确档位：只返回 total_bonus === 420 的卡组（不可达档为空数组）。
-                return r.decks.length > 0 && bonus === 420;
+                // 精确档位：只返回 total_bonus === 档位 的卡组（不可达档为空数组）。
+                return r.decks.length > 0 && bonus === ctx.bonusTier;
             },
             expect: '精确命中目标加成档位（wasm search_targets 路径）',
         },
@@ -355,7 +355,10 @@ async function main() {
     });
     const baseWlBonus = baseWlRun.decks[0]?.event_bonus_total ?? 0;
     console.log(`   基线：pool=${basePoolSize}, topPT=${baseEvent.decks[0]?.event_point}, wlBonus=${baseWlBonus}`);
-    const bonusRun = run({ ...BASE_EVENT, target: 'bonus', target_bonus_list: [420] });
+    // 档位取基线最优卡组的实际加成：该档位由盒内卡组构成，必然可达，
+    // 免受排行榜账号卡盒变化影响。
+    const bonusTier = Math.round(baseEvent.decks[0].cards.reduce((sum, c) => sum + (c.event_bonus ?? 0), 0));
+    const bonusRun = run({ ...BASE_EVENT, target: 'bonus', target_bonus_list: [bonusTier] });
     const challengeRun = run({
         region: 'jp', live_type: 'challenge', challenge_live_character_id: 1,
         music_id: 74, music_diff: 'master', target: 'score', limit: 1, timeout_ms: 60_000,
@@ -371,7 +374,7 @@ async function main() {
     const myRun = run({ region: 'jp', live_type: 'multi', music_id: 74, music_diff: 'master', target: 'mysekai', event_id: 215, limit: 1, timeout_ms: 60_000, ...ALL_RARITY_DEFAULTS });
 
     console.log('3) 参数矩阵逐项验证…');
-    const matrix = buildMatrix(mod, baseEvent.decks, { basePoolSize, baseWlBonus });
+    const matrix = buildMatrix(mod, baseEvent.decks, { basePoolSize, baseWlBonus, bonusTier });
     let pass = 0;
     const failures = [];
     for (const item of matrix) {
@@ -403,7 +406,7 @@ console.log('3C) 展示解码逐模式校验…');
     const decodeCases = [
         { name: 'event score', input: { mode: 'event', target: 'score', targetValue: baseEvent.decks[0].target_value, eventPoint: baseEvent.decks[0].event_point }, expect: (v) => v >= 100 && v <= 20000 },
         { name: 'event power', input: { mode: 'event', target: 'power', targetValue: run({ ...BASE_EVENT, target: 'power' }).decks[0].target_value }, expect: (v) => v >= 50000 && v <= 2000000 },
-        { name: 'event bonus', input: { mode: 'event', target: 'bonus', targetValue: bonusRun.decks[0].target_value }, expect: (v) => v >= 400 && v <= 430 },
+        { name: 'event bonus', input: { mode: 'event', target: 'bonus', targetValue: bonusRun.decks[0]?.target_value ?? -1 }, expect: (v) => v >= bonusTier - 5 && v <= bonusTier + 5 },
         { name: 'challenge score', input: { mode: 'challenge', targetValue: challengeRun.decks[0].target_value }, expect: (v) => v >= 1000000 && v <= 5000000 },
         { name: 'custom pt', input: { mode: 'custom', targetValue: customRun.decks[0].target_value, eventPoint: customRun.decks[0].event_point }, expect: (v) => v >= 100 && v <= 20000 },
         { name: 'strongest skill', input: { mode: 'strongest', strongestTarget: 'skill', targetValue: skillRun.decks[0].target_value }, expect: (v) => v >= 50 && v <= 400 },

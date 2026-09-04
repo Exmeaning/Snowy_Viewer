@@ -662,6 +662,7 @@ async function importSitemap() {
     },
     path: { join: (...parts) => parts.join("/") },
     getCanonicalOrigin: () => SITEMAP_TEST_ORIGIN,
+    getServerDataDir: () => "/moesekai-data",
     INDEXABLE_SEO_ROUTES: [],
     DEFAULT_ROUTE_LOCALE: localeRouting.DEFAULT_ROUTE_LOCALE,
     SUPPORTED_ROUTE_LOCALES: routeLocales,
@@ -673,6 +674,7 @@ async function importSitemap() {
     ["import fs from 'fs';", `const fs = globalThis.${dependencyKey}.fs;`],
     ["import path from 'path';", `const path = globalThis.${dependencyKey}.path;`],
     ["import { getCanonicalOrigin } from '@/lib/site-origin';", `const getCanonicalOrigin = globalThis.${dependencyKey}.getCanonicalOrigin;`],
+    ["import { getServerDataDir } from '@/lib/server-data-dir';", `const getServerDataDir = globalThis.${dependencyKey}.getServerDataDir;`],
     ["import { INDEXABLE_SEO_ROUTES } from '@/lib/seo-routes';", `const INDEXABLE_SEO_ROUTES = globalThis.${dependencyKey}.INDEXABLE_SEO_ROUTES;`],
     [
       "import { DEFAULT_ROUTE_LOCALE, getLocaleRouteConfig, SUPPORTED_ROUTE_LOCALES, type RouteLocale } from '@/lib/locale-routing';",
