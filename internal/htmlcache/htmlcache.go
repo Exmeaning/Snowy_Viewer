@@ -52,6 +52,25 @@ type flight struct {
 	resp *cachedResponse
 }
 
+type WarmupStats struct {
+	Total       int       `json:"total"`
+	Completed   int       `json:"completed"`
+	Warmed      int       `json:"warmed"`
+	Skipped     int       `json:"skipped"`
+	InProgress  bool      `json:"in_progress"`
+	CurrentPath string    `json:"current_path,omitempty"`
+	StartTime   time.Time `json:"start_time,omitempty"`
+	EndTime     time.Time `json:"end_time,omitempty"`
+}
+
+type Stats struct {
+	Entries    int         `json:"entries"`
+	Bytes      int64       `json:"bytes"`
+	BytesMB    float64     `json:"bytes_mb"`
+	MaxBytesMB float64     `json:"max_bytes_mb"`
+	Warmup     WarmupStats `json:"warmup"`
+}
+
 type Cache struct {
 	next  http.Handler
 	cfg   Config
@@ -64,6 +83,28 @@ type Cache struct {
 	bytes          int64
 	flights        map[string]*flight
 	activeRequests atomic.Int64
+
+	warmupMu    sync.RWMutex
+	warmupStats WarmupStats
+}
+
+func (c *Cache) Stats() Stats {
+	c.mu.Lock()
+	entries := len(c.items)
+	bytes := c.bytes
+	c.mu.Unlock()
+
+	c.warmupMu.RLock()
+	warmup := c.warmupStats
+	c.warmupMu.RUnlock()
+
+	return Stats{
+		Entries:    entries,
+		Bytes:      bytes,
+		BytesMB:    float64(bytes) / (1024 * 1024),
+		MaxBytesMB: float64(c.cfg.MaxBytes) / (1024 * 1024),
+		Warmup:     warmup,
+	}
 }
 
 func New(next http.Handler, cfg Config) *Cache {

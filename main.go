@@ -81,6 +81,10 @@ func main() {
 				MaxEntryBytes: int64(cfg.HTMLCacheEntryMB) << 20,
 				Persistent:    cfg.HTMLCachePersistent,
 			})
+			mux.HandleFunc("/internal-cache-stats", func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_ = json.NewEncoder(w).Encode(cacheHandler.Stats())
+			})
 			mux.Handle("/", cacheHandler)
 
 			if cfg.HTMLCacheWarmup {
