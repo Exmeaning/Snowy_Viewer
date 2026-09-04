@@ -308,32 +308,121 @@ function computeCardPower(c) {
     return result;
 }
 
+function formatSkillDescription(skill, skillLevel, card, charaNamesMap) {
+    if (!skill || !skill.description) return '';
+    let newSkillInfo = skill.description;
+
+    const singleRegExp = /{{(\d+);(\w+)}}/g;
+    const doubleRegExp = /{{(\d+),(\d+);(\w+)}}/g;
+
+    newSkillInfo = newSkillInfo.replace(singleRegExp, (match, idStr, type) => {
+        const id = Number(idStr);
+
+        if (type === 'c' && card) {
+            const charaName = charaNamesMap?.get(card.characterId);
+            return charaName || match;
+        }
+
+        const skillEffect = skill.skillEffects?.find(eff => eff.id === id);
+        if (!skillEffect) return match;
+
+        const detail = skillEffect.skillEffectDetails?.find(d => d.level === skillLevel);
+        if (!detail) return match;
+
+        switch (type) {
+            case 'd':
+                return String(detail.activateEffectDuration);
+            case 'v':
+                return String(detail.activateEffectValue);
+            case 'e':
+                return skillEffect.skillEnhance?.activateEffectValue
+                    ? String(skillEffect.skillEnhance.activateEffectValue)
+                    : match;
+            case 'm':
+                if (skillEffect.skillEnhance?.activateEffectValue) {
+                    return String(
+                        skillEffect.skillEnhance.activateEffectValue * 5 +
+                        detail.activateEffectValue
+                    );
+                }
+                return match;
+            default:
+                return match;
+        }
+    });
+
+    newSkillInfo = newSkillInfo.replace(doubleRegExp, (match, id1Str, id2Str, type) => {
+        const id1 = Number(id1Str);
+        const id2 = Number(id2Str);
+
+        const getEffectValue = effectId => {
+            const effect = skill.skillEffects?.find(e => e.id === effectId);
+            if (!effect) return 0;
+            const detail = effect.skillEffectDetails?.find(d => d.level === skillLevel);
+            return detail ? detail.activateEffectValue : 0;
+        };
+
+        const val1 = getEffectValue(id1);
+        const val2 = getEffectValue(id2);
+
+        switch (type) {
+            case 'u':
+            case 'o':
+            case 's':
+            case 'v':
+                return String(val1 + val2);
+            case 'r':
+                return String(val2 > 0 ? val2 : val1);
+            default:
+                return match;
+        }
+    });
+
+    return newSkillInfo;
+}
+
 const datasets = [
     {
         key: 'cards',
         label: 'cards',
-        filename: 'cards.json',
-        fallback: [],
-        validate: Array.isArray,
-        build: (cards, existingMap) => Object.fromEntries(
-            (Array.isArray(cards) ? cards : []).map(c => {
-                const existing = existingMap?.cards?.[String(c.id)] || {};
-                const power = existing.power || computeCardPower(c);
-                const entry = {
-                    prefix: c.prefix,
-                    characterId: c.characterId,
-                    rarity: c.cardRarityType,
-                    attr: c.attr,
-                    asset: c.assetbundleName,
-                    releaseAt: c.releaseAt ?? existing.releaseAt,
-                    skillName: c.cardSkillName || existing.skillName,
-                    skillDesc: existing.skillDesc,
-                };
-                if (power) entry.power = power;
-                if (existing.event) entry.event = existing.event;
-                return [c.id, entry];
-            })
-        ),
+        filename: 'cards.json + skills.json + gameCharacters.json',
+        fallback: { cards: [], skills: [], gameCharacters: [] },
+        validate: data => Array.isArray(data?.cards) && Array.isArray(data?.skills),
+        fetch: async () => ({
+            cards: await fetchMasterJson('cards.json', 'cards'),
+            skills: await fetchMasterJson('skills.json', 'skills'),
+            gameCharacters: await fetchMasterJson('gameCharacters.json', 'characters').catch(() => []),
+        }),
+        build: (raw, existingMap) => {
+            const cards = Array.isArray(raw?.cards) ? raw.cards : [];
+            const skills = Array.isArray(raw?.skills) ? raw.skills : [];
+            const characters = Array.isArray(raw?.gameCharacters) ? raw.gameCharacters : [];
+            const charNames = characterNameById(characters);
+            const skillsMap = new Map(skills.map(s => [s.id, s]));
+
+            return Object.fromEntries(
+                cards.map(c => {
+                    const existing = existingMap?.cards?.[String(c.id)] || {};
+                    const power = existing.power || computeCardPower(c);
+                    const skill = skillsMap.get(c.skillId);
+                    const formattedSkill = skill ? formatSkillDescription(skill, 4, c, charNames) : '';
+                    const skillDesc = formattedSkill || existing.skillDesc || '';
+                    const entry = {
+                        prefix: c.prefix,
+                        characterId: c.characterId,
+                        rarity: c.cardRarityType,
+                        attr: c.attr,
+                        asset: c.assetbundleName,
+                        releaseAt: c.releaseAt ?? existing.releaseAt,
+                        skillName: c.cardSkillName || existing.skillName,
+                        skillDesc,
+                    };
+                    if (power) entry.power = power;
+                    if (existing.event) entry.event = existing.event;
+                    return [c.id, entry];
+                })
+            );
+        },
     },
     {
         key: 'musics',
