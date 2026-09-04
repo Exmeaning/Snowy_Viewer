@@ -18,6 +18,7 @@ import (
 	"snowy_viewer/internal/handlers"
 	"snowy_viewer/internal/htmlcache"
 	"snowy_viewer/internal/masterdata"
+	"snowy_viewer/internal/mcp"
 	"snowy_viewer/internal/middleware"
 )
 
@@ -48,6 +49,10 @@ func main() {
 	mux := http.NewServeMux()
 	handler := handlers.New(store)
 	handler.RegisterRoutes(mux)
+
+	// Register Model Context Protocol (MCP) server
+	mcpServer := mcp.New()
+	mcpServer.RegisterRoutes(mux)
 
 	// Prevent unknown /api/* paths from bouncing between Go and Next.js.
 	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
