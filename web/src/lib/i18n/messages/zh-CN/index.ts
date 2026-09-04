@@ -1546,6 +1546,13 @@ export const zhCNMessages = {
             supportUnitLabel: "团体归属",
         },
         music: {
+            jpAdvanceBadge: "日服先行",
+            exclusiveBadges: {
+                en: "美服独占",
+                tw: "台服独占",
+                kr: "韩服独占",
+                cn: "国服独占",
+            },
             badge: "音乐数据库",
             title: "音乐",
             titleHighlight: "图鉴",

@@ -18,19 +18,15 @@ import type {
     CardEventMeta,
 } from "@/types/types";
 
+import type { MusicMeta } from "@/types/music";
+
 export type {
     CardMeta,
     CardPowerItem,
     CardPowerMeta,
     CardEventMeta,
+    MusicMeta,
 };
-
-export interface MusicMeta {
-    title: string;
-    lyricist: string;
-    composer: string;
-    asset: string;
-}
 
 export interface EventMeta {
     name: string;
@@ -209,7 +205,27 @@ export function getCardMeta(id: number, region?: MetadataRegion): CardMeta | nul
 }
 
 export function getMusicMeta(id: number, region?: MetadataRegion): MusicMeta | null {
-    return getMap(region)?.musics[String(id)] ?? null;
+    // 1. Check if ID exists in JP canonical pool
+    const jpMusic = getMap('jp')?.musics[String(id)];
+    if (!jpMusic) {
+        // ID is NOT in JP. This means it is a region-exclusive song (EN, CN, KR, Global exclusive).
+        // Per architecture rule: region-exclusive / conflicting IDs bypass SSR pre-rendering (initialData = null)
+        // and delegate cleanly to client-side CSR with multi-server detection.
+        return null;
+    }
+
+    // 2. If region is specified (e.g. 'cn', 'en', etc.) and not 'jp':
+    if (region && region !== 'jp') {
+        const regional = getMap(region)?.musics[String(id)];
+        if (regional) {
+            return { ...regional, isJpFallback: false };
+        }
+        // Song is in JP canonical pool, but not yet released in this region -> JP advance!
+        return { ...jpMusic, isJpFallback: true };
+    }
+
+    // 3. Region is 'jp' or default
+    return { ...jpMusic, isJpFallback: false };
 }
 
 export function getEventMeta(id: number, region?: MetadataRegion): EventMeta | null {

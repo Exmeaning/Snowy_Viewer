@@ -239,13 +239,17 @@ const musicDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getMu
     routePrefix: "music",
     getData: getMusicMeta,
     structuredData: { parentPageKey: "music", entity: { type: "MusicRecording" } },
-    build: (music, { locale }) => ({
-        title: music.title,
-        descriptionKind: "music",
-        descriptionValues: { title: music.title, lyricist: music.lyricist, composer: music.composer },
-        images: [getMusicJacketUrl(music.asset, getSeoAssetSource(locale))],
-        twitterCard: "summary",
-    }),
+    build: (music, { locale }) => {
+        const tag = music.isJpFallback ? formatJpAdvancePrefix(locale) : "";
+        const title = `${tag}${music.title}`;
+        return {
+            title,
+            descriptionKind: "music",
+            descriptionValues: { title: music.title, lyricist: music.lyricist, composer: music.composer },
+            images: [getMusicJacketUrl(music.asset, getSeoAssetSource(locale))],
+            twitterCard: "summary",
+        };
+    },
 });
 
 export const defineMusicDetailPage = detailPageFactory(musicDetailPreset);

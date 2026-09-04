@@ -1544,6 +1544,13 @@ export const koKRMessages = {
             supportUnitLabel: "그룹 소속"
         },
         music: {
+            jpAdvanceBadge: "일섭 선행",
+            exclusiveBadges: {
+                en: "글로벌 독점",
+                tw: "대만 독점",
+                kr: "한섭 독점",
+                cn: "중섭 독점",
+            },
             badge: "음악 데이터베이스",
             title: "음악",
             titleHighlight: "그림책",

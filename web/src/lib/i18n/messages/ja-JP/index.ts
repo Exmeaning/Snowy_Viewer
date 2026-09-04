@@ -1546,6 +1546,13 @@ export const jaJPMessages = {
       supportUnitLabel: 'ユニット所属'
     },
     music: {
+      jpAdvanceBadge: '先行登場',
+      exclusiveBadges: {
+        en: 'グローバル版限定',
+        tw: '繁中版限定',
+        kr: '韓国版限定',
+        cn: '簡中版限定'
+      },
       badge: '楽曲データベース',
       title: '楽曲',
       titleHighlight: 'Encyclopedia',

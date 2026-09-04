@@ -1547,6 +1547,13 @@ export const enUSMessages = {
             supportUnitLabel: "Unit Affiliation",
         },
         music: {
+            jpAdvanceBadge: "JP Advance",
+            exclusiveBadges: {
+                en: "EN Exclusive",
+                tw: "TW Exclusive",
+                kr: "KR Exclusive",
+                cn: "CN Exclusive",
+            },
             badge: "Music Database",
             title: "Music",
             titleHighlight: "Encyclopedia",

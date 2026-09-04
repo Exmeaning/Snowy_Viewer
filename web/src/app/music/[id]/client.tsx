@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
@@ -15,6 +15,8 @@ import {
     IMusicVocalInfo,
     IOutsideCharacter,
     MusicDifficultyType,
+    MusicMeta,
+    getMusicExclusiveRegion,
     getMusicJacketUrl,
     getMusicVocalAudioUrl,
     MUSIC_CATEGORY_COLORS,
@@ -25,7 +27,7 @@ import {
     buildMusicCategoriesMap,
 } from "@/types/music";
 import { getCharacterName } from "@/lib/i18n";
-import { useTheme, type AssetSourceType } from "@/contexts/ThemeContext";
+import { useTheme, type AssetSourceType, type ServerSourceType } from "@/contexts/ThemeContext";
 import { getCharacterIconUrl, getEventBannerUrl, MOE_RANKINGS_URL } from "@/lib/assets";
 import { getOutsideCharacterAvatarUrl } from "@/lib/lyrics-performers";
 import { fetchMasterData, fetchMusicMetas } from "@/lib/fetch";
@@ -97,16 +99,40 @@ interface MusicRankings {
 
 
 
-export default function MusicDetailPage() {
+function createMusicFromMeta(id: number, meta: MusicMeta): IMusicInfo {
+    return {
+        id,
+        seq: id,
+        releaseConditionId: 1,
+        categories: ["original"],
+        title: meta.title,
+        pronunciation: "",
+        creatorArtistId: 0,
+        lyricist: meta.lyricist || "",
+        composer: meta.composer || "",
+        arranger: meta.arranger || "",
+        dancerCount: 0,
+        selfDancerPosition: 0,
+        assetbundleName: meta.asset,
+        liveTalkBackgroundAssetbundleName: "",
+        publishedAt: meta.publishedAt || 0,
+        releasedAt: meta.publishedAt || 0,
+        liveStageId: 0,
+        fillerSec: 0,
+        isNewlyWrittenMusic: false,
+        isFullLength: false,
+    };
+}
+
+export default function MusicDetailPage({ initialData, id }: { initialData?: MusicMeta | null; id?: number }) {
     const params = useParams();
-    const searchParams = useSearchParams();
-    const { assetSource } = useTheme();
+    const { assetSource, serverSource } = useTheme();
     const { setDetailName } = useBreadcrumb();
     const { t, formatDate, formatNumber } = useI18n();
-    const musicId = Number(params.id);
-    const isScreenshotMode = searchParams.get('mode') === 'screenshot';
+    const musicId = id ?? Number(params?.id);
+    const [isScreenshotMode, setIsScreenshotMode] = useState(false);
 
-    const [music, setMusic] = useState<IMusicInfo | null>(null);
+    const [music, setMusic] = useState<IMusicInfo | null>(() => (initialData && musicId ? createMusicFromMeta(musicId, initialData) : null));
     const [musicTags, setMusicTags] = useState<IMusicTagInfo[]>([]);
     const [difficulties, setDifficulties] = useState<IMusicDifficultyInfo[]>([]);
     const [vocals, setVocals] = useState<IMusicVocalInfo[]>([]);
@@ -114,9 +140,24 @@ export default function MusicDetailPage() {
     const [limitedTimeMusics, setLimitedTimeMusics] = useState<IlimitedTimeMusicsInfo[]>([]);
     const [outsideCharacters, setOutsideCharacters] = useState<Record<number, string>>({});
     const [hasPublishedLyrics, setHasPublishedLyrics] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(!initialData);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
+    const [isJpAdvance, setIsJpAdvance] = useState(() => Boolean(initialData?.isJpFallback));
+    const [exclusiveRegion, setExclusiveRegion] = useState<ServerSourceType | null>(() => {
+        if (!initialData && musicId) {
+            return getMusicExclusiveRegion(musicId);
+        }
+        return null;
+    });
+
+    // Handle screenshot mode from query string after mount
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const sp = new URLSearchParams(window.location.search);
+            setIsScreenshotMode(sp.get("mode") === "screenshot");
+        }
+    }, []);
 
     // Duration and ranking states
     const [musicDuration, setMusicDuration] = useState<number | null>(null);
@@ -173,33 +214,88 @@ export default function MusicDetailPage() {
         async function fetchData() {
             try {
                 setIsLoading(true);
+                const activeServer: ServerSourceType = serverSource || "cn";
                 const [musicsData, categoriesData, tagsData, diffisData, vocalsData, eventsData, eventMusicsData, limitedTimeMusicsData, outsideCharsData] = await Promise.all([
-                    fetchMasterData<IMusicInfo[]>("musics.json"),
-                    fetchMasterData<IMusicCategoryInfo[]>("musicCategories.json").catch(() => [] as IMusicCategoryInfo[]),
-                    fetchMasterData<IMusicTagInfo[]>("musicTags.json"),
-                    fetchMasterData<IMusicDifficultyInfo[]>("musicDifficulties.json"),
-                    fetchMasterData<IMusicVocalInfo[]>("musicVocals.json"),
-                    fetchMasterData<EventLite[]>("events.json"),
-                    fetchMasterData<EventMusicLink[]>("eventMusics.json"),
-                    fetchMasterData<IlimitedTimeMusicsInfo[]>("limitedTimeMusics.json"),
-                    fetchMasterData<IOutsideCharacter[]>("outsideCharacters.json").catch(() => [] as IOutsideCharacter[]),
+                    fetchMasterData<IMusicInfo[]>("musics.json", false, activeServer),
+                    fetchMasterData<IMusicCategoryInfo[]>("musicCategories.json", false, activeServer).catch(() => [] as IMusicCategoryInfo[]),
+                    fetchMasterData<IMusicTagInfo[]>("musicTags.json", false, activeServer),
+                    fetchMasterData<IMusicDifficultyInfo[]>("musicDifficulties.json", false, activeServer),
+                    fetchMasterData<IMusicVocalInfo[]>("musicVocals.json", false, activeServer),
+                    fetchMasterData<EventLite[]>("events.json", false, activeServer),
+                    fetchMasterData<EventMusicLink[]>("eventMusics.json", false, activeServer),
+                    fetchMasterData<IlimitedTimeMusicsInfo[]>("limitedTimeMusics.json", false, activeServer),
+                    fetchMasterData<IOutsideCharacter[]>("outsideCharacters.json", false, activeServer).catch(() => [] as IOutsideCharacter[]),
                 ]);
 
-                const foundMusic = musicsData.find(m => m.id === musicId);
+                let activeMusics = musicsData;
+                let activeCategories = categoriesData;
+                let activeTags = tagsData;
+                let activeDiffis = diffisData;
+                let activeVocals = vocalsData;
+
+                let foundMusic = activeMusics.find(m => m.id === musicId);
+
+                // Multi-Server Fallback: If not found on active server, probe candidate servers
+                if (!foundMusic) {
+                    const exclusiveHint = getMusicExclusiveRegion(musicId);
+                    const candidateServers: ServerSourceType[] = [];
+                    if (exclusiveHint && exclusiveHint !== activeServer) {
+                        candidateServers.push(exclusiveHint);
+                    }
+                    const allServers: ServerSourceType[] = ["jp", "cn", "en", "tw", "kr"];
+                    for (const s of allServers) {
+                        if (s !== activeServer && !candidateServers.includes(s)) {
+                            candidateServers.push(s);
+                        }
+                    }
+
+                    for (const candidate of candidateServers) {
+                        try {
+                            const candMusics = await fetchMasterData<IMusicInfo[]>("musics.json", false, candidate);
+                            const cand = candMusics.find(m => m.id === musicId);
+                            if (cand) {
+                                foundMusic = cand;
+                                activeMusics = candMusics;
+                                const [candCats, candTags, candDiffis, candVocals] = await Promise.all([
+                                    fetchMasterData<IMusicCategoryInfo[]>("musicCategories.json", false, candidate).catch(() => [] as IMusicCategoryInfo[]),
+                                    fetchMasterData<IMusicTagInfo[]>("musicTags.json", false, candidate).catch(() => [] as IMusicTagInfo[]),
+                                    fetchMasterData<IMusicDifficultyInfo[]>("musicDifficulties.json", false, candidate).catch(() => [] as IMusicDifficultyInfo[]),
+                                    fetchMasterData<IMusicVocalInfo[]>("musicVocals.json", false, candidate).catch(() => [] as IMusicVocalInfo[]),
+                                ]);
+                                activeCategories = candCats;
+                                activeTags = candTags;
+                                activeDiffis = candDiffis;
+                                activeVocals = candVocals;
+
+                                if (candidate === "jp") {
+                                    setIsJpAdvance(true);
+                                    setExclusiveRegion(null);
+                                } else {
+                                    setIsJpAdvance(false);
+                                    setExclusiveRegion(candidate);
+                                }
+                                break;
+                            }
+                        } catch {
+                            // Candidate probe failed, continue next
+                        }
+                    }
+                }
+
                 if (!foundMusic) {
                     throw new Error(`Music ${musicId} not found`);
                 }
 
-                const categoriesMap = buildMusicCategoriesMap(categoriesData);
+                const categoriesMap = buildMusicCategoriesMap(activeCategories);
                 const normalizedMusic = normalizeMusicItem(foundMusic, categoriesMap);
 
                 setMusic(normalizedMusic);
                 document.title = `Moesekai - ${normalizedMusic.title}`;
-                setMusicTags(tagsData.filter(t => t.musicId === musicId));
-                setDifficulties(diffisData.filter(d => d.musicId === musicId).sort((a, b) => {
+                setMusicTags(activeTags.filter(t => t.musicId === musicId));
+                setDifficulties(activeDiffis.filter(d => d.musicId === musicId).sort((a, b) => {
                     return DIFFICULTY_ORDER.indexOf(a.musicDifficulty) - DIFFICULTY_ORDER.indexOf(b.musicDifficulty);
                 }));
-                setVocals(vocalsData.filter(v => v.musicId === musicId));
+                setVocals(activeVocals.filter(v => v.musicId === musicId));
                 setLimitedTimeMusics(limitedTimeMusicsData);
 
                 // Build outside character name map
@@ -220,7 +316,7 @@ export default function MusicDetailPage() {
                 setError(null);
 
                 // Set default difficulty to master if available
-                const availableDiffs = diffisData.filter(d => d.musicId === musicId);
+                const availableDiffs = activeDiffis.filter(d => d.musicId === musicId);
                 if (availableDiffs.length > 0) {
                     const masterDiff = availableDiffs.find(d => d.musicDifficulty === "master");
                     setSelectedDifficulty(masterDiff?.musicDifficulty || "expert");
@@ -324,7 +420,7 @@ export default function MusicDetailPage() {
                 console.warn("Failed to load song constants:", err);
             });
         }
-    }, [musicId]);
+    }, [musicId, serverSource]);
 
     // Selected difficulty info
     const selectedDifficultyInfo = useMemo(() => {
@@ -417,9 +513,21 @@ export default function MusicDetailPage() {
                 {/* Header Section */}
                 <div className="mb-8">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-2">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500 w-fit">
-                            ID: {music.id}
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500 w-fit">
+                                ID: {music.id}
+                            </span>
+                            {isJpAdvance && (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/50 bg-amber-400/10 px-2.5 py-0.5 text-xs font-semibold text-amber-500 dark:border-amber-400/40 dark:bg-amber-400/15 dark:text-amber-400">
+                                    {t("page.music.jpAdvanceBadge")}
+                                </span>
+                            )}
+                            {exclusiveRegion && (
+                                <span className="inline-flex items-center gap-1 rounded-full border border-purple-400/50 bg-purple-400/10 px-2.5 py-0.5 text-xs font-semibold text-purple-500 dark:border-purple-400/40 dark:bg-purple-400/15 dark:text-purple-400">
+                                    {t(`page.music.exclusiveBadges.${exclusiveRegion}`)}
+                                </span>
+                            )}
+                        </div>
                         {/* Category Tags */}
                         <div className="flex items-center gap-2 flex-wrap">
                             {Array.from(new Set(music.categories ?? [])).map((cat) => {

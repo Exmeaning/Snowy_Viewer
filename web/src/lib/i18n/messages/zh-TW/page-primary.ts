@@ -676,6 +676,13 @@ export const zhTWPagePrimary = {
             supportUnitLabel: "團體歸屬",
         },
         music: {
+            jpAdvanceBadge: "日服先行",
+            exclusiveBadges: {
+                en: "美服獨占",
+                tw: "台服獨占",
+                kr: "韓服獨占",
+                cn: "陸服獨占",
+            },
             badge: "音樂資料庫",
             title: "音樂",
             titleHighlight: "圖鑒",

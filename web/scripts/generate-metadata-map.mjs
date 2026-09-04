@@ -337,7 +337,9 @@ const datasets = [
                 title: m.title,
                 lyricist: m.lyricist,
                 composer: m.composer,
+                arranger: m.arranger || '',
                 asset: m.assetbundleName,
+                publishedAt: m.publishedAt || 0,
             }])
         ),
     },

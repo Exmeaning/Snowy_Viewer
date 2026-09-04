@@ -222,6 +222,17 @@ export interface IMusicMeta {
     pspi_pt_per_hour_multi: number;
 }
 
+// Lightweight music metadata for SEO and SSR pre-rendering
+export interface MusicMeta {
+    title: string;
+    lyricist: string;
+    composer: string;
+    arranger?: string;
+    asset: string;
+    publishedAt?: number;
+    isJpFallback?: boolean;
+}
+
 // Ranking info for display in music items
 export interface IRankingInfo {
     rank: number;
@@ -230,5 +241,25 @@ export interface IRankingInfo {
 
 // Re-export asset URL functions from centralized assets.ts
 export { getChartSvgUrl, getMusicJacketUrl, getMusicVocalAudioUrl } from "@/lib/assets";
+
+// Known global/EN exclusive music IDs
+const KNOWN_GLOBAL_EN_EXCLUSIVE_IDS = new Set<number>([
+    371, 419, 453, 459, 479, 514, 528, 535, 563, 568,
+    598, 599, 602, 609, 640, 657, 673, 694, 701, 725,
+    736, 762, 786, 787,
+]);
+
+/**
+ * Identify if a music ID belongs to a known region-exclusive category.
+ * - 11000 ~ 11999: CN server exclusives
+ * - 10000 ~ 10999: KR server exclusives
+ * - Specific non-JP regular IDs: EN / Global exclusives
+ */
+export function getMusicExclusiveRegion(id: number): "en" | "cn" | "kr" | null {
+    if (id >= 11000 && id < 12000) return "cn";
+    if (id >= 10000 && id < 11000) return "kr";
+    if (KNOWN_GLOBAL_EN_EXCLUSIVE_IDS.has(id)) return "en";
+    return null;
+}
 
 
