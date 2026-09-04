@@ -2207,7 +2207,7 @@ export const zhTWPagePrimary = {
             },
             cardConfigHeaders: {
                 rarity: "稀有度",
-                disable: "停用",
+                enable: "啟用",
                 maxLevel: "滿等",
                 episodes: "前後篇",
                 maxMaster: "突破全滿",

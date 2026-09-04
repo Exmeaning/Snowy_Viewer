@@ -3094,7 +3094,7 @@ export const koKRMessages = {
             },
             cardConfigHeaders: {
                 rarity: "희소성",
-                disable: "비활성화",
+                enable: "활성화",
                 maxLevel: "전체 레벨",
                 episodes: "전후",
                 maxMaster: "완전한 돌파구",

@@ -3073,7 +3073,7 @@ export const enUSMessages = {
             },
             cardConfigHeaders: {
                 rarity: "Rarity",
-                disable: "Disable",
+                enable: "Enable",
                 maxLevel: "Max Lv.",
                 episodes: "Episodes",
                 maxMaster: "Max Mastery",

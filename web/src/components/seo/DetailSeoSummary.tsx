@@ -4,19 +4,17 @@ interface DetailSeoSummaryProps {
 }
 
 /**
- * A short, genuinely visible server-rendered introduction for CSR detail pages.
- * It lives after the interactive page so it does not compete with the richer
- * client UI, while still giving users and crawlers useful initial HTML.
+ * Accessible server-rendered summary for search engines and assistive technology.
+ * Kept visually hidden (sr-only) so it does not interfere with the rich visual UI
+ * while remaining fully indexable in the initial HTML DOM.
  */
 export default function DetailSeoSummary({ title, description }: DetailSeoSummaryProps) {
     return (
         <aside
             aria-label={title}
-            className="mx-auto my-6 max-w-5xl px-4 text-sm leading-7 text-slate-600 dark:text-slate-300"
+            className="sr-only"
         >
-            <p className="rounded-2xl border border-slate-200/70 bg-white/55 px-5 py-4 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-slate-900/45">
-                {description}
-            </p>
+            <p>{description}</p>
         </aside>
     );
 }

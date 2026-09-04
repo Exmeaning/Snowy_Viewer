@@ -1155,7 +1155,7 @@ export default function ScoreControlClient() {
                                             <thead>
                                                 <tr>
                                                     <th className="text-left py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.rarity")}</th>
-                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.disable")}</th>
+                                                    <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.enable")}</th>
                                                     <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.maxLevel")}</th>
                                                     <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.episodes")}</th>
                                                     <th className="py-2 px-2 text-slate-500 font-medium">{t("page.scoreControl.cardConfigHeaders.maxMaster")}</th>

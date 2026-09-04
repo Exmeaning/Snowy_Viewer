@@ -3072,7 +3072,7 @@ export const zhCNMessages = {
             },
             cardConfigHeaders: {
                 rarity: "稀有度",
-                disable: "禁用",
+                enable: "启用",
                 maxLevel: "满级",
                 episodes: "前后篇",
                 maxMaster: "满突破",

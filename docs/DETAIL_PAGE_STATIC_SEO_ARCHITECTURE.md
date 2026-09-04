@@ -111,3 +111,25 @@ flowchart TD
 - [ ] **Step 2: 创建 Server Shell**：在对应组件目录创建 `<Module>DetailServerShell.tsx`，使用标准语义标签（`<h1>`、`<article>`、`<table>`、`<a>`）渲染首屏静态内容。
 - [ ] **Step 3: 改造 Client 组件为 Island**：保留所有滑块、播放器、3D 模型等交互，将静态骨架交由 Server Shell 处理。
 - [ ] **Step 4: 注册 Sitemap 与预热**：确保该路由在 `sitemap-details` 中注册，Go 端的 `WarmupEngine` 将自动纳入闲时预热列表。
+
+---
+
+## 6. SEO 描述文本与视觉隔离规范 (`DetailSeoSummary`)
+
+### 6.1 痛点与历史成因
+在旧版纯 CSR 时代，Next.js 服务端直出的 `<body>` 只有 `<div class="loading-spinner"></div>`。为了避免爬虫收到空页面，各详情页通过 `DetailSeoSummary` 组件在底部硬编码注入了一段模板文字（例如：`查看 MEIKO 的 Project SEKAI 卡牌「酔いどれ知らず」，包含卡牌稀有度、属性、技能、数值与高清卡面资源。 | PJSK WIKI`）。
+但该组件此前被渲染为一个带有背景色、边框与阴影的独立卡片（`rounded-2xl border bg-white/55 shadow-sm`），在页面交互完成后显得格外机械化与突兀。
+
+### 6.2 规范与改造策略
+- **爬虫与屏幕阅读器保留**: 保留 `<aside aria-label={title}><p>{description}</p></aside>` 语义树结构，以便搜索引擎蜘蛛（Googlebot、Bing 等）和无障碍设备提取内容。
+- **视觉完全隐藏 (`sr-only`)**: 组件使用 Tailwind 的 `sr-only` 类，在浏览器可视化渲染流中占位为 0 像素，对人类真实用户完全隐形，消除任何不自然的突兀卡片感：
+  ```tsx
+  export default function DetailSeoSummary({ title, description }: DetailSeoSummaryProps) {
+      return (
+          <aside aria-label={title} className="sr-only">
+              <p>{description}</p>
+          </aside>
+      );
+  }
+  ```
+- **全模块继承**: 所有经过 `defineSeoDetailPage` 包装的详情页统一自动继承此规范，新迁移模块无需做额外处理。

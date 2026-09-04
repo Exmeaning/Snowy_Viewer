@@ -3096,7 +3096,7 @@ export const jaJPMessages = {
       },
       cardConfigHeaders: {
         rarity: 'レアリティ',
-        disable: 'Disable',
+        enable: '有効',
         maxLevel: 'Max Lv.',
         episodes: 'Episodes',
         maxMaster: 'Max Mastery',
