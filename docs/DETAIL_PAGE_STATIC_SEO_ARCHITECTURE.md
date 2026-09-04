@@ -1,22 +1,28 @@
-# 全站详情页静态化与 SEO 增强技术架构方案 (Detail Pages Static & SEO Architecture)
+# 全站详情页“深度语义 SEO 壳 + 纯净 CSR 交互岛”技术架构方案 (Detail Pages Semantic SEO & Clean Island Architecture)
 
-> **目标**：将网站内所有实体详情页（以 `/cards/:id` 为先导，后续推广至音乐、活动、扭蛋、角色、服装等）升级为**完全静态化预渲染**，外界列表页维持高效 CSR，实现极速首屏（<1ms 直出）、长尾关键词全覆盖与极致 SEO 表现，同时通过**“跨版本持久缓存”**与**“闲时抢占式预热引擎”**彻底杜绝爬虫风暴打穿服务器。
-
----
-
-## 1. 核心价值与背景分析
-
-### 1.1 现状痛点
-- **Body 内容为空**：目前各详情页采用 `define<Kind>DetailClientPage`，由于是客户端组件（`"use client"`），在服务端 SSR 阶段初始状态为 `isLoading: true`，实际输出给爬虫的 HTML `<body>` 只有一个 `<div class="loading-spinner"></div>`。
-- **搜索引擎索引受限**：虽然 `<head>` 拥有 Meta 标签与 JSON-LD，但百度、Bing、各类社交分享爬虫（Discord、Twitter/X）不执行 JS；Googlebot 属于两阶段渲染，在沙盒中拉取 10MB+ 的 Masterdata JSON 极易发生超时与丢包，导致关键长尾词（技能名、数值白值、作词作曲、加成属性等）无法被高效索引。
-
-### 1.2 核心业务事实：Masterdata 不可变性（Immutability）
-- **只增不减（Append-only）**：PJSK 官方数据为静态 Masterdata，历史发布的卡牌、歌曲、活动一旦定型，其基础属性永远不会变动。
-- **版本强绑定**：数据变更仅在官方推新活动/新卡池时触发，项目已具备 [`.github/workflows/watch-master-data.yml`](../.github/workflows/watch-master-data.yml) 自动监听版本号并在更新时触发 CI/CD 部署。
+> **核心宗旨**：将网站内所有实体详情页（卡牌、音乐、活动、扭蛋、角色、服装等）升级为**“深度语义 SEO 壳 + 纯净 CSR 交互岛”**架构。
+> - **人类玩家**：交互界面维持 100% 纯净 CSR，读取本地个性化设置（自选区服、主题、滑块等），**零感知差异、零多服冲突、零视觉跳变**；
+> - **搜索引擎爬虫**：首屏直出高密度、全字段的**语义化 HTML（`<article className="sr-only">`）与深度 JSON-LD 结构化数据**，长尾关键词 100% 覆盖；
+> - **网关加速**：结合 Go 网关的**“跨版本持久缓存（180天）”**与**“闲时抢占式预热引擎”**，为搜索引擎提供 `<1ms` 极速直出。
 
 ---
 
-## 2. 总体技术架构：双车道调度与持久化静态闭环
+## 1. 核心价值与背景复盘
+
+### 1.1 传统全量视觉 SSR 的困境与阻抗失配
+在早期的探索中，曾尝试将人类交互的复杂 UI（播放器、3D 模型、卡面特训切换等）直接在服务端用 Mock 假数据强制吐出。但在 PJSK 这类高频跨服、多语言的特殊场景下，存在不可调和的矛盾：
+1. **区服与用户偏好撕裂**：用户在客户端保存了 `server-source`（如中文界面玩日服、查看美服独占曲等），服务端 SSR 无法知晓客户端本地存储；强行预渲染单一服数据会导致视觉闪烁、状态错乱或独占曲报错。
+2. **UI 侵入与维护成本畸高**：每个页面必须拼装复杂的 Mock 实体（如 `createCardFromMeta`, `createMusicFromMeta`），导致客户端代码臃肿且极易引发 Hydration Mismatch。
+
+### 1.2 解决方案：渐进增强与语义隔离（Progressive Enhancement）
+- **人类要视觉与交互**：人类玩家并不需要服务端预渲染死板的按钮，他们需要的是流畅的动画、自己的区服偏好、可播放的音频与即时交互。
+- **爬虫要结构与词汇**：搜索引擎蜘蛛根本不在乎好看的按钮和 CSS 阴影，它们只需要首屏 HTML 中包含：**全称、数值白值、技能全文本、作词作曲编曲、各难度物量与定数、关联活动网状链接**。
+
+因此，将**爬虫语义（Semantic Shell）**与**人类交互（Client Island）**彻底解耦，是多服 Web 应用唯一的银弹解法。
+
+---
+
+## 2. 总体技术架构：双车道调度与语义隔离闭环
 
 ```mermaid
 flowchart TD
@@ -25,7 +31,7 @@ flowchart TD
         CheckCache -- HIT (<1ms) --> RetCached[直接返回本地静态 HTML]
         CheckCache -- MISS --> MarkExtActive[原子计数: activeExternalRequests++]
         MarkExtActive --> HiPriBuild[高优直通车道: 立即调用 Next.js SSR 渲染]
-        HiPriBuild --> SaveDisk[持久化存入磁盘缓存]
+        HiPriBuild --> SaveDisk[持久化存入磁盘缓存 (180天)]
         SaveDisk --> DecExtActive[原子计数: activeExternalRequests--]
         DecExtActive --> RetLive[返回给客户端]
     end
@@ -41,73 +47,85 @@ flowchart TD
         SaveWarm --> Sleep[强制冷却 80ms (平滑 CPU)]
         Sleep --> Loop
     end
+
+    subgraph NextSSR["Next.js 服务端渲染输出结构"]
+        HeadMeta["1. <head> Meta 标签 (Title, OG, Twitter, Canonical)"]
+        JsonLd["2. 深度 JSON-LD Schema (<script type='application/ld+json'>)"]
+        SemanticShell["3. 深度语义 SEO 壳 (<article className='sr-only'>)"]
+        ClientIsland["4. 客户端交互岛 (<ClientIslandComponent />)"]
+    end
+
+    HiPriBuild --> NextSSR
+    LowPriBuild --> NextSSR
 ```
 
-### 2.1 存量缓存免清空：跨版本持久化（Persistent Cache）
-- **历史静态 Chunk 保护**：系统已在 [`scripts/start-container.sh`](../scripts/start-container.sh#L49-L67) 中实现了 `STATIC_ARCHIVE_DIR`，新构建发布时老版本的 `_next/static` chunks 会被自动归档并保留 30 天，由 Go 网关自动提供回退服务。
-- **缓存目录持久化**：HTML 缓存固定存放在 `/app/data/html_cache` 持久卷中，容器重启或重新发布时不再清空该目录。已有上千张老卡在发布后**零重算、终身直接命中磁盘**。
+---
 
-### 2.2 闲时抢占式轮番预构建（Priority-Preemptive Warmup Engine）
-- **外部请求绝对高优（High-Priority Preemption）**：
-  - 用户或外部爬虫请求到达时，享有最高 CPU 优先级。
-  - Go 原生的 `SingleFlight`（并发合并）自动拦截同一 URL 的并发击穿，50 个并发抓取合并为 1 次渲染。
-- **闲时平滑默默预热（Low-Priority Pacing）**：
-  - 后台 Goroutine 仅在 `activeExternalRequests == 0` 的闲时启动。
-  - 单线程并发 + 每次渲染强制休眠 80ms，将服务器 CPU 占用平稳压制在 5%~10%。
-  - 只要检测到有外部请求进入，后台任务**立刻自旋让步避让**，把 100% 算力留给真实请求。
+## 3. 深度语义 SEO 壳规范 (`DetailSemanticSeoShell`)
 
-### 2.3 前端渲染架构：Server Component Shell + Client Island
-- **服务端（Server Component）**：以默认最佳状态输出语义化 HTML（大图 `<img>` 带完整 `alt`、白值属性表格、技能文字说明、关联活动/扭蛋/角色内链 `<a href="...">`）。
-- **客户端（Client Island）**：组件水合（Hydration）后无缝激活富交互（特训前后立绘切换、数值滑动条实时计算、3D 试穿、全屏灯箱）。
+### 3.1 视觉完全隐藏规范 (`sr-only`)
+- 彻底摒弃旧版在页面底部渲染视觉卡片的突兀做法；
+- 根容器使用标准无障碍隐藏类 `sr-only`：
+  ```css
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+  ```
+- **搜索引擎合规性（100% White-Hat SEO）**：
+  - 隐藏内容与页面真实展示的主题 100% 对应（歌曲/卡牌的事实数据），绝非关键词堆砌或恶意障眼法（Cloaking）；
+  - Google / 百度官方明确支持为屏幕阅读器（Screen Reader）与无障碍访问提供的语义文本；
+  - 视力正常的人类玩家在屏幕上完全看不到它（0 像素视觉占用），体验完全零侵扰。
+
+### 3.2 深度语义内容大纲（高价值长尾词提取）
+
+| 模块类型 | 核心提取维度（爬虫可读取的语义标签） |
+|---|---|
+| **卡牌 (`cards`)** | `<h1>` 角色全名与卡牌前缀<br/>`<p>` 稀有度星级、初始与特训后属性分类<br/>`<table>` 满级三值（表现力/技巧/体能）与综合力白值表<br/>`<dl>` 技能全称、初始与满级效果完整描述<br/>`<ul>` 关联活动名称、专属卡池名称、关联服装名称 |
+| **音乐 (`music`)** | `<h1>` 歌曲全名与发音（Pronunciation）<br/>`<p>` 作词、作曲、编曲全称、歌曲时长、BPM、标签<br/>`<table>` 各难度（Easy/Normal/Hard/Expert/Master/Append）等级、NOTE 物量、社区定数<br/>`<dl>` 演唱版本清单（虚拟歌手/各组合 SEKAI 角色版本）<br/>`<ul>` 关联活动、所属乐团 |
+| **活动 (`events`)** | `<h1>` 活动名称与期数<br/>`<p>` 活动类型（Marathon/Cheer/Carnival）、开始与结束时间<br/>`<dl>` 加成角色清单、加成属性说明、活动专属故事简介<br/>`<ul>` 排位奖励卡牌清单、关联卡池 |
+| **扭蛋 (`gacha`)** | `<h1>` 卡池全名<br/>`<p>` 卡池类型、开放起止时间、抽取保底与天井规则<br/>`<ul>` Pick-Up 特别 UP 卡牌清单与对应概率 |
+| **服装 (`costumes`)** | `<h1>` 服装名称与所属角色<br/>`<dl>` 部件分类（发型/服装/配件）、获取方式与兑换要求<br/>`<p>` 设计大赛来源与作者致谢信息 |
+| **角色 (`character`)** | `<h1>` 角色全名与罗马音<br/>`<dl>` 个人资料（所属乐团、生日、身高、声优/CV、性格爱好）<br/>`<ul>` 代表乐曲清单、相关四格漫画 |
 
 ---
 
-## 3. 落地实施路线（以 `/cards/[id]` 为标杆先导）
+## 4. 全站各详情页任务跟踪表 (Roadmap & Checklist)
 
-### Phase 1: 卡牌详情服务端语义渲染改造
-1. **扩展构建期轻量元数据**：
-   - 在 [`web/scripts/generate-metadata-map.mjs`](../web/scripts/generate-metadata-map.mjs) 中补充卡牌的【满级三值与综合力、技能名、技能描述模板、关联活动/卡池 ID】。
-   - 在 [`web/src/lib/metadata.ts`](../web/src/lib/metadata.ts) 扩展 `CardMeta`，实现 Node.js 服务端微秒级从内存直接读取，零网络请求。
-2. **新建卡牌服务端语义组件**：
-   - 创建 `CardDetailServerShell.tsx`，在首屏直接渲染结构化 HTML，代替原本的 loading spinner。
-3. **改造客户端交互岛**：
-   - 保持 [`web/src/app/cards/[id]/client.tsx`](../web/src/app/cards/%5Bid%5D/client.tsx) 的所有动态交互，首屏接收服务端预注入数据，消除白屏等待。
+> **开发规范**：每个详情页只增补其服务端 SEO 语义壳与 JSON-LD，**绝不侵入修改其客户端富交互逻辑**。完成后及时更新勾选状态。
 
-### Phase 2: Go 端缓存持久化与闲时预热引擎
-1. **持久化改造**：
-   - 调整 [`internal/htmlcache/htmlcache.go`](../internal/htmlcache/htmlcache.go)，启动时保留现有缓存目录并加载已有条目。
-2. **构建预热引擎**：
-   - 新增 `internal/htmlcache/warmup.go`，实现 `activeExternalRequests` 流量感知与闲时预热 Goroutine。
-3. **缓存周期调整**：
-   - [`web/src/lib/page-cache-policy.ts`](../web/src/lib/page-cache-policy.ts) 中的 `DETAIL_ORIGIN_MAX_AGE_SECONDS` 上调为长周期（如 180 天），与版本生命周期对齐。
-
----
-
-## 4. 全站其他详情页迁移蓝图 (Multi-Page Migration Roadmap)
-
-标杆落地并验证稳定后，其余 10 类详情页均可按照统一范式进行标准化平移：
-
-| 模块路由 | 页面类型 | 服务端静态化语义核心（SEO 高价值内容） | 客户端交互岛保留（Client Island） |
-|---|---|---|---|
-| **`/cards/[id]`** | 卡牌详情 | 立绘大图、满级白值表格、技能全文本、角色与活动内链 | 特训前后立绘切换、等级滑块计算、3D 服装预览 |
-| **`/music/[id]`** | 歌曲详情 | 封面大图、作词/作曲/编曲、各难度物量与等级表、关联活动 | 音频试听播放器、谱面预览切换、3D MV 查看器 |
-| **`/events/[id]`** | 活动详情 | 横幅大图、活动类型、加成属性/角色、排名奖励、关联卡牌 | 活动倒计时、实时积分榜单、卡组加成计算器 |
-| **`/gacha/[id]`** | 扭蛋详情 | 卡池 Logo/横幅、UP 卡牌清单、抽取规则、关联活动 | 模拟抽卡交互、天井兑换清单 |
-| **`/costumes/[id]`** | 服装详情 | 服装名称、所属角色、获取方式、部件分类说明 | 3D 模型渲染器、染色切换、部件穿戴模拟 |
-| **`/character/[id]`** | 角色详情 | 角色立绘、个人档案（生日/身高/性格）、所属乐团、代表曲目 | 语音试听、角色羁绊等级计算器、卡牌图鉴筛选 |
-| **`/exchanges/[id]`** | 兑换所详情 | 兑换所分类、可兑换道具清单、所需代币、开启时间 | 道具兑换数量计算器、库存状态 |
-| **`/live/[id]`** | Virtual Live | 演出海报、登场角色、曲目列表、场次时间表 | 场次提醒订阅、动作预览 |
-| **`/manga/[id]`** | 漫画/四格 | 漫画正文图片（带 `alt`）、期数标题、登场角色关联 | 翻页阅读器、全屏放大、多语言译文切换 |
-| **`/mysekai/[id]`** | 家具/设施 | 家具缩略图、分类、摆放限制、制作材料清单 | 3D 家具预览、制作资源计算器 |
-| **`/guides/[id]`** | 攻略文章 | 完整 Markdown 文章正文、目录结构、作者、发布时间 | 评论区互动、目录滚动高亮、代码/图片交互 |
+| 模块路由 | 页面类型 | 爬虫语义核心内容 (Semantic Shell) | 改造状态 | 完成日期 |
+|---|---|---|:---:|:---:|
+| **`/cards/[id]`** | 卡牌详情 | 角色名、满级白值表格、技能全描述、关联活动/卡池 | **[x] 已完成** | 2026-09-04 |
+| **`/music/[id]`** | 歌曲详情 | 作词作曲编曲、全难度等级物量表、BPM、演唱阵容 | **[x] 已完成** | 2026-09-04 |
+| **`/events/[id]`** | 活动详情 | 活动类型、起止时间、加成属性角色、排位奖励卡牌 | **[ ] 待改造** | - |
+| **`/gacha/[id]`** | 扭蛋详情 | 卡池类型、UP 卡牌清单、规则与保底说明 | **[ ] 待改造** | - |
+| **`/costumes/[id]`** | 服装详情 | 服装所属角色、部件清单、获取方式说明 | **[ ] 待改造** | - |
+| **`/character/[id]`** | 角色详情 | 个人档案（生日/身高/CV）、所属乐团、代表曲目 | **[ ] 待改造** | - |
+| **`/exchanges/[id]`** | 兑换所详情 | 兑换所分类、可兑换道具清单、消耗代币说明 | **[ ] 待改造** | - |
+| **`/live/[id]`** | Virtual Live | 演出海报、登场角色、曲目列表、场次时间表 | **[ ] 待改造** | - |
+| **`/manga/[id]`** | 漫画/四格 | 漫画标题、期数、登场角色关联 | **[ ] 待改造** | - |
+| **`/mysekai/[id]`** | 家具/设施 | 家具分类、摆放限制、制作材料清单说明 | **[ ] 待改造** | - |
+| **`/lyrics/[musicId]`** | 歌词详情 | 歌词全文大纲、作词者、关联歌曲信息 | **[ ] 待改造** | - |
+| **`/guides/[id]`** | 攻略文章 | 攻略标题、分类、作者、文章正文大纲 | **[ ] 待改造** | - |
 
 ---
 
-## 5. 统一标准化迁移指南（Checklist for Future Pages）
+## 5. 统一标准化落地流程 (Standard 3-Step Recipe)
 
-未来为任一模块（如 `music/[id]`）实施迁移时，遵循以下 4 步法：
+为任一模块（以 `cards/[id]` 或 `music/[id]` 为例）落地实施时，仅需遵循极其干净的 3 步：
 
-- [ ] **Step 1: 紧凑元数据提取**：在 `generate-metadata-map.mjs` 中为该实体提取 SEO 所需的核心文本与数值，写入对应本地元数据。
-- [ ] **Step 2: 创建 Server Shell**：在对应组件目录创建 `<Module>DetailServerShell.tsx`，使用标准语义标签（`<h1>`、`<article>`、`<table>`、`<a>`）渲染首屏静态内容。
-- [ ] **Step 3: 改造 Client 组件为 Island**：保留所有滑块、播放器、3D 模型等交互，将静态骨架交由 Server Shell 处理。
-- [ ] **Step 4: 注册 Sitemap 与预热**：确保该路由在 `sitemap-details` 中注册，Go 端的 `WarmupEngine` 将自动纳入闲时预热列表。
+1. **Step 1: 编写语义壳组件**：
+   - 创建或扩展 `<Kind>DetailSemanticShell.tsx`，使用标准语义 HTML（`<h1>`, `<table>`, `<dl>`, `<ul>`）渲染高密度文本事实。
+   - 外层包裹 `className="sr-only"`。
+2. **Step 2: 在服务端工厂挂载**：
+   - 在 `web/src/lib/seo-detail-metadata.ts` 对应的 preset 中挂载该语义组件。
+   - 服务端输出的 HTML 自动包含：`<head>` Meta + JSON-LD + `<article className="sr-only">` 语义壳。
+3. **Step 3: 保持客户端纯净**：
+   - 客户端组件维持原本最自然的 CSR 逻辑，不写 Mock 假数据，无缝读取玩家 `server-source` 正常交互。
+

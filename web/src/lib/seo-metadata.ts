@@ -444,7 +444,14 @@ export function defineSeoDynamicPage<TData, TParams extends Record<string, strin
                 DetailSeoSummaryProvider,
                 {
                     summary: structuredData.summary !== false
-                        ? { title: detailName, description }
+                        ? {
+                            title: detailName,
+                            description,
+                            semantic: {
+                                kind: metadataOptions.routePrefix,
+                                data,
+                            },
+                        }
                         : null,
                 },
                 render({ params }),
@@ -665,7 +672,14 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
                 DetailSeoSummaryProvider,
                 {
                     summary: structuredData.summary !== false
-                        ? { title: detailName, description }
+                        ? {
+                            title: detailName,
+                            description,
+                            semantic: {
+                                kind: metadataOptions.kind,
+                                data,
+                            },
+                        }
                         : null,
                 },
                 render({ params, initialData: data, id: numericId }),

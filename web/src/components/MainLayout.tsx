@@ -396,6 +396,7 @@ export default function MainLayout({
                         <DetailSeoSummary
                             title={detailSeoSummary.title}
                             description={detailSeoSummary.description}
+                            semantic={detailSeoSummary.semantic}
                         />
                     )}
                 </div>

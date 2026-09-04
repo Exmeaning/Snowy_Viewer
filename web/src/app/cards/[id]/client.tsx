@@ -7,7 +7,6 @@ import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
 import {
     ICardInfo,
-    CardMeta,
     ISkillInfo,
     ATTR_COLORS,
     ATTR_NAMES,
@@ -18,7 +17,6 @@ import {
     getCardDefaultTrainedStatus,
     getRarityNumber,
     CardAttribute,
-    CardRarityType,
     SUPPORT_UNIT_LABEL_KEYS,
 } from "@/types/types";
 import { getCardFullUrl, getCardThumbnailUrl, getEventBannerUrl, getGachaLogoUrl, getCardGachaVoiceUrl, getCostumeThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
@@ -60,57 +58,7 @@ interface RelatedGachaInfo {
     assetbundleName: string;
 }
 
-function createCardFromMeta(id: number, meta: CardMeta): ICardInfo {
-    const rarity = meta.rarity as CardRarityType;
-    const maxLevelInfo = MAX_LEVELS[rarity] || { normal: 50 };
-    const maxLvl = maxLevelInfo.trained || maxLevelInfo.normal;
-    const isTrainable = !!maxLevelInfo.trained;
-
-    const normalPower = meta.power?.normal || { performance: 0, technique: 0, stamina: 0, total: 0 };
-    const trainedPower = meta.power?.trained || normalPower;
-
-    const bonus1 = isTrainable && trainedPower.performance > normalPower.performance ? trainedPower.performance - normalPower.performance : (isTrainable ? 1 : 0);
-    const bonus2 = isTrainable && trainedPower.technique > normalPower.technique ? trainedPower.technique - normalPower.technique : (isTrainable ? 1 : 0);
-    const bonus3 = isTrainable && trainedPower.stamina > normalPower.stamina ? trainedPower.stamina - normalPower.stamina : (isTrainable ? 1 : 0);
-
-    const param1 = new Array(maxLvl).fill(normalPower.performance);
-    const param2 = new Array(maxLvl).fill(normalPower.technique);
-    const param3 = new Array(maxLvl).fill(normalPower.stamina);
-
-    return {
-        id,
-        seq: id,
-        characterId: meta.characterId,
-        cardRarityType: rarity,
-        specialTrainingPower1BonusFixed: bonus1,
-        specialTrainingPower2BonusFixed: bonus2,
-        specialTrainingPower3BonusFixed: bonus3,
-        initialSpecialTrainingStatus: "not_doing",
-        attr: meta.attr as CardAttribute,
-        supportUnit: "none",
-        skillId: 0,
-        cardSkillName: meta.skillName || "",
-        specialTrainingSkillId: undefined,
-        specialTrainingSkillName: undefined,
-        prefix: meta.prefix,
-        assetbundleName: meta.asset,
-        gachaPhrase: "",
-        archiveDisplayType: "normal",
-        archivePublishedAt: meta.releaseAt || 0,
-        cardParameters: {
-            param1,
-            param2,
-            param3,
-        },
-        specialTrainingCosts: [],
-        masterLessonAchieveResources: [],
-        releaseAt: meta.releaseAt || 0,
-        cardSupplyId: 0,
-        cardSupplyType: "normal",
-    };
-}
-
-export default function CardDetailPage({ initialData, id }: { initialData?: CardMeta | null; id?: number }) {
+export default function CardDetailPage({ id }: { initialData?: unknown; id?: number }) {
     const { t, formatDate: formatLocaleDate } = useI18n();
     const params = useParams();
     const cardId = id ?? Number(params?.id);
@@ -119,13 +67,13 @@ export default function CardDetailPage({ initialData, id }: { initialData?: Card
     const { setDetailName } = useBreadcrumb();
 
     const [isScreenshotMode, setIsScreenshotMode] = useState(false);
-    const [card, setCard] = useState<ICardInfo | null>(() => (initialData && cardId ? createCardFromMeta(cardId, initialData) : null));
-    const [skillDescription, setSkillDescription] = useState<string | null>(initialData?.skillDesc || null);
+    const [card, setCard] = useState<ICardInfo | null>(null);
+    const [skillDescription, setSkillDescription] = useState<string | null>(null);
     const [supplyName, setSupplyName] = useState<string>(""); // Added state
-    const [isLoading, setIsLoading] = useState(!initialData);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
-    const [isJpAdvance, setIsJpAdvance] = useState(() => Boolean(initialData?.isJpFallback));
+    const [isJpAdvance, setIsJpAdvance] = useState(false);
 
     // Handle screenshot mode from query string after mount
     useEffect(() => {
@@ -137,19 +85,13 @@ export default function CardDetailPage({ initialData, id }: { initialData?: Card
 
     // View states
     const [showTrained, setShowTrained] = useState(false);
-    const [cardLevel, setCardLevel] = useState(() => {
-        if (!initialData) return 1;
-        const maxLevelInfo = MAX_LEVELS[initialData.rarity];
-        return maxLevelInfo?.trained || maxLevelInfo?.normal || 1;
-    });
+    const [cardLevel, setCardLevel] = useState(1);
     const [skillLevel, setSkillLevel] = useState(1);
     const [skillData, setSkillData] = useState<ISkillInfo | null>(null);
     const [trainedSkillData, setTrainedSkillData] = useState<ISkillInfo | null>(null);
     const [trainedSkillDescription, setTrainedSkillDescription] = useState<string | null>(null);
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
-    const [relatedEvent, setRelatedEvent] = useState<{ id: number; name: string; assetbundleName: string } | null>(() => (
-        initialData?.event ? { id: initialData.event.id, name: initialData.event.name, assetbundleName: initialData.event.asset } : null
-    ));
+    const [relatedEvent, setRelatedEvent] = useState<{ id: number; name: string; assetbundleName: string } | null>(null);
     const [relatedGachas, setRelatedGachas] = useState<RelatedGachaInfo[]>([]);
     const [relatedCostumes, setRelatedCostumes] = useState<ICostumeInfo[]>([]);
     const [hasCardStory, setHasCardStory] = useState(false);
@@ -169,9 +111,7 @@ export default function CardDetailPage({ initialData, id }: { initialData?: Card
     useEffect(() => {
         async function fetchCard() {
             try {
-                if (!initialData) {
-                    setIsLoading(true);
-                }
+                setIsLoading(true);
                 const [cardsData, skillsData, suppliesData, cardEpisodesData] = await Promise.all([
                     fetchMasterData<ICardInfo[]>("cards.json"),
                     fetchMasterData<ISkillInfo[]>("skills.json"),
@@ -205,10 +145,7 @@ export default function CardDetailPage({ initialData, id }: { initialData?: Card
                 }
 
                 if (!foundCard) {
-                    if (!initialData) {
-                        throw new Error(`Card ${cardId} not found`);
-                    }
-                    return;
+                    throw new Error(`Card ${cardId} not found`);
                 }
 
                 // Check if card has story episodes
@@ -271,9 +208,7 @@ export default function CardDetailPage({ initialData, id }: { initialData?: Card
                 setError(null);
             } catch (err) {
                 console.error("Error fetching card:", err);
-                if (!initialData) {
-                    setError(err instanceof Error ? err.message : "Unknown error");
-                }
+                setError(err instanceof Error ? err.message : "Unknown error");
             } finally {
                 setIsLoading(false);
             }
@@ -281,7 +216,7 @@ export default function CardDetailPage({ initialData, id }: { initialData?: Card
         if (cardId) {
             fetchCard();
         }
-    }, [cardId, t, initialData]);
+    }, [cardId, t]);
 
     // Computed values
     const trainable = card ? isTrainableCard(card) : false;

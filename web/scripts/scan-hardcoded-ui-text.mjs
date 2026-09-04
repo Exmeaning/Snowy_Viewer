@@ -31,6 +31,7 @@ const ALLOWLIST = new Map([
     ["src/lib/storyLoader.ts", "Masterdata and story translation fallback map"],
     ["src/lib/team-links.ts", "Team members and official organization links"],
     ["src/vendor/sekai-sus2img/renderer.ts", "Vendored upstream chart renderer (GPL-3); Japanese 譜面確認 label matches the in-game chart-check convention"],
+    ["src/components/seo/DetailSemanticSeoShell.tsx", "Project SEKAI crawler semantic shell fact taxonomy and stat tables"],
 ]);
 
 const COMMENT_ONLY_ALLOWLIST = new Map([

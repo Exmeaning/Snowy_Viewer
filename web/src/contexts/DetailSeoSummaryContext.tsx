@@ -2,9 +2,15 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 
+export interface DetailSeoSemanticPayload {
+    kind: string;
+    data: unknown;
+}
+
 export interface DetailSeoSummaryValue {
     title: string;
     description: string;
+    semantic?: DetailSeoSemanticPayload;
 }
 
 const DetailSeoSummaryContext = createContext<DetailSeoSummaryValue | null>(null);
