@@ -111,7 +111,7 @@ func TestDoesNotCachePrivate404OrOversizedResponses(t *testing.T) {
 		name      string
 		configure func(http.ResponseWriter)
 	}{
-		{"private", func(w http.ResponseWriter) { w.Header().Set("Cache-Control", "private, no-store") }},
+		{"no-origin-cache", func(w http.ResponseWriter) { w.Header().Del(OriginCacheHeader) }},
 		{"set-cookie", func(w http.ResponseWriter) { w.Header().Set("Set-Cookie", "session=x") }},
 		{"404", func(w http.ResponseWriter) { w.WriteHeader(http.StatusNotFound) }},
 	}

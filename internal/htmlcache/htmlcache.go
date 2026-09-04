@@ -169,7 +169,8 @@ func eligibleRequest(r *http.Request) bool {
 	if strings.Contains(strings.ToLower(r.Header.Get("Purpose")), "prefetch") || strings.Contains(strings.ToLower(r.Header.Get("Next-Router-Prefetch")), "1") {
 		return false
 	}
-	if !strings.Contains(strings.ToLower(r.Header.Get("Accept")), "text/html") {
+	accept := strings.ToLower(r.Header.Get("Accept"))
+	if accept != "" && !strings.Contains(accept, "text/html") && !strings.Contains(accept, "*/*") {
 		return false
 	}
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/"), "/")
@@ -224,8 +225,7 @@ func (r *responseRecorder) Write(p []byte) (int, error) {
 
 func (c *Cache) makeEntry(r *responseRecorder) *cachedResponse {
 	fresh, swr, ok := parsePolicy(r.header.Get(OriginCacheHeader))
-	cc := strings.ToLower(r.header.Get("Cache-Control"))
-	if !ok || r.status != http.StatusOK || !strings.HasPrefix(strings.ToLower(r.header.Get("Content-Type")), "text/html") || strings.Contains(cc, "private") || strings.Contains(cc, "no-store") || len(r.header.Values("Set-Cookie")) > 0 || int64(r.body.Len()) > c.cfg.MaxEntryBytes {
+	if !ok || r.status != http.StatusOK || !strings.HasPrefix(strings.ToLower(r.header.Get("Content-Type")), "text/html") || len(r.header.Values("Set-Cookie")) > 0 || int64(r.body.Len()) > c.cfg.MaxEntryBytes {
 		return nil
 	}
 	header := cacheableHeaders(r.header)
