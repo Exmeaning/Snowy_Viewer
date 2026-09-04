@@ -6,10 +6,10 @@ import (
 )
 
 type Config struct {
-	RedisURL         string
-	Port             string
-	MasterDataPath   string
-	FrontendProxyURL string
+	RedisURL            string
+	Port                string
+	MasterDataPath      string
+	FrontendProxyURL    string
 	HTMLCacheDir        string
 	HTMLCacheMaxGB      int
 	HTMLCacheEntries    int

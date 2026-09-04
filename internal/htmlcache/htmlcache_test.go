@@ -285,5 +285,3 @@ func TestWarmupPopulatesCache(t *testing.T) {
 		}
 	}
 }
-
-
