@@ -1502,6 +1502,7 @@ export const enUSMessages = {
             },
         },
         cards: {
+            jpAdvanceBadge: "JP Advance",
             badge: "Card Database",
             title: "Card",
             titleHighlight: "Encyclopedia",

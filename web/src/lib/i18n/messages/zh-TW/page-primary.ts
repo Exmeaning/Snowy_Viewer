@@ -631,6 +631,7 @@ export const zhTWPagePrimary = {
             },
         },
         cards: {
+            jpAdvanceBadge: "日服先行",
             badge: "卡牌資料庫",
             title: "卡牌",
             titleHighlight: "圖鑒",

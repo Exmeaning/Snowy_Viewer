@@ -1501,6 +1501,7 @@ export const jaJPMessages = {
       }
     },
     cards: {
+      jpAdvanceBadge: '先行登場',
       badge: 'カードデータベース',
       title: 'カード',
       titleHighlight: 'Encyclopedia',

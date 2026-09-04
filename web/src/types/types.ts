@@ -104,6 +104,38 @@ export interface ICardInfo {
     cardSupplyType: string;
 }
 
+export interface CardPowerItem {
+    performance: number;
+    technique: number;
+    stamina: number;
+    total: number;
+}
+
+export interface CardPowerMeta {
+    normal?: CardPowerItem;
+    trained?: CardPowerItem;
+}
+
+export interface CardEventMeta {
+    id: number;
+    name: string;
+    asset: string;
+}
+
+export interface CardMeta {
+    prefix: string;
+    characterId: number;
+    rarity: string;
+    attr: string;
+    asset: string;
+    releaseAt?: number;
+    skillName?: string;
+    skillDesc?: string;
+    power?: CardPowerMeta;
+    event?: CardEventMeta;
+    isJpFallback?: boolean;
+}
+
 // Character data
 export interface IGameChara {
     id: number;

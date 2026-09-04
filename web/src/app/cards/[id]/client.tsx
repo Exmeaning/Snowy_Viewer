@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import Link from "@/components/LocalizedLink";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import MainLayout from "@/components/MainLayout";
 import {
     ICardInfo,
+    CardMeta,
     ISkillInfo,
     ATTR_COLORS,
     ATTR_NAMES,
@@ -17,6 +18,7 @@ import {
     getCardDefaultTrainedStatus,
     getRarityNumber,
     CardAttribute,
+    CardRarityType,
     SUPPORT_UNIT_LABEL_KEYS,
 } from "@/types/types";
 import { getCardFullUrl, getCardThumbnailUrl, getEventBannerUrl, getGachaLogoUrl, getCardGachaVoiceUrl, getCostumeThumbnailUrl, getCharacterIconUrl } from "@/lib/assets";
@@ -58,32 +60,96 @@ interface RelatedGachaInfo {
     assetbundleName: string;
 }
 
-export default function CardDetailPage() {
+function createCardFromMeta(id: number, meta: CardMeta): ICardInfo {
+    const rarity = meta.rarity as CardRarityType;
+    const maxLevelInfo = MAX_LEVELS[rarity] || { normal: 50 };
+    const maxLvl = maxLevelInfo.trained || maxLevelInfo.normal;
+    const isTrainable = !!maxLevelInfo.trained;
+
+    const normalPower = meta.power?.normal || { performance: 0, technique: 0, stamina: 0, total: 0 };
+    const trainedPower = meta.power?.trained || normalPower;
+
+    const bonus1 = isTrainable && trainedPower.performance > normalPower.performance ? trainedPower.performance - normalPower.performance : (isTrainable ? 1 : 0);
+    const bonus2 = isTrainable && trainedPower.technique > normalPower.technique ? trainedPower.technique - normalPower.technique : (isTrainable ? 1 : 0);
+    const bonus3 = isTrainable && trainedPower.stamina > normalPower.stamina ? trainedPower.stamina - normalPower.stamina : (isTrainable ? 1 : 0);
+
+    const param1 = new Array(maxLvl).fill(normalPower.performance);
+    const param2 = new Array(maxLvl).fill(normalPower.technique);
+    const param3 = new Array(maxLvl).fill(normalPower.stamina);
+
+    return {
+        id,
+        seq: id,
+        characterId: meta.characterId,
+        cardRarityType: rarity,
+        specialTrainingPower1BonusFixed: bonus1,
+        specialTrainingPower2BonusFixed: bonus2,
+        specialTrainingPower3BonusFixed: bonus3,
+        initialSpecialTrainingStatus: "not_doing",
+        attr: meta.attr as CardAttribute,
+        supportUnit: "none",
+        skillId: 0,
+        cardSkillName: meta.skillName || "",
+        specialTrainingSkillId: undefined,
+        specialTrainingSkillName: undefined,
+        prefix: meta.prefix,
+        assetbundleName: meta.asset,
+        gachaPhrase: "",
+        archiveDisplayType: "normal",
+        archivePublishedAt: meta.releaseAt || 0,
+        cardParameters: {
+            param1,
+            param2,
+            param3,
+        },
+        specialTrainingCosts: [],
+        masterLessonAchieveResources: [],
+        releaseAt: meta.releaseAt || 0,
+        cardSupplyId: 0,
+        cardSupplyType: "normal",
+    };
+}
+
+export default function CardDetailPage({ initialData, id }: { initialData?: CardMeta | null; id?: number }) {
     const { t, formatDate: formatLocaleDate } = useI18n();
     const params = useParams();
-    const searchParams = useSearchParams();
-    const cardId = Number(params.id);
-    const isScreenshotMode = searchParams.get('mode') === 'screenshot';
+    const cardId = id ?? Number(params?.id);
     const { assetSource } = useTheme();
     const { t: translateGameData } = useTranslation();
     const { setDetailName } = useBreadcrumb();
 
-    const [card, setCard] = useState<ICardInfo | null>(null);
-    const [skillDescription, setSkillDescription] = useState<string | null>(null);
+    const [isScreenshotMode, setIsScreenshotMode] = useState(false);
+    const [card, setCard] = useState<ICardInfo | null>(() => (initialData && cardId ? createCardFromMeta(cardId, initialData) : null));
+    const [skillDescription, setSkillDescription] = useState<string | null>(initialData?.skillDesc || null);
     const [supplyName, setSupplyName] = useState<string>(""); // Added state
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(!initialData);
     const [error, setError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
+    const [isJpAdvance, setIsJpAdvance] = useState(() => Boolean(initialData?.isJpFallback));
+
+    // Handle screenshot mode from query string after mount
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const sp = new URLSearchParams(window.location.search);
+            setIsScreenshotMode(sp.get("mode") === "screenshot");
+        }
+    }, []);
 
     // View states
     const [showTrained, setShowTrained] = useState(false);
-    const [cardLevel, setCardLevel] = useState(1);
+    const [cardLevel, setCardLevel] = useState(() => {
+        if (!initialData) return 1;
+        const maxLevelInfo = MAX_LEVELS[initialData.rarity];
+        return maxLevelInfo?.trained || maxLevelInfo?.normal || 1;
+    });
     const [skillLevel, setSkillLevel] = useState(1);
     const [skillData, setSkillData] = useState<ISkillInfo | null>(null);
     const [trainedSkillData, setTrainedSkillData] = useState<ISkillInfo | null>(null);
     const [trainedSkillDescription, setTrainedSkillDescription] = useState<string | null>(null);
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
-    const [relatedEvent, setRelatedEvent] = useState<{ id: number; name: string; assetbundleName: string } | null>(null);
+    const [relatedEvent, setRelatedEvent] = useState<{ id: number; name: string; assetbundleName: string } | null>(() => (
+        initialData?.event ? { id: initialData.event.id, name: initialData.event.name, assetbundleName: initialData.event.asset } : null
+    ));
     const [relatedGachas, setRelatedGachas] = useState<RelatedGachaInfo[]>([]);
     const [relatedCostumes, setRelatedCostumes] = useState<ICostumeInfo[]>([]);
     const [hasCardStory, setHasCardStory] = useState(false);
@@ -103,7 +169,9 @@ export default function CardDetailPage() {
     useEffect(() => {
         async function fetchCard() {
             try {
-                setIsLoading(true);
+                if (!initialData) {
+                    setIsLoading(true);
+                }
                 const [cardsData, skillsData, suppliesData, cardEpisodesData] = await Promise.all([
                     fetchMasterData<ICardInfo[]>("cards.json"),
                     fetchMasterData<ISkillInfo[]>("skills.json"),
@@ -111,17 +179,43 @@ export default function CardDetailPage() {
                     fetchMasterData<{ cardId: number }[]>("cardEpisodes.json").catch(() => []),
                 ]);
 
-                const foundCard = cardsData.find(c => c.id === cardId);
+                let foundCard = cardsData.find(c => c.id === cardId);
+                let resolvedSkills = skillsData;
+                let resolvedSupplies = suppliesData;
+                let resolvedEpisodes = cardEpisodesData;
 
                 if (!foundCard) {
-                    throw new Error(`Card ${cardId} not found`);
+                    try {
+                        const [jpCards, jpSkills, jpSupplies, jpEpisodes] = await Promise.all([
+                            fetchMasterData<ICardInfo[]>("cards.json", false, "jp"),
+                            fetchMasterData<ISkillInfo[]>("skills.json", false, "jp"),
+                            fetchMasterData<CardSupplyInfo[]>("cardSupplies.json", false, "jp").catch(() => []),
+                            fetchMasterData<{ cardId: number }[]>("cardEpisodes.json", false, "jp").catch(() => []),
+                        ]);
+                        foundCard = jpCards.find(c => c.id === cardId);
+                        if (foundCard) {
+                            resolvedSkills = jpSkills;
+                            resolvedSupplies = jpSupplies;
+                            resolvedEpisodes = jpEpisodes;
+                            setIsJpAdvance(true);
+                        }
+                    } catch (jpErr) {
+                        console.warn("JP fallback fetch failed:", jpErr);
+                    }
+                }
+
+                if (!foundCard) {
+                    if (!initialData) {
+                        throw new Error(`Card ${cardId} not found`);
+                    }
+                    return;
                 }
 
                 // Check if card has story episodes
-                setHasCardStory(cardEpisodesData.some(e => e.cardId === cardId));
+                setHasCardStory(resolvedEpisodes.some(e => e.cardId === cardId));
 
                 // Handle Supply Type
-                const supply = suppliesData.find((s) => s.id === foundCard.cardSupplyId);
+                const supply = resolvedSupplies.find((s) => s.id === foundCard.cardSupplyId);
                 if (supply && supply.cardSupplyType) {
                     const localizedSupply = t("common.cardSupplyTypes." + supply.cardSupplyType);
                     setSupplyName(localizedSupply !== "common.cardSupplyTypes." + supply.cardSupplyType ? localizedSupply : supply.cardSupplyType);
@@ -131,7 +225,7 @@ export default function CardDetailPage() {
 
                 // ... (rest of logic)
                 // Normal skill
-                const skill = skillsData.find((s) => s.id === foundCard.skillId);
+                const skill = resolvedSkills.find((s) => s.id === foundCard.skillId);
                 if (skill) {
                     setSkillData(skill);
                     // Default to max level available in skill effects details
@@ -140,7 +234,7 @@ export default function CardDetailPage() {
                 }
                 // Trained skill (after blooming)
                 if (foundCard.specialTrainingSkillId) {
-                    const trainedSkill = skillsData.find((s) => s.id === foundCard.specialTrainingSkillId);
+                    const trainedSkill = resolvedSkills.find((s) => s.id === foundCard.specialTrainingSkillId);
                     if (trainedSkill) {
                         setTrainedSkillData(trainedSkill);
                     }
@@ -177,7 +271,9 @@ export default function CardDetailPage() {
                 setError(null);
             } catch (err) {
                 console.error("Error fetching card:", err);
-                setError(err instanceof Error ? err.message : "Unknown error");
+                if (!initialData) {
+                    setError(err instanceof Error ? err.message : "Unknown error");
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -185,7 +281,7 @@ export default function CardDetailPage() {
         if (cardId) {
             fetchCard();
         }
-    }, [cardId, t]);
+    }, [cardId, t, initialData]);
 
     // Computed values
     const trainable = card ? isTrainableCard(card) : false;
@@ -385,6 +481,12 @@ export default function CardDetailPage() {
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-slate-100 rounded-full text-xs font-mono text-slate-500 w-fit">
                             ID: {card.id}
                         </span>
+                        {isJpAdvance && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-100 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 rounded-full text-xs font-semibold w-fit border border-rose-200 dark:border-rose-900/50">
+                                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
+                                {t("page.cards.jpAdvanceBadge")}
+                            </span>
+                        )}
                         <div className="flex items-center gap-2">
                             {/* Attribute Badge */}
                             <div

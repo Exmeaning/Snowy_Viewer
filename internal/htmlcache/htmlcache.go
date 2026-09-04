@@ -6,6 +6,8 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -13,6 +15,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -24,6 +27,7 @@ type Config struct {
 	MaxEntries    int
 	MaxEntryBytes int64
 	FetchTimeout  time.Duration
+	Persistent    bool
 }
 
 type cachedResponse struct {
@@ -54,11 +58,12 @@ type Cache struct {
 	now   func() time.Time
 	ready bool
 
-	mu      sync.Mutex
-	items   map[string]*list.Element
-	lru     *list.List
-	bytes   int64
-	flights map[string]*flight
+	mu             sync.Mutex
+	items          map[string]*list.Element
+	lru            *list.List
+	bytes          int64
+	flights        map[string]*flight
+	activeRequests atomic.Int64
 }
 
 func New(next http.Handler, cfg Config) *Cache {
@@ -77,11 +82,35 @@ func New(next http.Handler, cfg Config) *Cache {
 	if cfg.FetchTimeout <= 0 {
 		cfg.FetchTimeout = 30 * time.Second
 	}
-	ready := os.RemoveAll(cfg.Dir) == nil && os.MkdirAll(cfg.Dir, 0o755) == nil
-	return &Cache{next: next, cfg: cfg, now: time.Now, ready: ready, items: make(map[string]*list.Element), lru: list.New(), flights: make(map[string]*flight)}
+
+	var ready bool
+	if cfg.Persistent {
+		ready = os.MkdirAll(cfg.Dir, 0o755) == nil
+		cleanOrphanTempFiles(cfg.Dir)
+	} else {
+		ready = os.RemoveAll(cfg.Dir) == nil && os.MkdirAll(cfg.Dir, 0o755) == nil
+	}
+
+	cache := &Cache{
+		next:    next,
+		cfg:     cfg,
+		now:     time.Now,
+		ready:   ready,
+		items:   make(map[string]*list.Element),
+		lru:     list.New(),
+		flights: make(map[string]*flight),
+	}
+
+	if cfg.Persistent && ready {
+		cache.restoreFromDisk()
+	}
+	return cache
 }
 
 func (c *Cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	c.activeRequests.Add(1)
+	defer c.activeRequests.Add(-1)
+
 	if !c.ready || !eligibleRequest(r) {
 		w.Header().Set("X-Moesekai-Cache", "BYPASS")
 		c.next.ServeHTTP(w, r)
@@ -276,6 +305,11 @@ func (c *Cache) store(key string, value *cachedResponse, body []byte) bool {
 	}
 	ok = true
 	value.path = finalPath
+
+	if c.cfg.Persistent {
+		c.writeDiskMeta(key, value)
+	}
+
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if old := c.items[key]; old != nil {
@@ -331,6 +365,9 @@ func (c *Cache) removeLocked(elem *list.Element) {
 	c.bytes -= item.value.size
 	c.lru.Remove(elem)
 	item.value.retired = true
+	if c.cfg.Persistent {
+		_ = os.Remove(filepath.Join(c.cfg.Dir, item.key+".meta"))
+	}
 	if item.value.refs == 0 {
 		_ = os.Remove(item.value.path)
 	}
@@ -410,3 +447,106 @@ func serveRecorded(w http.ResponseWriter, req *http.Request, recorded *responseR
 		_, _ = w.Write(recorded.body.Bytes())
 	}
 }
+
+type diskMeta struct {
+	Key        string              `json:"key"`
+	HTMLFile   string              `json:"htmlFile"`
+	Status     int                 `json:"status"`
+	Header     map[string][]string `json:"header"`
+	Size       int64               `json:"size"`
+	StoredAt   time.Time           `json:"storedAt"`
+	FreshUntil time.Time           `json:"freshUntil"`
+	StaleUntil time.Time           `json:"staleUntil"`
+}
+
+func (c *Cache) writeDiskMeta(key string, value *cachedResponse) {
+	meta := diskMeta{
+		Key:        key,
+		HTMLFile:   filepath.Base(value.path),
+		Status:     value.status,
+		Header:     value.header,
+		Size:       value.size,
+		StoredAt:   value.storedAt,
+		FreshUntil: value.freshUntil,
+		StaleUntil: value.staleUntil,
+	}
+	data, err := json.Marshal(meta)
+	if err != nil {
+		return
+	}
+	tmp, err := os.CreateTemp(c.cfg.Dir, ".meta-*")
+	if err != nil {
+		return
+	}
+	tmpName := tmp.Name()
+	if _, err = tmp.Write(data); err == nil && tmp.Sync() == nil {
+		_ = tmp.Close()
+		_ = os.Rename(tmpName, filepath.Join(c.cfg.Dir, key+".meta"))
+	} else {
+		_ = tmp.Close()
+		_ = os.Remove(tmpName)
+	}
+}
+
+func (c *Cache) restoreFromDisk() {
+	files, err := os.ReadDir(c.cfg.Dir)
+	if err != nil {
+		return
+	}
+	now := c.now()
+	restoredCount := 0
+	for _, f := range files {
+		if f.IsDir() || !strings.HasSuffix(f.Name(), ".meta") {
+			continue
+		}
+		metaPath := filepath.Join(c.cfg.Dir, f.Name())
+		metaBytes, err := os.ReadFile(metaPath)
+		if err != nil {
+			continue
+		}
+		var meta diskMeta
+		if err := json.Unmarshal(metaBytes, &meta); err != nil {
+			continue
+		}
+		htmlPath := filepath.Join(c.cfg.Dir, meta.HTMLFile)
+		fi, err := os.Stat(htmlPath)
+		if err != nil || !now.Before(meta.StaleUntil) {
+			_ = os.Remove(metaPath)
+			if err == nil {
+				_ = os.Remove(htmlPath)
+			}
+			continue
+		}
+
+		resp := &cachedResponse{
+			status:     meta.Status,
+			header:     meta.Header,
+			path:       htmlPath,
+			size:       fi.Size(),
+			storedAt:   meta.StoredAt,
+			freshUntil: meta.FreshUntil,
+			staleUntil: meta.StaleUntil,
+		}
+
+		elem := c.lru.PushFront(&lruItem{key: meta.Key, value: resp})
+		c.items[meta.Key] = elem
+		c.bytes += resp.size
+		restoredCount++
+	}
+	if restoredCount > 0 {
+		fmt.Printf("[HTMLCache] Restored %d persistent cache entries from %s (%d MB)\n", restoredCount, c.cfg.Dir, c.bytes/(1024*1024))
+	}
+}
+
+func cleanOrphanTempFiles(dir string) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasPrefix(e.Name(), ".") {
+			_ = os.Remove(filepath.Join(dir, e.Name()))
+		}
+	}
+}
+

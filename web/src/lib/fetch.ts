@@ -63,18 +63,20 @@ function getCurrentAssetSource(): "main" | "overseas" {
 /**
  * Get master base URL for runtime (respects server selection)
  */
-function getMasterBaseUrl(): string {
+function getMasterBaseUrl(server?: ServerSourceType): string {
     const domain = getCurrentAssetSource() === "overseas" ? "metadata.pjsk.moe" : "metadata.exmeaning.com";
-    return `https://${domain}/${getCurrentServer()}/master`;
+    const targetServer = server || getCurrentServer();
+    return `https://${domain}/${targetServer}/master`;
 }
 
 /**
  * Get fallback master base URL for runtime (respects server selection)
  * Used when primary server fails (e.g., ISP blocking)
  */
-function getFallbackMasterBaseUrl(): string {
+function getFallbackMasterBaseUrl(server?: ServerSourceType): string {
     const domain = getCurrentAssetSource() === "overseas" ? "metadata.exmeaning.com" : "metadata.pjsk.moe";
-    return `https://${domain}/${getCurrentServer()}/master`;
+    const targetServer = server || getCurrentServer();
+    return `https://${domain}/${targetServer}/master`;
 }
 
 /**
@@ -160,7 +162,13 @@ export function clearCacheBypassFlag(): void {
  * @param path - Path relative to master directory (e.g., "gachas.json", "cards.json")
  * @param noCache - If true, bypass browser cache by adding timestamp
  */
-export async function fetchMasterData<T>(path: string, noCache: boolean = false): Promise<T> {
+export async function fetchMasterData<T>(
+    path: string,
+    noCache: boolean = false,
+    server?: ServerSourceType
+): Promise<T> {
+    const activeServer = server || getCurrentServer();
+    const isCustomServer = Boolean(server && server !== getCurrentServer());
     // Auto-detect if we need to bypass cache (after version sync refresh)
     const shouldNoCache = noCache || shouldBypassCache();
     const fetchOptions: RequestInit = shouldNoCache ? { cache: "no-store" } : {};
@@ -182,7 +190,7 @@ export async function fetchMasterData<T>(path: string, noCache: boolean = false)
     const queryString = params.toString() ? `?${params.toString()}` : "";
 
     // ===== IndexedDB Cache Layer =====
-    if (isIndexedDBAvailable() && localVersion) {
+    if (!isCustomServer && isIndexedDBAvailable() && localVersion) {
         // Try reading from IndexedDB (skip if force-refreshing)
         if (!shouldNoCache) {
             try {
@@ -191,7 +199,7 @@ export async function fetchMasterData<T>(path: string, noCache: boolean = false)
                     // Apply post-patches on the cached (original) payload
                     const file = patchFileForPath(path);
                     if (file !== null) {
-                        return applyMasterdataPatches(file, getCurrentServer(), cached);
+                        return applyMasterdataPatches(file, activeServer, cached);
                     }
                     return cached;
                 }
@@ -202,18 +210,18 @@ export async function fetchMasterData<T>(path: string, noCache: boolean = false)
     }
 
     // Runtime: try primary server first, then fallback
-    const primaryUrl = `${getMasterBaseUrl()}/${path}${queryString}`;
+    const primaryUrl = `${getMasterBaseUrl(activeServer)}/${path}${queryString}`;
     try {
         const response = await fetchWithCompression(primaryUrl, fetchOptions);
         if (response.ok) {
             const data: T = await response.json();
             // Write RAW data to IndexedDB cache (patches stay ephemeral)
-            if (isIndexedDBAvailable() && localVersion) {
+            if (!isCustomServer && isIndexedDBAvailable() && localVersion) {
                 setMasterDataCache(path, data, localVersion).catch(() => { });
             }
             const file = patchFileForPath(path);
             if (file !== null) {
-                return applyMasterdataPatches(file, getCurrentServer(), data);
+                return applyMasterdataPatches(file, activeServer, data);
             }
             return data;
         }
@@ -225,7 +233,7 @@ export async function fetchMasterData<T>(path: string, noCache: boolean = false)
     }
 
     // Try fallback server
-    const fallbackUrl = `${getFallbackMasterBaseUrl()}/${path}${queryString}`;
+    const fallbackUrl = `${getFallbackMasterBaseUrl(activeServer)}/${path}${queryString}`;
     const fallbackResponse = await fetchWithCompression(fallbackUrl, fetchOptions);
     if (!fallbackResponse.ok) {
         throw new Error(`Failed to fetch master data: ${path} (both primary and fallback servers failed)`);
@@ -234,13 +242,13 @@ export async function fetchMasterData<T>(path: string, noCache: boolean = false)
     const fallbackData: T = await fallbackResponse.json();
 
     // Write RAW data to IndexedDB cache
-    if (isIndexedDBAvailable() && localVersion) {
+    if (!isCustomServer && isIndexedDBAvailable() && localVersion) {
         setMasterDataCache(path, fallbackData, localVersion).catch(() => { });
     }
 
     const fallbackFile = patchFileForPath(path);
     if (fallbackFile !== null) {
-        return applyMasterdataPatches(fallbackFile, getCurrentServer(), fallbackData);
+        return applyMasterdataPatches(fallbackFile, activeServer, fallbackData);
     }
     return fallbackData;
 }

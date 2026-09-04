@@ -1499,6 +1499,7 @@ export const koKRMessages = {
             }
         },
         cards: {
+            jpAdvanceBadge: "일섭 선행",
             badge: "카드 데이터베이스",
             title: "카드",
             titleHighlight: "그림책",

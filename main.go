@@ -74,12 +74,32 @@ func main() {
 			}
 
 			fmt.Printf("Proxying frontend requests to Next.js server on %s\n", cfg.FrontendProxyURL)
-			mux.Handle("/", htmlcache.New(nextjsProxy, htmlcache.Config{
+			cacheHandler := htmlcache.New(nextjsProxy, htmlcache.Config{
 				Dir:           cfg.HTMLCacheDir,
 				MaxBytes:      int64(cfg.HTMLCacheMaxGB) << 30,
 				MaxEntries:    cfg.HTMLCacheEntries,
 				MaxEntryBytes: int64(cfg.HTMLCacheEntryMB) << 20,
-			}))
+				Persistent:    cfg.HTMLCachePersistent,
+			})
+			mux.Handle("/", cacheHandler)
+
+			if cfg.HTMLCacheWarmup {
+				go func() {
+					time.Sleep(3 * time.Second)
+					locales := []string{"zh-cn", "ja-jp", "en-us"}
+					var warmupRoutes []string
+					for _, loc := range locales {
+						warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/", loc))
+						warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/cards/", loc))
+					}
+					for id := 1; id <= 1450; id++ {
+						for _, loc := range locales {
+							warmupRoutes = append(warmupRoutes, fmt.Sprintf("/%s/cards/%d", loc, id))
+						}
+					}
+					cacheHandler.StartWarmup(context.Background(), warmupRoutes, 300*time.Millisecond)
+				}()
+			}
 		}
 	} else {
 		registerAPIOnlyHealthRoute(mux)

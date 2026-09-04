@@ -601,7 +601,7 @@ export interface SeoDetailPageProps {
 }
 
 export interface SeoDetailPageOptions<T> extends Omit<CreateDynamicDetailMetadataOptions<T>, "params"> {
-    render: (props: { params?: Promise<{ id: string }> }) => ReactNode;
+    render: (props: { params?: Promise<{ id: string }>; initialData?: T | null; id?: number }) => ReactNode;
 }
 
 export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOptions }: SeoDetailPageOptions<T>) {
@@ -619,9 +619,9 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
             // selected content server, so it must not turn a valid client route
             // into a hard Next.js 404. generateMetadata already emits a noindex
             // fallback until metadata for this item becomes available.
-            return render({ params });
+            return render({ params, initialData: null, id: Number.isFinite(numericId) ? numericId : undefined });
         }
-        if (!structuredData) return render({ params });
+        if (!structuredData) return render({ params, initialData: data, id: numericId });
         const context = { id, numericId, locale, path };
         const metadataResult = metadataOptions.build(data, context);
         const detailName = metadataResult.title;
@@ -668,7 +668,7 @@ export function defineSeoDetailPage<T>({ render, structuredData, ...metadataOpti
                         ? { title: detailName, description }
                         : null,
                 },
-                render({ params }),
+                render({ params, initialData: data, id: numericId }),
             ),
         );
     };

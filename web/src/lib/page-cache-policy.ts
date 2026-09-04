@@ -38,7 +38,7 @@ const PUBLIC_DETAIL_CACHE_ROOTS = new Set([
 ]);
 
 const LIST_ORIGIN_MAX_AGE_SECONDS = 3600;
-const DETAIL_ORIGIN_MAX_AGE_SECONDS = 86400;
+const DETAIL_ORIGIN_MAX_AGE_SECONDS = 15552000; // 180 days (masterdata detail pages are immutable)
 const STALE_WHILE_REVALIDATE_SECONDS = 604800;
 
 export const CLIENT_HTML_CACHE_CONTROL = "no-cache, max-age=0, must-revalidate";

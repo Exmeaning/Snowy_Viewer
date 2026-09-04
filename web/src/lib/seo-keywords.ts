@@ -1759,3 +1759,11 @@ export function formatMysekaiFlavorSuffix(flavor: string | undefined, locale: Ui
   const clipped = flavor.slice(0, 100);
   return locale === "zh-CN" || locale === "zh-TW" || locale === "ja-JP" ? ` — ${clipped}` : ` - ${clipped}`;
 }
+
+export function formatJpAdvancePrefix(locale: UiLocale = DEFAULT_UI_LOCALE): string {
+  if (locale === "zh-CN" || locale === "zh-TW") return "[日服先行] ";
+  if (locale === "en-US") return "[JP Advance] ";
+  if (locale === "ko-KR") return "[일섭 선행] ";
+  return "";
+}
+

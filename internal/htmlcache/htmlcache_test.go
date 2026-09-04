@@ -1,6 +1,7 @@
 package htmlcache
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -215,3 +216,74 @@ func TestLRUEvictsByEntryCount(t *testing.T) {
 		t.Fatalf("disk files after eviction = %d, err = %v, want 1", len(files), err)
 	}
 }
+
+func TestPersistentCacheRestoresOnStartup(t *testing.T) {
+	dir := t.TempDir()
+	var count atomic.Int32
+
+	cfg := Config{
+		Dir:        dir,
+		Persistent: true,
+	}
+
+	// First instance populates the cache
+	c1 := New(cacheableHandler(&count), cfg)
+	rr1 := httptest.NewRecorder()
+	c1.ServeHTTP(rr1, documentRequest("/zh-cn/cards/1/"))
+	if rr1.Header().Get("X-Moesekai-Cache") != "MISS" || count.Load() != 1 {
+		t.Fatalf("instance 1 failed: status=%s count=%d", rr1.Header().Get("X-Moesekai-Cache"), count.Load())
+	}
+
+	// Second instance with same directory should restore the cached entry
+	c2 := New(cacheableHandler(&count), cfg)
+	rr2 := httptest.NewRecorder()
+	c2.ServeHTTP(rr2, documentRequest("/zh-cn/cards/1/"))
+
+	if rr2.Header().Get("X-Moesekai-Cache") != "HIT" {
+		t.Fatalf("instance 2 want HIT, got %s", rr2.Header().Get("X-Moesekai-Cache"))
+	}
+	if count.Load() != 1 {
+		t.Fatalf("instance 2 made upstream call (%d), want 1", count.Load())
+	}
+	if rr2.Body.String() != "page-1" {
+		t.Fatalf("instance 2 body = %q, want page-1", rr2.Body.String())
+	}
+}
+
+func TestWarmupPopulatesCache(t *testing.T) {
+	dir := t.TempDir()
+	var count atomic.Int32
+
+	cfg := Config{
+		Dir:        dir,
+		Persistent: true,
+	}
+
+	c := New(cacheableHandler(&count), cfg)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	routes := []string{"/zh-cn/cards/10/", "/zh-cn/cards/20/"}
+	c.StartWarmup(ctx, routes, 10*time.Millisecond)
+
+	// Wait for warmup to finish
+	deadline := time.Now().Add(2 * time.Second)
+	for count.Load() < 2 {
+		if time.Now().After(deadline) {
+			t.Fatalf("warmup did not complete in time, count = %d", count.Load())
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	// Verify both routes are cached and serve HIT
+	for _, route := range routes {
+		rr := httptest.NewRecorder()
+		c.ServeHTTP(rr, documentRequest(route))
+		if rr.Header().Get("X-Moesekai-Cache") != "HIT" {
+			t.Fatalf("expected HIT for %s, got %s", route, rr.Header().Get("X-Moesekai-Cache"))
+		}
+	}
+}
+
+

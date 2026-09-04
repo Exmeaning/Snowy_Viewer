@@ -11,15 +11,19 @@
 import fs from 'fs';
 import path from 'path';
 
-// ==================== Type Definitions ====================
+import type {
+    CardMeta,
+    CardPowerItem,
+    CardPowerMeta,
+    CardEventMeta,
+} from "@/types/types";
 
-export interface CardMeta {
-    prefix: string;
-    characterId: number;
-    rarity: string;
-    attr: string;
-    asset: string;
-}
+export type {
+    CardMeta,
+    CardPowerItem,
+    CardPowerMeta,
+    CardEventMeta,
+};
 
 export interface MusicMeta {
     title: string;
@@ -191,7 +195,17 @@ function getMap(region: MetadataRegion = 'cn'): MetadataMap | null {
 // ==================== Public Accessors ====================
 
 export function getCardMeta(id: number, region?: MetadataRegion): CardMeta | null {
-    return getMap(region)?.cards[String(id)] ?? null;
+    const regional = getMap(region)?.cards[String(id)];
+    if (regional) {
+        return { ...regional, isJpFallback: false };
+    }
+    if (region && region !== 'jp') {
+        const jpCard = getMap('jp')?.cards[String(id)];
+        if (jpCard) {
+            return { ...jpCard, isJpFallback: true };
+        }
+    }
+    return null;
 }
 
 export function getMusicMeta(id: number, region?: MetadataRegion): MusicMeta | null {

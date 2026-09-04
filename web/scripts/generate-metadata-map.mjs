@@ -267,6 +267,38 @@ function hasUsefulMetadata(map) {
     ].some(key => countEntries(map[key]) > 0);
 }
 
+function computeCardPower(c) {
+    if (!c?.cardParameters || !Array.isArray(c.cardParameters.param1)) return null;
+    const p1 = c.cardParameters.param1;
+    const p2 = c.cardParameters.param2;
+    const p3 = c.cardParameters.param3;
+    if (!p1.length || !p2.length || !p3.length) return null;
+    const normalPerf = p1[p1.length - 1];
+    const normalTech = p2[p2.length - 1];
+    const normalStam = p3[p3.length - 1];
+    const normalTotal = normalPerf + normalTech + normalStam;
+    const result = {
+        normal: {
+            performance: normalPerf,
+            technique: normalTech,
+            stamina: normalStam,
+            total: normalTotal,
+        },
+    };
+    if (c.specialTrainingPower1BonusFixed || c.specialTrainingPower2BonusFixed || c.specialTrainingPower3BonusFixed) {
+        const trainedPerf = normalPerf + (c.specialTrainingPower1BonusFixed || 0);
+        const trainedTech = normalTech + (c.specialTrainingPower2BonusFixed || 0);
+        const trainedStam = normalStam + (c.specialTrainingPower3BonusFixed || 0);
+        result.trained = {
+            performance: trainedPerf,
+            technique: trainedTech,
+            stamina: trainedStam,
+            total: trainedPerf + trainedTech + trainedStam,
+        };
+    }
+    return result;
+}
+
 const datasets = [
     {
         key: 'cards',
@@ -274,14 +306,24 @@ const datasets = [
         filename: 'cards.json',
         fallback: [],
         validate: Array.isArray,
-        build: cards => Object.fromEntries(
-            (Array.isArray(cards) ? cards : []).map(c => [c.id, {
-                prefix: c.prefix,
-                characterId: c.characterId,
-                rarity: c.cardRarityType,
-                attr: c.attr,
-                asset: c.assetbundleName,
-            }])
+        build: (cards, existingMap) => Object.fromEntries(
+            (Array.isArray(cards) ? cards : []).map(c => {
+                const existing = existingMap?.cards?.[String(c.id)] || {};
+                const power = existing.power || computeCardPower(c);
+                const entry = {
+                    prefix: c.prefix,
+                    characterId: c.characterId,
+                    rarity: c.cardRarityType,
+                    attr: c.attr,
+                    asset: c.assetbundleName,
+                    releaseAt: c.releaseAt ?? existing.releaseAt,
+                    skillName: c.cardSkillName || existing.skillName,
+                    skillDesc: existing.skillDesc,
+                };
+                if (power) entry.power = power;
+                if (existing.event) entry.event = existing.event;
+                return [c.id, entry];
+            })
         ),
     },
     {
@@ -537,7 +579,7 @@ async function loadDataset(dataset, existingMap) {
             throw new Error(`Unexpected ${dataset.label} response shape`);
         }
 
-        const built = dataset.build(raw);
+        const built = dataset.build(raw, existingMap);
         const section = normalizeDatasetSection(dataset, built);
         const sectionCount = totalEntries(section);
 

@@ -25,13 +25,13 @@ import {
     defineSeoDetailPage,
     type CreateDynamicDetailMetadataOptions,
 } from "@/lib/seo-metadata";
-import { formatExchangeShopSuffix, formatMysekaiFlavorSuffix } from "@/lib/seo-keywords";
+import { formatExchangeShopSuffix, formatJpAdvancePrefix, formatMysekaiFlavorSuffix } from "@/lib/seo-keywords";
 import { getSeoAssetSource } from "@/lib/seo-metadata";
 import { CHARACTER_NAMES } from "@/types/types";
 
 type DetailPreset<T> = Omit<CreateDynamicDetailMetadataOptions<T>, "params">;
 
-type DetailPageRender = (props: { params?: Promise<{ id: string }> }) => ReactNode;
+type DetailPageRender<T = unknown> = (props: { params?: Promise<{ id: string }>; initialData?: T | null }) => ReactNode;
 
 const DETAIL_LOADING_FALLBACK = createElement(
     "div",
@@ -44,7 +44,7 @@ function defineDetailPreset<T>(preset: DetailPreset<T>) {
 }
 
 function detailPageFactory<T>(preset: DetailPreset<T>) {
-    return (render: DetailPageRender) => defineSeoDetailPage({ ...preset, render });
+    return (render: DetailPageRender<T>) => defineSeoDetailPage({ ...preset, render });
 }
 
 interface DetailClientPageOptions {
@@ -52,9 +52,12 @@ interface DetailClientPageOptions {
     wrap?: (children: ReactNode) => ReactNode;
 }
 
-function renderClientWithSuspense(Client: ComponentType, options: DetailClientPageOptions = {}) {
-    function DetailClientSuspensePage() {
-        const content = createElement(Suspense, { fallback: options.fallback ?? DETAIL_LOADING_FALLBACK }, createElement(Client));
+function renderClientWithSuspense<T = unknown>(Client: ComponentType<{ initialData?: T | null; id?: number }>, options: DetailClientPageOptions = {}) {
+    function DetailClientSuspensePage({ initialData, id }: { params?: Promise<{ id: string }>; initialData?: T | null; id?: number }) {
+        const clientElement = createElement(Client, { initialData, id });
+        const content = initialData
+            ? clientElement
+            : createElement(Suspense, { fallback: options.fallback ?? DETAIL_LOADING_FALLBACK }, clientElement);
         return options.wrap ? options.wrap(content) : content;
     }
 
@@ -63,9 +66,9 @@ function renderClientWithSuspense(Client: ComponentType, options: DetailClientPa
 }
 
 function detailClientPageFactory<T>(preset: DetailPreset<T>) {
-    return (Client: ComponentType, options?: DetailClientPageOptions) => defineSeoDetailPage({
+    return (Client: ComponentType<{ initialData?: T | null; id?: number }>, options?: DetailClientPageOptions) => defineSeoDetailPage<T>({
         ...preset,
-        render: renderClientWithSuspense(Client, options),
+        render: renderClientWithSuspense<T>(Client, options),
     });
 }
 
@@ -76,9 +79,11 @@ const cardDetailPreset = defineDetailPreset<NonNullable<ReturnType<typeof getCar
     structuredData: { parentPageKey: "cards", entity: { type: "CreativeWork" } },
     build: (card, { locale }) => {
         const characterName = CHARACTER_NAMES[card.characterId] || "";
+        const tag = card.isJpFallback ? formatJpAdvancePrefix(locale) : "";
+        const title = `${tag}${characterName} - ${card.prefix}`;
 
         return {
-            title: `${characterName} - ${card.prefix}`,
+            title,
             descriptionKind: "card",
             descriptionValues: { prefix: card.prefix, character: characterName },
             images: [getCardThumbnailUrl(card.characterId, card.asset, false, getSeoAssetSource(locale))],
