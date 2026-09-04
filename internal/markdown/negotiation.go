@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -296,12 +297,27 @@ func NewNegotiationMiddleware(next http.Handler) http.Handler {
 
 		markdownText := ConvertHTMLToMarkdown(rec.body.String(), r.URL.Path)
 
+		mdTokens := estimateTokens(markdownText)
+		origTokens := estimateTokens(rec.body.String())
+
 		w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
 		w.Header().Set("Cache-Control", "public, max-age=60, s-maxage=3600")
 		w.Header().Set("Vary", "Accept")
+		w.Header().Set("x-markdown-tokens", strconv.Itoa(mdTokens))
+		w.Header().Set("x-original-tokens", strconv.Itoa(origTokens))
+		w.Header().Set("Content-Signal", "ai-train=no, search=yes, ai-input=yes")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(markdownText))
 	})
+}
+
+func estimateTokens(s string) int {
+	runes := len([]rune(s))
+	tokens := runes / 3
+	if tokens < 1 && len(s) > 0 {
+		return 1
+	}
+	return tokens
 }
 
 type responseRecorder struct {

@@ -15,13 +15,16 @@ export async function GET() {
 Allow: /
 ${disallowLines.join('\n')}
 
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+
 Sitemap: ${baseUrl}/sitemap.xml
 `;
 
     return new NextResponse(body, {
         headers: {
-            'Content-Type': 'text/plain',
+            'Content-Type': 'text/plain; charset=utf-8',
             'Cache-Control': 'public, max-age=86400, s-maxage=86400',
+            'Content-Signal': 'ai-train=no, search=yes, ai-input=yes',
         },
     });
 }

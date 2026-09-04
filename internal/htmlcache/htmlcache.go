@@ -264,6 +264,21 @@ func (r *responseRecorder) Write(p []byte) (int, error) {
 	return r.body.Write(p)
 }
 
+func appendVaryAccept(h http.Header) {
+	existing := h.Get("Vary")
+	if existing == "" {
+		h.Set("Vary", "Accept")
+		return
+	}
+	parts := strings.Split(existing, ",")
+	for _, p := range parts {
+		if strings.EqualFold(strings.TrimSpace(p), "Accept") {
+			return
+		}
+	}
+	h.Set("Vary", existing+", Accept")
+}
+
 func (c *Cache) makeEntry(r *responseRecorder) *cachedResponse {
 	fresh, swr, ok := parsePolicy(r.header.Get(OriginCacheHeader))
 	if !ok || r.status != http.StatusOK || !strings.HasPrefix(strings.ToLower(r.header.Get("Content-Type")), "text/html") || len(r.header.Values("Set-Cookie")) > 0 || int64(r.body.Len()) > c.cfg.MaxEntryBytes {
@@ -271,6 +286,7 @@ func (c *Cache) makeEntry(r *responseRecorder) *cachedResponse {
 	}
 	header := cacheableHeaders(r.header)
 	header.Set("Cache-Control", "public, max-age=60, s-maxage=3600")
+	appendVaryAccept(header)
 	now := c.now()
 	return &cachedResponse{status: r.status, header: header, size: int64(r.body.Len()), storedAt: now, freshUntil: now.Add(fresh), staleUntil: now.Add(fresh + swr)}
 }
@@ -455,6 +471,7 @@ func serveFile(w http.ResponseWriter, r *http.Request, entry *cachedResponse, st
 			w.Header().Add(k, value)
 		}
 	}
+	appendVaryAccept(w.Header())
 	w.Header().Set("X-Moesekai-Cache", state)
 	age := int64(time.Since(entry.storedAt).Seconds())
 	if age < 0 {
@@ -487,6 +504,7 @@ func serveRecorded(w http.ResponseWriter, req *http.Request, recorded *responseR
 	}
 	if isCacheable {
 		w.Header().Set("Cache-Control", "public, max-age=60, s-maxage=3600")
+		appendVaryAccept(w.Header())
 	}
 	w.WriteHeader(recorded.status)
 	if req.Method != http.MethodHead {

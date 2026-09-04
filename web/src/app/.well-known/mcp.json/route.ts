@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import { getBaseUrl } from "@/lib/sitemap";
 
-export async function GET() {
-    const origin = await getBaseUrl();
-    const card = {
+export function buildServerCard(origin: string) {
+    return {
         name: "Moesekai - Project SEKAI Data Engine",
         serverInfo: {
             name: "Moesekai MCP",
@@ -67,6 +66,11 @@ export async function GET() {
             description: "No authentication required for public Project SEKAI game database queries.",
         },
     };
+}
+
+export async function GET() {
+    const origin = await getBaseUrl();
+    const card = buildServerCard(origin);
 
     return NextResponse.json(card, {
         headers: {
