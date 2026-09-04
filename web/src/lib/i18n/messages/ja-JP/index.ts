@@ -3011,6 +3011,7 @@ export const jaJPMessages = {
       harukiHintEnd: 'before using this tool',
       server: 'サーバー',
       event: 'Event',
+      wlChapterCharacter: 'World Bloomチャプターのキャラクター',
       cardTrainingSettings: 'Card Training Settings',
       infiniteSearch: 'Infinite Search',
       infiniteWarning: 'This feature searches song PT rates from 100% to 130% one by one for songs that can produce pure AFK routes. It can take a very long time, possibly dozens of minutes, and stops after finding 10 results. Mobile devices may have performance issues; use a PC or iPad.',
@@ -3115,6 +3116,7 @@ export const jaJPMessages = {
         calculationFailedUnknown: 'Calculation failed',
         userRequired: 'Please enter a user ID',
         eventRequired: 'Please select an event',
+        supportCharacterRequired: 'Please select a chapter character',
         workerError: 'Worker error: {message}'
       }
     },

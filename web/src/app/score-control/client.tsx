@@ -12,6 +12,7 @@ import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
+import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import { preloadDeckEngine } from "@/lib/deck-engine/wasm-loader";
 
 import { useI18n } from "@/contexts/I18nContext";
@@ -190,8 +191,9 @@ export default function ScoreControlClient() {
     const [dbUserId, setDbUserId] = useState("");
     const [dbServer, setDbServer] = useState<ServerType>("jp");
     const [dbEventId, setDbEventId] = useState("");
+    const [dbEventType, setDbEventType] = useState<string | null>(null);
     const [dbLiveType, _setDbLiveType] = useState("multi");
-    const [dbSupportCharacterId, _setDbSupportCharacterId] = useState<number | null>(null);
+    const [dbSupportCharacterId, setDbSupportCharacterId] = useState<number | null>(null);
     const [dbCardConfig, setDbCardConfig] = useState<Record<string, CardConfigItem>>(
         JSON.parse(JSON.stringify(DEFAULT_CARD_CONFIG))
     );
@@ -353,6 +355,36 @@ export default function ScoreControlClient() {
         return meta.event_rate || 100;
     }, [musicId, difficulty, musicMetas]);
 
+    // World Bloom chapter character: the deck-builder request needs the chapter
+    // (supportCharacterId maps to world_bloom_character_id in the worker).
+    const handleDbEventSelect = useCallback((eventId: string, eventType?: string) => {
+        setDbEventId(eventId);
+        setDbEventType(eventType ?? null);
+        setDbSupportCharacterId(null);
+    }, []);
+
+    const [worldBlooms, setWorldBlooms] = useState<
+        { eventId: number; gameCharacterId: number | null; chapterNo: number | null; worldBloomChapterType: string | null }[]
+    >([]);
+    useEffect(() => {
+        if (dbEventType !== "world_bloom") return;
+        fetchMasterDataForServer<
+            { eventId: number; gameCharacterId: number | null; chapterNo: number | null; worldBloomChapterType: string | null }[]
+        >(dbServer, "worldBlooms.json").then(setWorldBlooms).catch(console.error);
+    }, [dbEventType, dbServer]);
+
+    const dbWlChapterCharacterIds = useMemo(() => {
+        if (dbEventType !== "world_bloom" || !dbEventId) return [];
+        const eventId = parseInt(dbEventId);
+        const ids = worldBlooms
+            .filter((row) => row.eventId === eventId
+                && row.gameCharacterId != null
+                && row.worldBloomChapterType !== "finale")
+            .sort((a, b) => (a.chapterNo ?? 0) - (b.chapterNo ?? 0))
+            .map((row) => row.gameCharacterId as number);
+        return [...new Set(ids)];
+    }, [dbEventType, dbEventId, worldBlooms]);
+
     // Selected music title
     const selectedMusicTitle = useMemo(() => {
         if (!musicId) return "";
@@ -416,6 +448,11 @@ export default function ScoreControlClient() {
             }
             if (!dbEventId.trim()) {
                 setDbError(t("page.scoreControl.errors.eventRequired"));
+                setIsCalculating(false);
+                return;
+            }
+            if (dbEventType === "world_bloom" && !dbSupportCharacterId) {
+                setDbError(t("page.scoreControl.errors.supportCharacterRequired"));
                 setIsCalculating(false);
                 return;
             }
@@ -569,6 +606,10 @@ export default function ScoreControlClient() {
         if (!musicMetas.length || !musics.length) return;
         if (!dbUserId.trim()) { setDbError(t("page.scoreControl.errors.userRequired")); return; }
         if (!dbEventId.trim()) { setDbError(t("page.scoreControl.errors.eventRequired")); return; }
+        if (dbEventType === "world_bloom" && !dbSupportCharacterId) {
+            setDbError(t("page.scoreControl.errors.supportCharacterRequired"));
+            return;
+        }
         if (!targetPT || targetPT <= 0) { setError(t("page.scoreControl.errors.invalidTargetPt")); return; }
 
         infiniteSearchCancelledRef.current = false;
@@ -1128,10 +1169,29 @@ export default function ScoreControlClient() {
                                     </label>
                                     <EventSelector
                                         selectedEventId={dbEventId}
-                                        onSelect={setDbEventId}
+                                        onSelect={handleDbEventSelect}
                                     />
                                 </div>
                             </div>
+
+                            {/* World Bloom chapter character */}
+                            {dbEventType === "world_bloom" && (
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        {t("page.scoreControl.wlChapterCharacter")} <span className="text-red-400">*</span>
+                                    </label>
+                                    <CharacterSelector
+                                        selectedCharacterId={dbSupportCharacterId}
+                                        onSelect={setDbSupportCharacterId}
+                                        availableCharacterIds={
+                                            dbWlChapterCharacterIds.length
+                                                ? dbWlChapterCharacterIds
+                                                : undefined
+                                        }
+                                        hideUnitFilter
+                                    />
+                                </div>
+                            )}
 
                             {/* Card Config Toggle */}
                             <div>
