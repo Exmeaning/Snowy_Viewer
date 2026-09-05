@@ -15,7 +15,7 @@
  */
 import type { ServerSourceType } from "./fetch";
 
-export type PatchFile = "cards" | "eventStories";
+export type PatchFile = "cards" | "eventStories" | "actionSets";
 
 export interface MasterdataPatch {
     /** Stable identifier (used in tests / tooling) */
@@ -51,6 +51,13 @@ export const MASTERDATA_PATCHES: MasterdataPatch[] = [
         patch: { bannerGameCharacterUnitId: 10 },
         note: "Event 97 banner character should be character 10 (was unit id 9)",
     },
+    {
+        id: "actionsets-934-release-condition",
+        file: "actionSets",
+        match: { id: 934 },
+        patch: { releaseConditionId: 101408 },
+        note: "area talk action set 934 release condition should be 101408 (was 101508)",
+    },
 ];
 
 /**
@@ -60,7 +67,7 @@ export const MASTERDATA_PATCHES: MasterdataPatch[] = [
 export function patchFileForPath(path: string): PatchFile | null {
     const base = path.split("/").pop() ?? "";
     const name = base.replace(/\.json$/, "");
-    if (name === "cards" || name === "eventStories") return name;
+    if (name === "cards" || name === "eventStories" || name === "actionSets") return name;
     return null;
 }
 

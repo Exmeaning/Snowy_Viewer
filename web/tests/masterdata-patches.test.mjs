@@ -21,6 +21,7 @@ const {
 test("patchFileForPath maps known files", () => {
   assert.equal(patchFileForPath("cards.json"), "cards");
   assert.equal(patchFileForPath("eventStories.json"), "eventStories");
+  assert.equal(patchFileForPath("actionSets.json"), "actionSets");
   assert.equal(patchFileForPath("https://x/master/cards.json"), "cards");
 });
 
@@ -44,6 +45,28 @@ test("registered eventStories patch has no server restriction (all regions)", ()
   const patch = MASTERDATA_PATCHES.find((p) => p.id === "eventstories-97-banner");
   assert.ok(patch);
   assert.equal(patch.server, undefined);
+});
+
+test("registered actionSets patch has no server restriction (all regions)", () => {
+  const patch = MASTERDATA_PATCHES.find((p) => p.id === "actionsets-934-release-condition");
+  assert.ok(patch);
+  assert.equal(patch.server, undefined);
+  assert.deepEqual(patch.match, { id: 934 });
+  assert.equal(patch.patch.releaseConditionId, 101408);
+});
+
+test("actionSets patch corrects releaseConditionId on every server", () => {
+  const sets = [
+    { id: 933, releaseConditionId: 101508 },
+    { id: 934, releaseConditionId: 101508 },
+    { id: 935, releaseConditionId: 101508 },
+  ];
+  for (const server of ["jp", "cn", "tw", "kr", "en"]) {
+    const out = applyMasterdataPatches("actionSets", server, sets);
+    assert.equal(out[0].releaseConditionId, 101508, `server ${server} untouched`);
+    assert.equal(out[1].releaseConditionId, 101408, `server ${server}`);
+    assert.equal(out[2].releaseConditionId, 101508, `server ${server} untouched`);
+  }
 });
 
 test("cards patch applies on every server (jp & cn)", () => {
