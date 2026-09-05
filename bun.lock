@@ -31,7 +31,7 @@
       "name": "moesekai",
       "version": "0.1.0",
       "dependencies": {
-        "@empty-sekai/allium-deck-wasm": "0.0.13",
+        "@empty-sekai/allium-deck-wasm": "0.0.14",
         "@supabase/supabase-js": "2.106.0",
         "@swc/helpers": "^0.5.15",
         "@types/qrcode": "^1.5.6",
@@ -176,7 +176,7 @@
 
     "@emnapi/wasi-threads": ["@emnapi/wasi-threads@1.2.1", "https://registry.npmmirror.com/@emnapi/wasi-threads/-/wasi-threads-1.2.1.tgz", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-uTII7OYF+/Mes/MrcIOYp5yOtSMLBWSIoLPpcgwipoiKbli6k322tcoFsxoIIxPDqW01SQGAgko4EzZi2BNv2w=="],
 
-    "@empty-sekai/allium-deck-wasm": ["@empty-sekai/allium-deck-wasm@0.0.13", "https://registry.npmjs.org/@empty-sekai/allium-deck-wasm/-/allium-deck-wasm-0.0.13.tgz", {}, "sha512-ZtVi8glNONhylkJtlCyzLtWCJgEqu2ytHVF4E0yZI90R/i7buQEI23A0ypOIi6cOp+CPg2mnOpimoY3Ejqglnw=="],
+    "@empty-sekai/allium-deck-wasm": ["@empty-sekai/allium-deck-wasm@0.0.14", "https://registry.npmjs.org/@empty-sekai/allium-deck-wasm/-/allium-deck-wasm-0.0.14.tgz", {}, "sha512-nuJRNBaTAUnQWtQCQzgqeyxdpT4pKIfzdhFRkaoCFXpT1jfqjp1PWMTLV++LjqWJn2NAt5oJPKq0T8BOVITQGQ=="],
 
     "@eslint-community/eslint-utils": ["@eslint-community/eslint-utils@4.9.1", "https://registry.npmmirror.com/@eslint-community/eslint-utils/-/eslint-utils-4.9.1.tgz", { "dependencies": { "eslint-visitor-keys": "^3.4.3" }, "peerDependencies": { "eslint": "^6.0.0 || ^7.0.0 || >=8.0.0" } }, "sha512-phrYmNiYppR7znFEdqgfWHXR6NCkZEK7hwWDHZUjit/2/U0r6XvkDl0SYnoM51Hq7FhCGdLDT6zxCCOY1hexsQ=="],
 
