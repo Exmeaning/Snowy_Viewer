@@ -3009,6 +3009,7 @@ export const koKRMessages = {
             harukiHintEnd: "데이터 업로드 및 공개 API 공개",
             server: "서버",
             event: "활동",
+            wlChapterCharacter: "월드 링크 챕터 캐릭터",
             cardTrainingSettings: "카드 개발 설정",
             infiniteSearch: "무제한 검색",
             infiniteWarning: "이 기능은 100%에서 130%까지 노래의 PT 계수에 따라 하나씩 순수 배치 경로로 결합할 수 있는 노래를 검색합니다. 시간이 많이 걸리고(수십분이 걸릴 수도 있음) 10개의 결과를 찾은 후 중지됩니다. 모바일 버전에서는 성능 문제가 발생할 수 있으니, PC/iPad를 이용하여 실행해 주시기 바랍니다.",
@@ -3113,6 +3114,7 @@ export const koKRMessages = {
                 calculationFailedUnknown: "계산 오류",
                 userRequired: "사용자 ID를 입력해주세요",
                 eventRequired: "활동을 선택해주세요",
+                supportCharacterRequired: "챕터 캐릭터를 선택해주세요",
                 workerError: "작업자 오류: {message}"
             }
         },
