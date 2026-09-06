@@ -9,8 +9,7 @@
         "lint": "npm run lint --prefix web"
     },
     "workspaces": [
-        "web",
-        "refer/re_sekai-calculator"
+        "web"
     ],
     "overrides": {
         "@babel/core": "7.29.6",

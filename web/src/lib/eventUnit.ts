@@ -22,6 +22,10 @@ export function buildEventRawUnitMap(actionSets: IActionSet[]): Map<number, stri
     map.set(5, "idol");
     map.set(6, "street");
     map.set(9, "shuffle");
+    // Special case: event 16 is a shuffle event. Its actionSet
+    // (areatalk_ev_wonder_03_006, releaseConditionId 101508) parses to
+    // "wonder", but the event is actually a shuffle event.
+    map.set(16, "shuffle");
 
     for (const action of actionSets) {
         const rcId = String(action.releaseConditionId);

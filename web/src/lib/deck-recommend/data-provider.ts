@@ -62,7 +62,7 @@ const USER_DATA_KEYS_LIST = USER_DATA_KEYS.split(",");
 export const PRELOAD_MASTER_KEYS = [
     "areaItems", "areaItemLevels", "cards", "cardMysekaiCanvasBonuses", "cardRarities",
     "characterRanks", "cardEpisodes", "events", "eventCards",
-    "eventRarityBonusRates", "eventDeckBonuses", "gameCharacters",
+    "eventRarityBonusRates", "eventDeckBonuses", "gameCharacters", "worldBlooms",
     "gameCharacterUnits", "honors", "masterLessons", "mysekaiGates",
     "mysekaiGateLevels", "skills", "worldBloomDifferentAttributeBonuses",
     "worldBloomSupportDeckBonuses", "worldBloomSupportDeckBonusesWL1",

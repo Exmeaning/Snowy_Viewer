@@ -12,6 +12,7 @@ import MainLayout from "@/components/MainLayout";
 import ExternalLink from "@/components/ExternalLink";
 import MusicSelector from "@/components/deck-recommend/MusicSelector";
 import EventSelector from "@/components/deck-recommend/EventSelector";
+import CharacterSelector from "@/components/deck-recommend/CharacterSelector";
 import { preloadDeckEngine } from "@/lib/deck-engine/wasm-loader";
 
 import { useI18n } from "@/contexts/I18nContext";
@@ -190,8 +191,9 @@ export default function ScoreControlClient() {
     const [dbUserId, setDbUserId] = useState("");
     const [dbServer, setDbServer] = useState<ServerType>("jp");
     const [dbEventId, setDbEventId] = useState("");
+    const [dbEventType, setDbEventType] = useState<string | null>(null);
     const [dbLiveType, _setDbLiveType] = useState("multi");
-    const [dbSupportCharacterId, _setDbSupportCharacterId] = useState<number | null>(null);
+    const [dbSupportCharacterId, setDbSupportCharacterId] = useState<number | null>(null);
     const [dbCardConfig, setDbCardConfig] = useState<Record<string, CardConfigItem>>(
         JSON.parse(JSON.stringify(DEFAULT_CARD_CONFIG))
     );
@@ -231,7 +233,7 @@ export default function ScoreControlClient() {
         if (routes.length > 0) {
             setExpandedRoute(0);
         } else {
-            const raw = getValidScores(tp, rate, 415, 3000000);
+            const raw = getValidScores(tp, rate, 435, 2_840_000);
             const filtered = raw.filter(r => r.eventBonus >= bMin && r.eventBonus <= bMax);
             setFallbackResults(groupByBoost(filtered));
             setFallbackCount(filtered.length);
@@ -353,6 +355,36 @@ export default function ScoreControlClient() {
         return meta.event_rate || 100;
     }, [musicId, difficulty, musicMetas]);
 
+    // World Bloom chapter character: the deck-builder request needs the chapter
+    // (supportCharacterId maps to world_bloom_character_id in the worker).
+    const handleDbEventSelect = useCallback((eventId: string, eventType?: string) => {
+        setDbEventId(eventId);
+        setDbEventType(eventType ?? null);
+        setDbSupportCharacterId(null);
+    }, []);
+
+    const [worldBlooms, setWorldBlooms] = useState<
+        { eventId: number; gameCharacterId: number | null; chapterNo: number | null; worldBloomChapterType: string | null }[]
+    >([]);
+    useEffect(() => {
+        if (dbEventType !== "world_bloom") return;
+        fetchMasterDataForServer<
+            { eventId: number; gameCharacterId: number | null; chapterNo: number | null; worldBloomChapterType: string | null }[]
+        >(dbServer, "worldBlooms.json").then(setWorldBlooms).catch(console.error);
+    }, [dbEventType, dbServer]);
+
+    const dbWlChapterCharacterIds = useMemo(() => {
+        if (dbEventType !== "world_bloom" || !dbEventId) return [];
+        const eventId = parseInt(dbEventId);
+        const ids = worldBlooms
+            .filter((row) => row.eventId === eventId
+                && row.gameCharacterId != null
+                && row.worldBloomChapterType !== "finale")
+            .sort((a, b) => (a.chapterNo ?? 0) - (b.chapterNo ?? 0))
+            .map((row) => row.gameCharacterId as number);
+        return [...new Set(ids)];
+    }, [dbEventType, dbEventId, worldBlooms]);
+
     // Selected music title
     const selectedMusicTitle = useMemo(() => {
         if (!musicId) return "";
@@ -393,9 +425,9 @@ export default function ScoreControlClient() {
             setTimeout(() => {
                 try {
                     const bonusMin = Math.max(0, minBonus);
-                    const bonusMax = Math.min(415, maxBonus);
+                    const bonusMax = Math.min(435, maxBonus);
 
-                    computeAndSetRoutes(targetPT, selectedEventRate, bonusMin, bonusMax, 3000000);
+                    computeAndSetRoutes(targetPT, selectedEventRate, bonusMin, bonusMax, 2_840_000);
                 } catch (err: unknown) {
                     const message = err instanceof Error ? err.message : t("page.scoreControl.errors.calculationFailedUnknown");
                     setError(t("page.scoreControl.errors.calculationFailed", { message }));
@@ -416,6 +448,11 @@ export default function ScoreControlClient() {
             }
             if (!dbEventId.trim()) {
                 setDbError(t("page.scoreControl.errors.eventRequired"));
+                setIsCalculating(false);
+                return;
+            }
+            if (dbEventType === "world_bloom" && !dbSupportCharacterId) {
+                setDbError(t("page.scoreControl.errors.supportCharacterRequired"));
                 setIsCalculating(false);
                 return;
             }
@@ -445,7 +482,7 @@ export default function ScoreControlClient() {
             }
 
             const bonusMin = Math.max(0, minBonus);
-            const bonusMax = Math.min(415, maxBonus);
+            const bonusMax = Math.min(435, maxBonus);
 
             // Target-driven build: plan routes first, then build decks only for
             // the bonus tiers these routes actually need.
@@ -456,9 +493,9 @@ export default function ScoreControlClient() {
             if (bonusTiers.length === 0) {
                 // No planned route in range: fall back to the plain wide-table calculation,
                 // and still build decks for the tiers the wide table found.
-                computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 3000000);
+                computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 2_840_000);
                 bonusTiers = [...new Set(
-                    getValidScores(targetPT, selectedEventRate!, 415, 3000000)
+                    getValidScores(targetPT, selectedEventRate!, 435, 2_840_000)
                         .filter((r) => r.eventBonus >= bonusMin && r.eventBonus <= bonusMax)
                         .map((r) => r.eventBonus),
                 )].sort((a, b) => a - b).slice(0, 32);
@@ -505,7 +542,7 @@ export default function ScoreControlClient() {
                     setDbError(getErrorMessage(data.error, t));
                     // Fallback routes
                     try {
-                        computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 3000000);
+                        computeAndSetRoutes(targetPT, selectedEventRate!, bonusMin, bonusMax, 2_840_000);
                     } catch (_) { /* ignore */ }
                     stopFakeProgress(setDbFakeProgress, dbFakeProgressTimerRef, false);
                     setIsCalculating(false);
@@ -569,6 +606,10 @@ export default function ScoreControlClient() {
         if (!musicMetas.length || !musics.length) return;
         if (!dbUserId.trim()) { setDbError(t("page.scoreControl.errors.userRequired")); return; }
         if (!dbEventId.trim()) { setDbError(t("page.scoreControl.errors.eventRequired")); return; }
+        if (dbEventType === "world_bloom" && !dbSupportCharacterId) {
+            setDbError(t("page.scoreControl.errors.supportCharacterRequired"));
+            return;
+        }
         if (!targetPT || targetPT <= 0) { setError(t("page.scoreControl.errors.invalidTargetPt")); return; }
 
         infiniteSearchCancelledRef.current = false;
@@ -594,7 +635,7 @@ export default function ScoreControlClient() {
         const infiniteStartTime = performance.now();
 
         const bonusMin = Math.max(0, minBonus);
-        const bonusMax = Math.min(415, maxBonus);
+        const bonusMax = Math.min(435, maxBonus);
 
         // Build card config once
         const configForCalc: Record<string, WorkerCardConfig> = {};
@@ -987,7 +1028,7 @@ export default function ScoreControlClient() {
                                 onChange={(e) => setMinBonus(Number(e.target.value))}
                                 placeholder="5"
                                 min={0}
-                                max={415}
+                                max={435}
                                 className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                             />
                             <p className="mt-1 text-xs text-slate-400">
@@ -1004,7 +1045,7 @@ export default function ScoreControlClient() {
                                 onChange={(e) => setMaxBonus(Number(e.target.value))}
                                 placeholder="200"
                                 min={0}
-                                max={415}
+                                max={435}
                                 className="sc-number-input w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-miku/20 focus:border-miku transition-all text-sm"
                             />
                             <p className="mt-1 text-xs text-slate-400">
@@ -1128,10 +1169,29 @@ export default function ScoreControlClient() {
                                     </label>
                                     <EventSelector
                                         selectedEventId={dbEventId}
-                                        onSelect={setDbEventId}
+                                        onSelect={handleDbEventSelect}
                                     />
                                 </div>
                             </div>
+
+                            {/* World Bloom chapter character */}
+                            {dbEventType === "world_bloom" && (
+                                <div className="mt-4">
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                                        {t("page.scoreControl.wlChapterCharacter")} <span className="text-red-400">*</span>
+                                    </label>
+                                    <CharacterSelector
+                                        selectedCharacterId={dbSupportCharacterId}
+                                        onSelect={setDbSupportCharacterId}
+                                        availableCharacterIds={
+                                            dbWlChapterCharacterIds.length
+                                                ? dbWlChapterCharacterIds
+                                                : undefined
+                                        }
+                                        hideUnitFilter
+                                    />
+                                </div>
+                            )}
 
                             {/* Card Config Toggle */}
                             <div>
