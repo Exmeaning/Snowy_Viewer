@@ -4,7 +4,7 @@ type SeoPageTranslation = {
     readonly keywords: readonly string[];
 };
 
-const BRAND_KEYWORDS = ["Project Sekai", "PJSK", "世界計畫", "Moesekai"] as const;
+const BRAND_KEYWORDS = ["PJSK", "PJSK Wiki", "Project Sekai", "Project SEKAI", "PRSK", "世界計畫", "世界計畫 繽紛舞台", "プロセカ", "Moesekai"] as const;
 
 function page(
     title: string,
@@ -469,30 +469,30 @@ export const ZH_TW_DETAIL_FALLBACK_TITLES = {
 } as const;
 
 export const ZH_TW_DETAIL_FALLBACK_DESCRIPTIONS = {
-    card: "檢視 Project SEKAI 卡牌詳情、角色、稀有度與圖片資源",
-    character: "檢視 Project SEKAI 角色資料、團體、生日與相關內容",
-    costume: "檢視 Project SEKAI 服裝詳情、適用角色與取得方式",
-    event: "檢視 Project SEKAI 活動詳情、時間、獎勵與相關資料",
-    exchange: "檢視 Project SEKAI 交換項目詳情、獎勵、所需道具與開放時間",
-    gacha: "檢視 Project SEKAI 轉蛋詳情、卡池時間、PU 卡牌與機率資訊",
-    live: "檢視 Project SEKAI 虛擬演唱會詳情、時間與獎勵資訊",
-    manga: "檢視 Project SEKAI 官方四格漫畫各話詳情",
-    music: "檢視 Project SEKAI 歌曲詳情、譜面、作詞作曲與封面資源",
-    lyrics: "檢視 Project SEKAI 歌曲歌詞、日文原文與已發布翻譯",
-    mysekai: "檢視 Project SEKAI MySekai 家具詳情、素材與風味文字",
+    card: "檢視 Project SEKAI（世界計畫 / PJSK）卡牌詳情、角色、稀有度與圖片資源",
+    character: "檢視 Project SEKAI（世界計畫 / PJSK）角色資料、團體、生日與相關內容",
+    costume: "檢視 Project SEKAI（世界計畫 / PJSK）服裝詳情、適用角色與取得方式",
+    event: "檢視 Project SEKAI（世界計畫 / PJSK）活動詳情、時間、獎勵與相關資料",
+    exchange: "檢視 Project SEKAI（世界計畫 / PJSK）交換項目詳情、獎勵、所需道具與開放時間",
+    gacha: "檢視 Project SEKAI（世界計畫 / PJSK）轉蛋詳情、卡池時間、PU 卡牌與機率資訊",
+    live: "檢視 Project SEKAI（世界計畫 / PJSK）虛擬演唱會詳情、時間與獎勵資訊",
+    manga: "檢視 Project SEKAI（世界計畫 / PJSK）官方四格漫畫各話詳情",
+    music: "檢視 Project SEKAI（世界計畫 / PJSK）歌曲詳情、譜面、作詞作曲與封面資源",
+    lyrics: "檢視 Project SEKAI（世界計畫 / PJSK）歌曲歌詞、日文原文與已發布翻譯",
+    mysekai: "檢視 Project SEKAI（世界計畫 / PJSK）MySekai 家具詳情、素材與風味文字",
 } as const;
 
 export const ZH_TW_DETAIL_SEO_TEMPLATES = {
-    card: "查看 {character} 的 Project SEKAI 卡牌「{prefix}」，包含卡牌稀有度、屬性、技能、數值與高畫質卡面資源。",
-    character: "查看 Project SEKAI 角色「{name}」的個人資料、所屬團體、相關卡牌、劇情與遊戲資料。",
-    costume: "查看 Project SEKAI 服裝「{name}」的外觀、適用角色、配色與取得相關資訊。",
-    event: "查看 Project SEKAI 活動「{name}」的舉辦時間、活動類型、獎勵、加成角色與相關劇情資料。",
-    exchange: "Project SEKAI 交換項目：{name}{shopSuffix}",
-    exchangeFallback: "Project SEKAI 交換項目詳情",
-    gacha: "查看 Project SEKAI 轉蛋「{name}」的開放時間、招募類型、卡池內容、Pickup 卡牌與提供機率。",
-    live: "查看 Project SEKAI 虛擬演唱會「{name}」的演出時間、出演角色、曲目與參與獎勵。",
-    manga: "閱讀 Project SEKAI 官方四格漫畫「{title}」，查看本話標題與完整漫畫圖片。",
-    music: "查看 Project SEKAI 歌曲「{title}」的難度與譜面資料、演唱版本和封面；作詞：{lyricist}，作曲：{composer}。",
-    lyrics: "閱讀 Project SEKAI 歌曲「{title}」的日文歌詞，並對照已發布的簡體中文與英文翻譯。",
-    mysekai: "查看 Project SEKAI MySekai 家具「{name}」的外觀、製作素材與物品說明。{flavorSuffix}",
+    card: "查看 {character} 的 Project SEKAI（世界計畫 / PJSK）卡牌「{prefix}」，包含卡牌稀有度、屬性、技能、數值與高畫質卡面資源。",
+    character: "查看 Project SEKAI（世界計畫 / PJSK）角色「{name}」的個人資料、所屬團體、相關卡牌、劇情與遊戲資料。",
+    costume: "查看 Project SEKAI（世界計畫 / PJSK）服裝「{name}」的外觀、適用角色、配色與取得相關資訊。",
+    event: "查看 Project SEKAI（世界計畫 / PJSK）活動「{name}」的舉辦時間、活動類型、獎勵、加成角色與相關劇情資料。",
+    exchange: "Project SEKAI（世界計畫 / PJSK）交換項目：{name}{shopSuffix}",
+    exchangeFallback: "Project SEKAI（世界計畫 / PJSK）交換項目詳情",
+    gacha: "查看 Project SEKAI（世界計畫 / PJSK）轉蛋「{name}」的開放時間、招募類型、卡池內容、Pickup 卡牌與提供機率。",
+    live: "查看 Project SEKAI（世界計畫 / PJSK）虛擬演唱會「{name}」的演出時間、出演角色、曲目與參與獎勵。",
+    manga: "閱讀 Project SEKAI（世界計畫 / PJSK）官方四格漫畫「{title}」，查看本話標題與完整漫畫圖片。",
+    music: "查看 Project SEKAI（世界計畫 / PJSK）歌曲「{title}」的難度與譜面資料、演唱版本和封面；作詞：{lyricist}，作曲：{composer}。",
+    lyrics: "閱讀 Project SEKAI（世界計畫 / PJSK）歌曲「{title}」的日文歌詞，並對照已發布的簡體中文與英文翻譯。",
+    mysekai: "查看 Project SEKAI（世界計畫 / PJSK）MySekai 家具「{name}」的外觀、製作素材與物品說明。{flavorSuffix}",
 } as const;

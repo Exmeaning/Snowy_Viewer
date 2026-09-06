@@ -30,6 +30,37 @@ function listItem(position: number, name: string, item: string) {
 export function generateRootJsonLd(baseUrl: string, locale: UiLocale = DEFAULT_UI_LOCALE) {
     const config = getSeoLocaleConfig(locale);
 
+    const videoGame = {
+        "@context": "https://schema.org" as const,
+        "@type": "VideoGame" as const,
+        name: "Project Sekai: Colorful Stage!",
+        alternateName: [
+            "Project SEKAI",
+            "Project Sekai",
+            "Project SEKAI: COLORFUL STAGE!",
+            "Project SEKAI COLORFUL STAGE! feat. 初音ミク",
+            "プロジェクトセカイ",
+            "プロジェクトセカイ カラフルステージ！ feat. 初音ミク",
+            "プロセカ",
+            "PJSK",
+            "PRSK",
+            "世界计划",
+            "世界计划 彩色舞台 feat. 初音未来",
+            "世界计划 缤纷舞台！ feat. 初音未来",
+            "世界计划 缤纷舞台",
+            "世界計畫",
+            "世界計畫 繽紛舞台！ feat. 初音未來",
+            "Hatsune Miku: Colorful Stage!",
+            "Colorful Stage",
+            "프로젝트 세카이",
+            "프로젝트 세카이 컬러풀 스테이지! feat. 하츠네 미쿠",
+            "프로세카",
+        ],
+        gamePlatform: ["iOS", "Android"],
+        applicationCategory: "GameApplication",
+        genre: "Rhythm Game",
+    };
+
     const website = {
         "@context": "https://schema.org" as const,
         "@type": "WebSite" as const,
@@ -38,21 +69,7 @@ export function generateRootJsonLd(baseUrl: string, locale: UiLocale = DEFAULT_U
         url: localizedAbsoluteUrl(baseUrl, "/", locale),
         inLanguage: config.htmlLang,
         description: config.root.jsonLdDescription,
-    };
-
-    const videoGame = {
-        "@context": "https://schema.org" as const,
-        "@type": "VideoGame" as const,
-        name: "Project Sekai",
-        alternateName: [
-            "世界计划 彩色舞台 feat. 初音未来",
-            "Hatsune Miku: Colorful Stage!",
-            "プロジェクトセカイ",
-            "PJSK",
-        ],
-        gamePlatform: ["iOS", "Android"],
-        applicationCategory: "GameApplication",
-        genre: "Rhythm Game",
+        about: videoGame,
     };
 
     return { website, videoGame };
